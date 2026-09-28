@@ -11,14 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as SellerComplaintsRouteImport } from './routes/seller/complaints'
-import { Route as SellerDispatchRouteImport } from './routes/seller/dispatch'
-import { Route as SellerProfileRouteImport } from './routes/seller/profile'
-import { Route as SellerReceiptsRouteImport } from './routes/seller/receipts'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
 import { Route as PapProfileRouteImport } from './routes/pap/profile'
 import { Route as PapQueueRouteImport } from './routes/pap/queue'
 import { Route as PapReceiptsRouteImport } from './routes/pap/receipts'
+import { Route as SellerComplaintsRouteImport } from './routes/seller/complaints'
+import { Route as SellerDispatchRouteImport } from './routes/seller/dispatch'
+import { Route as SellerProfileRouteImport } from './routes/seller/profile'
+import { Route as SellerReceiptsRouteImport } from './routes/seller/receipts'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,26 +28,6 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SellerComplaintsRoute = SellerComplaintsRouteImport.update({
-  id: '/seller/complaints',
-  path: '/seller/complaints',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SellerDispatchRoute = SellerDispatchRouteImport.update({
-  id: '/seller/dispatch',
-  path: '/seller/dispatch',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SellerProfileRoute = SellerProfileRouteImport.update({
-  id: '/seller/profile',
-  path: '/seller/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SellerReceiptsRoute = SellerReceiptsRouteImport.update({
-  id: '/seller/receipts',
-  path: '/seller/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PapDispatchRoute = PapDispatchRouteImport.update({
@@ -70,98 +50,114 @@ const PapReceiptsRoute = PapReceiptsRouteImport.update({
   path: '/pap/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellerComplaintsRoute = SellerComplaintsRouteImport.update({
+  id: '/seller/complaints',
+  path: '/seller/complaints',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerDispatchRoute = SellerDispatchRouteImport.update({
+  id: '/seller/dispatch',
+  path: '/seller/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerProfileRoute = SellerProfileRouteImport.update({
+  id: '/seller/profile',
+  path: '/seller/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerReceiptsRoute = SellerReceiptsRouteImport.update({
+  id: '/seller/receipts',
+  path: '/seller/receipts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/seller/complaints': typeof SellerComplaintsRoute
-  '/seller/dispatch': typeof SellerDispatchRoute
-  '/seller/profile': typeof SellerProfileRoute
-  '/seller/receipts': typeof SellerReceiptsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
   '/pap/receipts': typeof PapReceiptsRoute
+  '/seller/complaints': typeof SellerComplaintsRoute
+  '/seller/dispatch': typeof SellerDispatchRoute
+  '/seller/profile': typeof SellerProfileRoute
+  '/seller/receipts': typeof SellerReceiptsRoute
 }
-
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/seller/complaints': typeof SellerComplaintsRoute
-  '/seller/dispatch': typeof SellerDispatchRoute
-  '/seller/profile': typeof SellerProfileRoute
-  '/seller/receipts': typeof SellerReceiptsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
   '/pap/receipts': typeof PapReceiptsRoute
+  '/seller/complaints': typeof SellerComplaintsRoute
+  '/seller/dispatch': typeof SellerDispatchRoute
+  '/seller/profile': typeof SellerProfileRoute
+  '/seller/receipts': typeof SellerReceiptsRoute
 }
-
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/seller/complaints': typeof SellerComplaintsRoute
-  '/seller/dispatch': typeof SellerDispatchRoute
-  '/seller/profile': typeof SellerProfileRoute
-  '/seller/receipts': typeof SellerReceiptsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
   '/pap/receipts': typeof PapReceiptsRoute
+  '/seller/complaints': typeof SellerComplaintsRoute
+  '/seller/dispatch': typeof SellerDispatchRoute
+  '/seller/profile': typeof SellerProfileRoute
+  '/seller/receipts': typeof SellerReceiptsRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
-    | '/seller/complaints'
-    | '/seller/dispatch'
-    | '/seller/profile'
-    | '/seller/receipts'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
     | '/pap/receipts'
+    | '/seller/complaints'
+    | '/seller/dispatch'
+    | '/seller/profile'
+    | '/seller/receipts'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/seller/complaints'
-    | '/seller/dispatch'
-    | '/seller/profile'
-    | '/seller/receipts'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
     | '/pap/receipts'
+    | '/seller/complaints'
+    | '/seller/dispatch'
+    | '/seller/profile'
+    | '/seller/receipts'
   id:
     | '__root__'
     | '/'
     | '/login'
-    | '/seller/complaints'
-    | '/seller/dispatch'
-    | '/seller/profile'
-    | '/seller/receipts'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
     | '/pap/receipts'
+    | '/seller/complaints'
+    | '/seller/dispatch'
+    | '/seller/profile'
+    | '/seller/receipts'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  SellerComplaintsRoute: typeof SellerComplaintsRoute
-  SellerDispatchRoute: typeof SellerDispatchRoute
-  SellerProfileRoute: typeof SellerProfileRoute
-  SellerReceiptsRoute: typeof SellerReceiptsRoute
   PapDispatchRoute: typeof PapDispatchRoute
   PapProfileRoute: typeof PapProfileRoute
   PapQueueRoute: typeof PapQueueRoute
   PapReceiptsRoute: typeof PapReceiptsRoute
+  SellerComplaintsRoute: typeof SellerComplaintsRoute
+  SellerDispatchRoute: typeof SellerDispatchRoute
+  SellerProfileRoute: typeof SellerProfileRoute
+  SellerReceiptsRoute: typeof SellerReceiptsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,34 +174,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/seller/complaints': {
-      id: '/seller/complaints'
-      path: '/seller/complaints'
-      fullPath: '/seller/complaints'
-      preLoaderRoute: typeof SellerComplaintsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/seller/dispatch': {
-      id: '/seller/dispatch'
-      path: '/seller/dispatch'
-      fullPath: '/seller/dispatch'
-      preLoaderRoute: typeof SellerDispatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/seller/profile': {
-      id: '/seller/profile'
-      path: '/seller/profile'
-      fullPath: '/seller/profile'
-      preLoaderRoute: typeof SellerProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/seller/receipts': {
-      id: '/seller/receipts'
-      path: '/seller/receipts'
-      fullPath: '/seller/receipts'
-      preLoaderRoute: typeof SellerReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pap/dispatch': {
@@ -236,20 +204,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PapReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seller/complaints': {
+      id: '/seller/complaints'
+      path: '/seller/complaints'
+      fullPath: '/seller/complaints'
+      preLoaderRoute: typeof SellerComplaintsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/dispatch': {
+      id: '/seller/dispatch'
+      path: '/seller/dispatch'
+      fullPath: '/seller/dispatch'
+      preLoaderRoute: typeof SellerDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/profile': {
+      id: '/seller/profile'
+      path: '/seller/profile'
+      fullPath: '/seller/profile'
+      preLoaderRoute: typeof SellerProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller/receipts': {
+      id: '/seller/receipts'
+      path: '/seller/receipts'
+      fullPath: '/seller/receipts'
+      preLoaderRoute: typeof SellerReceiptsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  SellerComplaintsRoute: SellerComplaintsRoute,
-  SellerDispatchRoute: SellerDispatchRoute,
-  SellerProfileRoute: SellerProfileRoute,
-  SellerReceiptsRoute: SellerReceiptsRoute,
   PapDispatchRoute: PapDispatchRoute,
   PapProfileRoute: PapProfileRoute,
   PapQueueRoute: PapQueueRoute,
   PapReceiptsRoute: PapReceiptsRoute,
+  SellerComplaintsRoute: SellerComplaintsRoute,
+  SellerDispatchRoute: SellerDispatchRoute,
+  SellerProfileRoute: SellerProfileRoute,
+  SellerReceiptsRoute: SellerReceiptsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
