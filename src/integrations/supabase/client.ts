@@ -28,19 +28,31 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 
+function getEnv(key: string): string | undefined {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      return import.meta.env[key];
+    }
+  } catch {}
+  try {
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch {}
+  return undefined;
+}
+
 function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
   const SUPABASE_URL = 
-    import.meta.env['VITE_SUPABASE_URL'] || 
-    process.env['SUPABASE_URL'] || 
+    getEnv('VITE_SUPABASE_URL') || 
+    getEnv('SUPABASE_URL') || 
     'https://vvhaclovubwecydkxqwe.supabase.co';
 
   const SUPABASE_PUBLISHABLE_KEY = 
-    import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] || 
-    import.meta.env['VITE_SUPABASE_ANON_KEY'] || 
-    process.env['SUPABASE_PUBLISHABLE_KEY'] || 
-    process.env['SUPABASE_ANON_KEY'] || 
+    getEnv('VITE_SUPABASE_PUBLISHABLE_KEY') || 
+    getEnv('VITE_SUPABASE_ANON_KEY') || 
+    getEnv('SUPABASE_PUBLISHABLE_KEY') || 
+    getEnv('SUPABASE_ANON_KEY') || 
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aGFjbG92dWJ3ZWN5ZGt4cXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1OTI4MzYsImV4cCI6MjEwNjE2ODgzNn0.FHc9sVM8AchWwXXcCpUWXz16ybfrOebeZTiMqIqurrk';
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
