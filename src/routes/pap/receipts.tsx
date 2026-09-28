@@ -22,7 +22,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import type { ParcelReceipt } from '@/types/database';
 
-export const Route = createFileRoute('/pap/receipts' as any)({
+export const Route = createFileRoute('/pap/receipts')({
   component: PapReceiptsPage,
 });
 
