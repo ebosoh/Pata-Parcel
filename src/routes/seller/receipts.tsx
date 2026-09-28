@@ -10,7 +10,7 @@ import { FileText, Calendar, ExternalLink, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { ParcelReceipt } from '@/types/database';
 
-export const Route = createFileRoute('/seller/receipts' as any)({
+export const Route = createFileRoute('/seller/receipts')({
   component: SellerReceiptsPage,
 });
 

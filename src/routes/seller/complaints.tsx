@@ -30,7 +30,7 @@ import { supabase } from '@/lib/supabase';
 import { formatPhoneDisplay, isValidKenyanPhone } from '@/lib/constants';
 import type { Complaint, ComplaintStatus } from '@/types/database';
 
-export const Route = createFileRoute('/seller/complaints' as any)({
+export const Route = createFileRoute('/seller/complaints')({
   component: SellerComplaintsPage,
 });
 

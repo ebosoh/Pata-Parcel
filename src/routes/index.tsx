@@ -43,7 +43,7 @@ function LandingPage() {
 
           {/* CTA Buttons */}
           <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
-            <Link to={'/login' as any}>
+            <Link to="/login">
               <Button size="lg" className="w-full text-base font-semibold">
                 Get Started
               </Button>
