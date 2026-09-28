@@ -6,7 +6,10 @@ export type PaymentStatus = 'paid' | 'unpaid' | 'pay_on_delivery';
 export type TrackingStatus = 'dispatched_to_pap' | 'sorting' | 'on_transit' | 'delivered';
 export type ComplaintStatus = 'open' | 'investigating' | 'resolved';
 
-export interface Database {
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "14.5";
+  };
   public: {
     Tables: {
       profiles: {
