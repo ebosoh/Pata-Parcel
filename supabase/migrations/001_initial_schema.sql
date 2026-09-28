@@ -1,6 +1,25 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Clean up if re-running (safe on fresh databases)
+DROP TABLE IF EXISTS parcel_tracking CASCADE;
+DROP TABLE IF EXISTS parcel_receipts CASCADE;
+DROP TABLE IF EXISTS complaints CASCADE;
+DROP TABLE IF EXISTS parcels CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS saccos CASCADE;
+DROP TABLE IF EXISTS destinations CASCADE;
+DROP SEQUENCE IF EXISTS parcel_ref_seq;
+DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS generate_reference_number() CASCADE;
+DROP FUNCTION IF EXISTS calculate_fees() CASCADE;
+DROP FUNCTION IF EXISTS is_staff_or_admin(UUID) CASCADE;
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS sending_method CASCADE;
+DROP TYPE IF EXISTS payment_status CASCADE;
+DROP TYPE IF EXISTS tracking_status CASCADE;
+DROP TYPE IF EXISTS complaint_status CASCADE;
+
 -- Define Enums
 CREATE TYPE user_role AS ENUM ('seller', 'pap_admin', 'pap_staff');
 CREATE TYPE sending_method AS ENUM ('pickup_mtaani', 'pata_parcel', 'door_to_door', 'psv');
