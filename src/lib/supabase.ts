@@ -1,17 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase as baseClient } from '@/integrations/supabase/client';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
-const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] as string;
-const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'] as string;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+// Shared Cloud client, typed with the app's own table definitions.
+export const supabase = baseClient as unknown as SupabaseClient<Database>;
