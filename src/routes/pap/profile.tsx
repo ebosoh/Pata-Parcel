@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ShieldCheck, User, Phone, MapPin, LogOut } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
-export const Route = createFileRoute('/pap/profile' as any)({
+export const Route = createFileRoute('/pap/profile')({
   component: PapProfilePage,
 });
 

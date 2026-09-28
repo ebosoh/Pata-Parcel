@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
-export const Route = createFileRoute('/pap/dispatch' as any)({
+export const Route = createFileRoute('/pap/dispatch')({
   component: PapDispatchPage,
 });
 

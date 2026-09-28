@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
-export const Route = createFileRoute('/pap/queue' as any)({
+export const Route = createFileRoute('/pap/queue')({
   component: PapQueuePage,
 });
 
