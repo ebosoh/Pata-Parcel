@@ -83,7 +83,7 @@ function LandingPage() {
             <div className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/30">
               <Truck className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm text-foreground">Multi-Way Dispatch</h3>
+            <h2 className="font-semibold text-sm text-foreground">Multi-Way Dispatch</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Official/Unofficial PSV SACCOs, Pick-up Mtaani, Door-to-Door, and PAP branches
             </p>
@@ -92,7 +92,7 @@ function LandingPage() {
             <div className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/30">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm text-foreground">Receipt Proof</h3>
+            <h2 className="font-semibold text-sm text-foreground">Receipt Proof</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Photographed courier slips shared instantly with online sellers
             </p>
@@ -101,7 +101,7 @@ function LandingPage() {
             <div className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/30">
               <Zap className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm text-foreground">3G Optimized PWA</h3>
+            <h2 className="font-semibold text-sm text-foreground">3G Optimized PWA</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Ultra-lightweight design tailored for fast loading on all Kenyan mobile networks
             </p>

@@ -23,6 +23,18 @@ import {
 import { supabase } from '@/lib/supabase';
 
 export const Route = createFileRoute('/seller/profile')({
+  head: () => ({
+    meta: [
+      { title: 'Seller Profile — Pata Parcel' },
+      { name: 'description', content: 'Manage your online shop details, contact phone and pickup location on Pata Parcel.' },
+      { property: 'og:title', content: 'Seller Profile — Pata Parcel' },
+      { property: 'og:description', content: 'Manage your online shop details, contact phone and pickup location on Pata Parcel.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/profile' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/profile' }],
+  }),
   component: SellerProfilePage,
 });
 

@@ -34,6 +34,18 @@ import {
 import { formatPhoneDisplay } from '@/lib/constants';
 
 export const Route = createFileRoute('/pap/dispatch')({
+  head: () => ({
+    meta: [
+      { title: 'Sorting & Dispatch — Pata Parcel Operations Hub' },
+      { name: 'description', content: 'Sort parcels and hand them to PSV, Pick-up Mtaani and door-to-door couriers.' },
+      { property: 'og:title', content: 'Sorting & Dispatch — Pata Parcel Operations Hub' },
+      { property: 'og:description', content: 'Sort parcels and hand them to PSV, Pick-up Mtaani and door-to-door couriers.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/dispatch' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/dispatch' }],
+  }),
   component: PapDispatchPage,
 });
 
@@ -178,6 +190,7 @@ export function PapDispatchPage() {
           <Button
             variant="outline"
             size="icon"
+            aria-label="Refresh list"
             onClick={refetch}
             disabled={loading}
             className="h-9 w-9"
@@ -242,7 +255,7 @@ export function PapDispatchPage() {
             {activeTab === 'sorting' ? (
               <>
                 <Clock className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
-                <h3 className="font-semibold text-foreground text-sm">No parcels in Sorting</h3>
+                <h2 className="font-semibold text-foreground text-sm">No parcels in Sorting</h2>
                 <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
                   Receive parcels from the Incoming Queue first to start sorting.
                 </p>
@@ -250,7 +263,7 @@ export function PapDispatchPage() {
             ) : (
               <>
                 <Truck className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
-                <h3 className="font-semibold text-foreground text-sm">No parcels on transit</h3>
+                <h2 className="font-semibold text-foreground text-sm">No parcels on transit</h2>
                 <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
                   Parcels dispatched to SACCOs or couriers will appear here until delivered.
                 </p>

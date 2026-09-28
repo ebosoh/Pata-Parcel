@@ -11,6 +11,18 @@ import { supabase } from '@/lib/supabase';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/seller/receipts')({
+  head: () => ({
+    meta: [
+      { title: 'Dispatch Receipts — Pata Parcel Seller Portal' },
+      { name: 'description', content: 'View photographed courier receipts for every parcel you have sent with Pata Parcel.' },
+      { property: 'og:title', content: 'Dispatch Receipts — Pata Parcel Seller Portal' },
+      { property: 'og:description', content: 'View photographed courier receipts for every parcel you have sent with Pata Parcel.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/receipts' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/receipts' }],
+  }),
   component: SellerReceiptsPage,
 });
 
@@ -114,6 +126,7 @@ function SellerReceiptsPage() {
           <Button
             variant="outline"
             size="icon"
+            aria-label="Refresh list"
             onClick={fetchReceipts}
             disabled={loading}
             title="Refresh receipts"
@@ -158,9 +171,9 @@ function SellerReceiptsPage() {
         ) : receipts.length === 0 ? (
           <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border bg-card/50">
             <FileText className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
-            <h3 className="font-semibold text-foreground text-sm">
+            <h2 className="font-semibold text-foreground text-sm">
               {selectedDate ? 'No receipts found for this date' : 'No receipts uploaded yet'}
-            </h3>
+            </h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
               Once Pata Parcel staff dispatches your parcels at the courier or SACCO office, they will photograph the receipts and upload them here.
             </p>

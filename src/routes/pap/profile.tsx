@@ -9,6 +9,18 @@ import { ShieldCheck, User, Phone, MapPin, LogOut } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
 export const Route = createFileRoute('/pap/profile')({
+  head: () => ({
+    meta: [
+      { title: 'Staff Profile — Pata Parcel Operations Hub' },
+      { name: 'description', content: 'Pata Parcel operations staff account, station and standard operating procedures.' },
+      { property: 'og:title', content: 'Staff Profile — Pata Parcel Operations Hub' },
+      { property: 'og:description', content: 'Pata Parcel operations staff account, station and standard operating procedures.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/profile' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/profile' }],
+  }),
   component: PapProfilePage,
 });
 

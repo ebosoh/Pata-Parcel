@@ -29,6 +29,18 @@ import {
 import type { TrackingStatus } from '@/types/database';
 
 export const Route = createFileRoute('/seller/dispatch')({
+  head: () => ({
+    meta: [
+      { title: 'Dispatch Parcels — Pata Parcel Seller Portal' },
+      { name: 'description', content: 'Book parcel dispatches via PSV, Pick-up Mtaani or door-to-door and track every order across Kenya.' },
+      { property: 'og:title', content: 'Dispatch Parcels — Pata Parcel Seller Portal' },
+      { property: 'og:description', content: 'Book parcel dispatches via PSV, Pick-up Mtaani or door-to-door and track every order across Kenya.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/dispatch' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/dispatch' }],
+  }),
   component: SellerDispatchPage,
 });
 
@@ -226,6 +238,7 @@ function SellerDispatchPage() {
           <Button
             variant="outline"
             size="icon"
+            aria-label="Refresh list"
             onClick={handleManualRefresh}
             disabled={refreshing || parcelsLoading}
             title="Refresh list"
@@ -253,9 +266,9 @@ function SellerDispatchPage() {
         ) : filteredParcels.length === 0 ? (
           <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border bg-card/50">
             <Package className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
-            <h3 className="font-semibold text-foreground text-sm">
+            <h2 className="font-semibold text-foreground text-sm">
               {searchQuery ? 'No parcels match your search' : 'No parcels dispatched yet'}
-            </h3>
+            </h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
               {searchQuery 
                 ? 'Try a different buyer name, phone number, or destination.'
