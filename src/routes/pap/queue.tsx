@@ -25,6 +25,18 @@ import {
 import { formatPhoneDisplay } from '@/lib/constants';
 
 export const Route = createFileRoute('/pap/queue')({
+  head: () => ({
+    meta: [
+      { title: 'Incoming Queue — Pata Parcel Operations Hub' },
+      { name: 'description', content: 'Receive and check incoming seller parcels at the Pata Parcel sorting hub.' },
+      { property: 'og:title', content: 'Incoming Queue — Pata Parcel Operations Hub' },
+      { property: 'og:description', content: 'Receive and check incoming seller parcels at the Pata Parcel sorting hub.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/queue' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/queue' }],
+  }),
   component: PapQueuePage,
 });
 
@@ -125,6 +137,7 @@ function PapQueuePage() {
           <Button
             variant="outline"
             size="icon"
+            aria-label="Refresh list"
             onClick={refetch}
             disabled={loading}
             className="h-9 w-9"
@@ -202,7 +215,7 @@ function PapQueuePage() {
         ) : filteredParcels.length === 0 ? (
           <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border bg-card/50">
             <Inbox className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
-            <h3 className="font-semibold text-foreground text-sm">No incoming parcels in queue</h3>
+            <h2 className="font-semibold text-foreground text-sm">No incoming parcels in queue</h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
               {searchQuery ? 'No parcels match your search query.' : 'When online sellers dispatch parcels, they will appear here for PAP staff to scan or receive.'}
             </p>

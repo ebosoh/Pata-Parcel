@@ -6,13 +6,15 @@ import { InstallPrompt } from '@/components/shared/InstallPrompt';
 export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
-      { title: 'Pata Parcel — Delivering Trust, Every Time' },
-      { name: 'description', content: 'Streamlined parcel dispatch and tracking for online sellers in Kenya.' },
-      { property: 'og:title', content: 'Pata Parcel — Delivering Trust, Every Time' },
-      { property: 'og:description', content: 'Streamlined parcel dispatch and tracking for online sellers in Kenya.' },
+      { title: 'Pata Parcel — Parcel Dispatch & Tracking for Kenyan Online Sellers' },
+      { name: 'description', content: 'Send parcels across Kenya via PSV, Pick-up Mtaani or door-to-door, with photo receipts for TikTok, Instagram and Facebook sellers.' },
+      { property: 'og:title', content: 'Pata Parcel — Parcel Dispatch & Tracking for Kenyan Online Sellers' },
+      { property: 'og:description', content: 'Send parcels across Kenya via PSV, Pick-up Mtaani or door-to-door, with photo receipts for TikTok, Instagram and Facebook sellers.' },
       { property: 'og:type', content: 'website' },
-      { name: 'twitter:card', content: 'summary_large_image' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/' },
+      { name: 'twitter:card', content: 'summary' },
     ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/' }],
   }),
   component: LandingPage,
 });
@@ -30,13 +32,14 @@ function LandingPage() {
           <div className="mb-4 overflow-hidden rounded-2xl shadow-xl border-2 border-primary/20 bg-card p-1">
             <img
               src="/logo.jpg"
-              alt="Pata Parcel Logo"
+              alt="Pata Parcel emblem showing a delivery package"
               className="h-28 w-28 object-contain rounded-xl"
             />
           </div>
 
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
             Pata Parcel
+            <span className="sr-only"> — Parcel Dispatch and Tracking for Online Sellers in Kenya</span>
           </h1>
           <p className="mt-1 text-sm font-bold text-primary tracking-wide uppercase">
             Delivering Trust, Every Time
@@ -83,7 +86,7 @@ function LandingPage() {
             <div className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/30">
               <Truck className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm text-foreground">Multi-Way Dispatch</h3>
+            <h2 className="font-semibold text-sm text-foreground">Multi-Way Dispatch</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Official/Unofficial PSV SACCOs, Pick-up Mtaani, Door-to-Door, and PAP branches
             </p>
@@ -92,7 +95,7 @@ function LandingPage() {
             <div className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/30">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm text-foreground">Receipt Proof</h3>
+            <h2 className="font-semibold text-sm text-foreground">Receipt Proof</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Photographed courier slips shared instantly with online sellers
             </p>
@@ -101,7 +104,7 @@ function LandingPage() {
             <div className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary/30">
               <Zap className="h-5 w-5 text-primary" />
             </div>
-            <h3 className="font-semibold text-sm text-foreground">3G Optimized PWA</h3>
+            <h2 className="font-semibold text-sm text-foreground">3G Optimized PWA</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Ultra-lightweight design tailored for fast loading on all Kenyan mobile networks
             </p>

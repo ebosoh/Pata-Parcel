@@ -31,6 +31,18 @@ import { formatPhoneDisplay, isValidKenyanPhone } from '@/lib/constants';
 import type { Complaint, ComplaintStatus } from '@/types/database';
 
 export const Route = createFileRoute('/seller/complaints')({
+  head: () => ({
+    meta: [
+      { title: 'Buyer Complaints — Pata Parcel Seller Portal' },
+      { name: 'description', content: 'Log and follow up on buyer delivery complaints for your Pata Parcel shipments.' },
+      { property: 'og:title', content: 'Buyer Complaints — Pata Parcel Seller Portal' },
+      { property: 'og:description', content: 'Log and follow up on buyer delivery complaints for your Pata Parcel shipments.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/complaints' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/complaints' }],
+  }),
   component: SellerComplaintsPage,
 });
 
@@ -297,7 +309,7 @@ function SellerComplaintsPage() {
         ) : complaints.length === 0 ? (
           <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border bg-card/50">
             <CheckCircle className="h-12 w-12 mx-auto text-emerald-500/70 mb-3" />
-            <h3 className="font-semibold text-foreground text-sm">No reported complaints</h3>
+            <h2 className="font-semibold text-foreground text-sm">No reported complaints</h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
               All your buyers' parcels are running smoothly! If any customer calls with a delivery concern, click "Report Issue" above.
             </p>
@@ -308,7 +320,7 @@ function SellerComplaintsPage() {
               <Card key={c.id} className="p-4 border border-border/80 bg-card space-y-2.5">
                 <div className="flex items-start justify-between">
                   <div className="space-y-0.5">
-                    <h3 className="font-semibold text-sm text-foreground">{c.buyer_name}</h3>
+                    <h2 className="font-semibold text-sm text-foreground">{c.buyer_name}</h2>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Phone className="h-3 w-3 text-primary" /> {formatPhoneDisplay(c.buyer_phone)}

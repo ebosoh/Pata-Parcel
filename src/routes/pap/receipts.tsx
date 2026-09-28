@@ -23,6 +23,18 @@ import { supabase } from '@/lib/supabase';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/pap/receipts')({
+  head: () => ({
+    meta: [
+      { title: 'Courier Receipts — Pata Parcel Operations Hub' },
+      { name: 'description', content: 'Upload courier slip photos so sellers get instant proof of dispatch.' },
+      { property: 'og:title', content: 'Courier Receipts — Pata Parcel Operations Hub' },
+      { property: 'og:description', content: 'Upload courier slip photos so sellers get instant proof of dispatch.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/receipts' },
+      { name: 'twitter:card', content: 'summary' },
+    ],
+    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/receipts' }],
+  }),
   component: PapReceiptsPage,
 });
 
@@ -175,6 +187,7 @@ function PapReceiptsPage() {
           <Button
             variant="outline"
             size="icon"
+            aria-label="Refresh list"
             onClick={fetchRecentReceipts}
             disabled={loadingReceipts}
             className="h-9 w-9"
