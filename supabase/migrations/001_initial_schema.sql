@@ -253,7 +253,9 @@ INSERT INTO saccos (name, route, is_active) VALUES
 ('Mololine', 'Nairobi - Nakuru', true),
 ('Climax Coaches', 'Nairobi - Rift Valley', true);
 
--- Storage bucket
+-- Storage bucket and policies
 INSERT INTO storage.buckets (id, name, public) VALUES ('receipts', 'receipts', true) ON CONFLICT DO NOTHING;
+DROP POLICY IF EXISTS "Receipts are publicly accessible" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload receipts" ON storage.objects;
 CREATE POLICY "Receipts are publicly accessible" ON storage.objects FOR SELECT USING (bucket_id = 'receipts');
 CREATE POLICY "Users can upload receipts" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'receipts');
