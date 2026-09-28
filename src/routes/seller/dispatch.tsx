@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import type { TrackingStatus } from '@/types/database';
 
-export const Route = createFileRoute('/seller/dispatch' as any)({
+export const Route = createFileRoute('/seller/dispatch')({
   component: SellerDispatchPage,
 });
 

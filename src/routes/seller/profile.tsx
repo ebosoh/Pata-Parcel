@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-export const Route = createFileRoute('/seller/profile' as any)({
+export const Route = createFileRoute('/seller/profile')({
   component: SellerProfilePage,
 });
 

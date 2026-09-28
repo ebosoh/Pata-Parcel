@@ -3,7 +3,7 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 
-export const Route = createFileRoute('/login' as any)({
+export const Route = createFileRoute('/login')({
   component: LoginPage,
 });
 
