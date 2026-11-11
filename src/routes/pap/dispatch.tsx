@@ -174,7 +174,7 @@ export function PapDispatchPage() {
   };
 
   return (
-    <AppShell role={profile?.role === 'pap_admin' ? 'pap_admin' : 'pap_staff'}>
+    <AppShell role="pap_staff">
       <div className="space-y-4 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
