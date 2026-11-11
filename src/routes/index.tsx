@@ -48,8 +48,21 @@ function LandingPage() {
             The simplest mobile platform for online sellers (TikTok, IG, FB) to dispatch packages across Kenya via PSV, Pick-up Mtaani, and Door-to-Door.
           </p>
 
+          {/* Primary Account Creation CTA */}
+          <div className="mt-6 w-full">
+            <Link to="/login" search={{ mode: 'signup' }}>
+              <Button size="lg" className="w-full text-base font-bold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-13 py-3.5">
+                Create Free Account
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Free to join — start dispatching parcels in minutes
+            </p>
+          </div>
+
           {/* Direct Portal Entry Buttons */}
-          <div className="mt-6 flex flex-col gap-2.5 w-full">
+          <div className="mt-4 flex flex-col gap-2.5 w-full">
             <Link to={'/seller/dispatch' as any}>
               <Button size="lg" className="w-full text-sm font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center justify-between px-5 h-12">
                 <span className="flex items-center gap-2">

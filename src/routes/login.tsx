@@ -4,6 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/login')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    mode: search['mode'] === 'signup' ? ('signup' as const) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: 'Sign In — Pata Parcel' },
@@ -31,6 +34,7 @@ function LoginPage() {
     profile 
   } = useAuth();
   const navigate = useNavigate();
+  const { mode } = Route.useSearch();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -52,6 +56,7 @@ function LoginPage() {
       onSignUpWithEmail={signUpWithEmail}
       loading={loading}
       error={error}
+      initialMode={mode === 'signup' ? 'signup' : 'signin'}
     />
   );
 }
