@@ -23,10 +23,10 @@ const PAP_STAFF_NAV: NavItem[] = [
 ];
 
 const PAP_ADMIN_NAV: NavItem[] = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/parcels', label: 'Parcels', icon: Package },
-  { to: '/admin/sellers', label: 'Sellers', icon: User },
-  { to: '/admin/complaints', label: 'Issues', icon: AlertCircle },
+  { to: '/admin/dashboard', label: 'Staff', icon: LayoutDashboard },
+  { to: '/pap/queue', label: 'Queue', icon: Inbox },
+  { to: '/pap/dispatch', label: 'Dispatch', icon: Package },
+  { to: '/pap/receipts', label: 'Receipts', icon: FileText },
 ];
 
 function getNavItems(role: UserRole | null): NavItem[] {

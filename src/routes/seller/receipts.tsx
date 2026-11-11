@@ -1,3 +1,4 @@
+import { StorageImage } from '@/components/shared/StorageImage';
 import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -186,7 +187,7 @@ function SellerReceiptsPage() {
                   className="relative aspect-video w-full bg-muted cursor-pointer overflow-hidden"
                   onClick={() => setPreviewImage(r.receipt_image_url)}
                 >
-                  <img
+                  <StorageImage
                     src={r.receipt_image_url}
                     alt="Receipt"
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -225,7 +226,7 @@ function SellerReceiptsPage() {
             onClick={() => setPreviewImage(null)}
           >
             <div className="relative max-w-2xl max-h-[90vh] overflow-hidden rounded-xl bg-card p-2" onClick={e => e.stopPropagation()}>
-              <img
+              <StorageImage
                 src={previewImage}
                 alt="Receipt Preview"
                 className="max-h-[80vh] w-auto mx-auto object-contain rounded-lg"
