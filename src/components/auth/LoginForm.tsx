@@ -40,6 +40,7 @@ export function LoginForm({
   const [sellerPhone, setSellerPhone] = useState('');
 
   const [localError, setLocalError] = useState<string | null>(null);
+  const [signupDone, setSignupDone] = useState(false);
 
   // Phone submit
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -91,11 +92,14 @@ export function LoginForm({
         return;
       }
       if (onSignUpWithEmail) {
-        await onSignUpWithEmail(email, password, {
+        const { error: signUpError } = await onSignUpWithEmail(email, password, {
           owner_name: ownerName.trim(),
           phone: sellerPhone.trim(),
           business_name: businessName.trim() || undefined,
         });
+        if (!signUpError) {
+          setSignupDone(true);
+        }
       }
     } else {
       if (onSignInWithEmail) {
@@ -253,7 +257,31 @@ export function LoginForm({
         )}
 
         {/* 2. Email / Password Flow */}
-        {authMethod === 'email' && (
+        {authMethod === 'email' && signupDone && (
+          <div className="text-center space-y-3 py-2">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary/30">
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-sm font-bold text-foreground">Check your email</h2>
+            <p className="text-xs text-muted-foreground">
+              We sent a confirmation link to <span className="font-semibold text-foreground">{email}</span>.
+              Click it to activate your account, then come back and sign in.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full text-xs font-semibold"
+              onClick={() => {
+                setSignupDone(false);
+                setEmailMode('signin');
+                setPassword('');
+              }}
+            >
+              Back to Sign In
+            </Button>
+          </div>
+        )}
+        {authMethod === 'email' && !signupDone && (
           <form onSubmit={handleEmailAuth} className="space-y-3.5">
             {emailMode === 'signup' && (
               <>
