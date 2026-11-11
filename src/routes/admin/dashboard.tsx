@@ -41,7 +41,7 @@ function AdminDashboard() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) navigate({ to: '/login' });
+    if (!authLoading && !isAuthenticated) navigate({ to: '/login', search: { mode: undefined } });
   }, [authLoading, isAuthenticated, navigate]);
 
   const load = useCallback(async () => {
