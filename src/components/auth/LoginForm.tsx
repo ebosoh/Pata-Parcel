@@ -12,6 +12,7 @@ interface LoginFormProps {
   onSignUpWithEmail?: (email: string, pass: string, profile: any) => Promise<{ error: { message: string } | null; data: unknown }>;
   loading: boolean;
   error: string | null;
+  initialMode?: 'signin' | 'signup';
 }
 
 export function LoginForm({
@@ -21,9 +22,10 @@ export function LoginForm({
   onSignUpWithEmail,
   loading,
   error,
+  initialMode = 'signin',
 }: LoginFormProps) {
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone');
-  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>('signin');
+  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>(initialMode === 'signup' ? 'email' : 'phone');
+  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>(initialMode);
 
   // Phone state
   const [phone, setPhone] = useState('');

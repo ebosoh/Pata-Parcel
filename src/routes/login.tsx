@@ -34,6 +34,7 @@ function LoginPage() {
     profile 
   } = useAuth();
   const navigate = useNavigate();
+  const { mode } = Route.useSearch();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -55,6 +56,7 @@ function LoginPage() {
       onSignUpWithEmail={signUpWithEmail}
       loading={loading}
       error={error}
+      initialMode={mode === 'signup' ? 'signup' : 'signin'}
     />
   );
 }
