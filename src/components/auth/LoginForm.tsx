@@ -40,6 +40,7 @@ export function LoginForm({
   const [sellerPhone, setSellerPhone] = useState('');
 
   const [localError, setLocalError] = useState<string | null>(null);
+  const [signupDone, setSignupDone] = useState(false);
 
   // Phone submit
   const handleSendOTP = async (e: React.FormEvent) => {

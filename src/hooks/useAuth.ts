@@ -163,25 +163,20 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/login` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+        // Profile row is created by the handle_new_user database trigger
+        data: {
+          owner_name: initialProfile.owner_name,
+          phone: initialProfile.phone,
+          business_name: initialProfile.business_name,
+          business_type: initialProfile.business_type,
+          location: initialProfile.location,
+        },
+      },
     });
 
-    if (!error && data.user) {
-      // Create profile record
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        role: 'seller' as UserRole,
-        owner_name: initialProfile.owner_name,
-        phone: initialProfile.phone,
-        business_name: initialProfile.business_name || null,
-        business_type: initialProfile.business_type || null,
-        location: initialProfile.location || null,
-      });
-
-      if (profileError) {
-        console.error('Failed to create profile on signup:', profileError);
-      }
-
+    if (!error && data.user && data.session) {
       const profile = await fetchProfile(data.user.id);
       setState({
         user: data.user,
@@ -190,6 +185,9 @@ export function useAuth() {
         loading: false,
         error: null,
       });
+    } else if (!error && data.user) {
+      // Email confirmation required — no session yet
+      setState(prev => ({ ...prev, loading: false, error: null }));
     } else {
       setState(prev => ({
         ...prev,
