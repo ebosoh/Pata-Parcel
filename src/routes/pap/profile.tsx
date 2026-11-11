@@ -41,7 +41,7 @@ function PapProfilePage() {
   };
 
   return (
-    <AppShell role="pap_staff">
+    <AppShell role={profile?.role === 'pap_admin' ? 'pap_admin' : 'pap_staff'}>
       <div className="space-y-4 max-w-md mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -49,7 +49,7 @@ interface StaffReceiptWithParcel extends ParcelReceipt {
 }
 
 function PapReceiptsPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const { parcels, uploadReceipt } = usePapOperations(user?.id);
@@ -172,7 +172,7 @@ function PapReceiptsPage() {
   };
 
   return (
-    <AppShell role="pap_staff">
+    <AppShell role={profile?.role === 'pap_admin' ? 'pap_admin' : 'pap_staff'}>
       <div className="space-y-5 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">

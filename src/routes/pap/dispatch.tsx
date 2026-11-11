@@ -50,7 +50,7 @@ export const Route = createFileRoute('/pap/dispatch')({
 });
 
 export function PapDispatchPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const { parcels, loading, error, dispatchParcel, deliverParcel, uploadReceipt, refetch } = usePapOperations(user?.id);
@@ -174,7 +174,7 @@ export function PapDispatchPage() {
   };
 
   return (
-    <AppShell role="pap_staff">
+    <AppShell role={profile?.role === 'pap_admin' ? 'pap_admin' : 'pap_staff'}>
       <div className="space-y-4 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
