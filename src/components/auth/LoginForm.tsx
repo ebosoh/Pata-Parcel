@@ -92,11 +92,14 @@ export function LoginForm({
         return;
       }
       if (onSignUpWithEmail) {
-        await onSignUpWithEmail(email, password, {
+        const { error: signUpError } = await onSignUpWithEmail(email, password, {
           owner_name: ownerName.trim(),
           phone: sellerPhone.trim(),
           business_name: businessName.trim() || undefined,
         });
+        if (!signUpError) {
+          setSignupDone(true);
+        }
       }
     } else {
       if (onSignInWithEmail) {
