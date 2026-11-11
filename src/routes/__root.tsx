@@ -52,9 +52,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
-        {error?.message && (
+        {err.message && (
           <div className="mt-3 p-3 text-left font-mono text-xs text-destructive bg-destructive/10 rounded-lg border border-destructive/20 overflow-x-auto">
-            {error.message}
+            {err.message}
           </div>
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
