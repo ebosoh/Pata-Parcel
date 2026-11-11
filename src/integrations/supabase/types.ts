@@ -298,6 +298,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_list_staff: {
+        Args: never
+        Returns: {
+          email: string
+          owner_name: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
+      admin_remove_staff: { Args: { _user_id: string }; Returns: undefined }
+      admin_set_staff_role: {
+        Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
+        Returns: undefined
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_pap_staff: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {

@@ -1,3 +1,4 @@
+import { StorageImage } from '@/components/shared/StorageImage';
 import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -96,11 +97,7 @@ function SellerProfilePage() {
         throw uploadError;
       }
 
-      const { data: urlData } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(filePath);
-
-      setAvatarUrl(urlData.publicUrl);
+      setAvatarUrl(filePath);
       setSuccessMessage('Photo uploaded! Remember to save profile.');
     } catch (err: any) {
       setErrorMessage(err.message || 'Failed to upload photo');
@@ -196,7 +193,7 @@ function SellerProfilePage() {
             <div className="flex items-center gap-4 pb-3 border-b border-border/60">
               <div className="relative">
                 {avatarUrl ? (
-                  <img
+                  <StorageImage
                     src={avatarUrl}
                     alt="Seller Profile"
                     className="h-16 w-16 rounded-full object-cover border-2 border-primary"

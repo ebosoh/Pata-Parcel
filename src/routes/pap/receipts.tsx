@@ -1,3 +1,4 @@
+import { StorageImage } from '@/components/shared/StorageImage';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -48,7 +49,7 @@ interface StaffReceiptWithParcel extends ParcelReceipt {
 }
 
 function PapReceiptsPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const { parcels, uploadReceipt } = usePapOperations(user?.id);
@@ -171,7 +172,7 @@ function PapReceiptsPage() {
   };
 
   return (
-    <AppShell role="pap_staff">
+    <AppShell role={profile?.role === 'pap_admin' ? 'pap_admin' : 'pap_staff'}>
       <div className="space-y-5 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -312,7 +313,7 @@ function PapReceiptsPage() {
                     className="relative aspect-video w-full bg-muted cursor-pointer overflow-hidden"
                     onClick={() => setPreviewImage(r.receipt_image_url)}
                   >
-                    <img
+                    <StorageImage
                       src={r.receipt_image_url}
                       alt="Receipt"
                       className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -347,7 +348,7 @@ function PapReceiptsPage() {
             onClick={() => setPreviewImage(null)}
           >
             <div className="relative max-w-2xl max-h-[90vh] overflow-hidden rounded-xl bg-card p-2" onClick={e => e.stopPropagation()}>
-              <img
+              <StorageImage
                 src={previewImage}
                 alt="Receipt Preview"
                 className="max-h-[80vh] w-auto mx-auto object-contain rounded-lg"
