@@ -4,6 +4,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/login')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    mode: search.mode === 'signup' ? ('signup' as const) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: 'Sign In — Pata Parcel' },
