@@ -15,6 +15,13 @@
       "when": 1794411399426,
       "tag": "0001_create_parcel_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794411647466,
+      "tag": "0002_admin_staff_management",
+      "breakpoints": true
     }
   ]
 }
