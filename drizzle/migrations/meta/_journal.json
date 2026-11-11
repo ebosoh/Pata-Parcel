@@ -8,6 +8,13 @@
       "when": 1794410647372,
       "tag": "0000_create_profiles_with_signup_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794411399426,
+      "tag": "0001_create_parcel_tables",
+      "breakpoints": true
     }
   ]
 }

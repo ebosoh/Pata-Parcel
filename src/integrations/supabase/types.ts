@@ -14,6 +14,207 @@ export type Database = {
   }
   public: {
     Tables: {
+      complaints: {
+        Row: {
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          destination: string
+          id: string
+          issue_description: string
+          package_type: string
+          parcel_id: string | null
+          resolved_at: string | null
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          destination: string
+          id?: string
+          issue_description: string
+          package_type: string
+          parcel_id?: string | null
+          resolved_at?: string | null
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          destination?: string
+          id?: string
+          issue_description?: string
+          package_type?: string
+          parcel_id?: string | null
+          resolved_at?: string | null
+          seller_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      destinations: {
+        Row: {
+          id: string
+          is_active: boolean
+          name: string
+          region: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          name: string
+          region?: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          name?: string
+          region?: string
+        }
+        Relationships: []
+      }
+      parcel_receipts: {
+        Row: {
+          created_at: string
+          id: string
+          parcel_id: string
+          receipt_image_url: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parcel_id: string
+          receipt_image_url: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parcel_id?: string
+          receipt_image_url?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcel_receipts_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcel_tracking: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          parcel_id: string
+          status: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          parcel_id: string
+          status: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          parcel_id?: string
+          status?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcel_tracking_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcels: {
+        Row: {
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          destination: string
+          id: string
+          num_packages: number
+          package_type: string
+          payment_status: string
+          platform_fee: number
+          platform_fee_paid: boolean
+          psv_sacco: string | null
+          reference_number: string
+          seller_id: string
+          sending_fee_per_package: number
+          sending_method: string
+          total_sending_fee: number
+          tracking_status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          destination: string
+          id?: string
+          num_packages?: number
+          package_type: string
+          payment_status?: string
+          platform_fee?: number
+          platform_fee_paid?: boolean
+          psv_sacco?: string | null
+          reference_number?: string
+          seller_id: string
+          sending_fee_per_package?: number
+          sending_method: string
+          total_sending_fee?: number
+          tracking_status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          destination?: string
+          id?: string
+          num_packages?: number
+          package_type?: string
+          payment_status?: string
+          platform_fee?: number
+          platform_fee_paid?: boolean
+          psv_sacco?: string | null
+          reference_number?: string
+          seller_id?: string
+          sending_fee_per_package?: number
+          sending_method?: string
+          total_sending_fee?: number
+          tracking_status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_name: string | null
@@ -53,15 +254,54 @@ export type Database = {
         }
         Relationships: []
       }
+      saccos: {
+        Row: {
+          id: string
+          is_active: boolean
+          name: string
+          route: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          name: string
+          route?: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          name?: string
+          route?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_pap_staff: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "pap_admin" | "pap_staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -188,6 +428,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["pap_admin", "pap_staff"],
+    },
   },
 } as const
