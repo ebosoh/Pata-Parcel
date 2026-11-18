@@ -64,6 +64,13 @@
       "when": 1795016969652,
       "tag": "0008_unique_buyer_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795017170688,
+      "tag": "0009_allow_repeat_buyer_phone",
+      "breakpoints": true
     }
   ]
 }
