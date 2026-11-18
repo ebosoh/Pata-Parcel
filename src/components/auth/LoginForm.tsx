@@ -12,6 +12,7 @@ interface LoginFormProps {
   onSignUpWithEmail?: (email: string, pass: string, profile: any) => Promise<{ error: { message: string } | null; data: unknown }>;
   loading: boolean;
   error: string | null;
+  initialMode?: 'signin' | 'signup';
 }
 
 export function LoginForm({
@@ -21,9 +22,10 @@ export function LoginForm({
   onSignUpWithEmail,
   loading,
   error,
+  initialMode = 'signin',
 }: LoginFormProps) {
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>('phone');
-  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>('signin');
+  const [authMethod] = useState<'phone' | 'email'>('email');
+  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>(initialMode);
 
   // Phone state
   const [phone, setPhone] = useState('');
@@ -38,6 +40,7 @@ export function LoginForm({
   const [sellerPhone, setSellerPhone] = useState('');
 
   const [localError, setLocalError] = useState<string | null>(null);
+  const [signupDone, setSignupDone] = useState(false);
 
   // Phone submit
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -89,11 +92,14 @@ export function LoginForm({
         return;
       }
       if (onSignUpWithEmail) {
-        await onSignUpWithEmail(email, password, {
+        const { error: signUpError } = await onSignUpWithEmail(email, password, {
           owner_name: ownerName.trim(),
           phone: sellerPhone.trim(),
           business_name: businessName.trim() || undefined,
         });
+        if (!signUpError) {
+          setSignupDone(true);
+        }
       }
     } else {
       if (onSignInWithEmail) {
@@ -119,40 +125,6 @@ export function LoginForm({
 
       {/* Login Card */}
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
-        {/* Auth Method Tabs */}
-        <div className="flex rounded-lg bg-muted p-1 mb-5">
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMethod('phone');
-              setLocalError(null);
-            }}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-all ${
-              authMethod === 'phone'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Phone SMS
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMethod('email');
-              setLocalError(null);
-            }}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-all ${
-              authMethod === 'email'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Email Login
-          </button>
-        </div>
-
         {displayError && (
           <div className="mb-4 text-xs text-destructive bg-destructive/10 p-2.5 rounded-lg border border-destructive/20">
             {displayError}
@@ -251,7 +223,31 @@ export function LoginForm({
         )}
 
         {/* 2. Email / Password Flow */}
-        {authMethod === 'email' && (
+        {authMethod === 'email' && signupDone && (
+          <div className="text-center space-y-3 py-2">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary/30">
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-sm font-bold text-foreground">Check your email</h2>
+            <p className="text-xs text-muted-foreground">
+              We sent a confirmation link to <span className="font-semibold text-foreground">{email}</span>.
+              Click it to activate your account, then come back and sign in.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full text-xs font-semibold"
+              onClick={() => {
+                setSignupDone(false);
+                setEmailMode('signin');
+                setPassword('');
+              }}
+            >
+              Back to Sign In
+            </Button>
+          </div>
+        )}
+        {authMethod === 'email' && !signupDone && (
           <form onSubmit={handleEmailAuth} className="space-y-3.5">
             {emailMode === 'signup' && (
               <>

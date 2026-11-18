@@ -226,12 +226,8 @@ export function usePapOperations(staffUserId?: string | null) {
 
       if (uploadErr) throw uploadErr;
 
-      // 2. Retrieve public URL
-      const { data: urlData } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(filePath);
-
-      const publicUrl = urlData.publicUrl;
+      // 2. Save the private file path; images are shown via signed links
+      const publicUrl = filePath;
 
       // 3. Insert record into parcel_receipts
       const { data: receiptRecord, error: insertErr } = await supabase

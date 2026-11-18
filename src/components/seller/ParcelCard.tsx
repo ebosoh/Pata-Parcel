@@ -100,9 +100,9 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
       {/* Main Info */}
       <div className="p-4 space-y-3">
         {/* Buyer & Destination */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-0.5">
-            <h3 className="font-semibold text-base text-foreground leading-snug">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 space-y-0.5">
+            <h3 className="truncate font-semibold text-base text-foreground leading-snug">
               {parcel.buyer_name}
             </h3>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -121,9 +121,9 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
           </div>
 
           {/* Destination Badge */}
-          <div className="flex items-center gap-1 bg-secondary/30 text-foreground px-2.5 py-1 rounded-full text-xs font-semibold">
+          <div className="flex shrink-0 items-center gap-1 bg-secondary/30 text-foreground px-2.5 py-1 rounded-full text-xs font-semibold">
             <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span>{parcel.destination}</span>
+            <span className="max-w-[7rem] truncate">{parcel.destination}</span>
           </div>
         </div>
 

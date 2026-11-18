@@ -1,3 +1,4 @@
+import { StorageImage } from '@/components/shared/StorageImage';
 import { useState, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -137,7 +138,7 @@ function SellerReceiptsPage() {
         </div>
 
         {/* Date Filter */}
-        <div className="flex items-center gap-2 bg-card p-3 rounded-xl border border-border/80">
+        <div className="flex flex-wrap items-center gap-2 bg-card p-3 rounded-xl border border-border/80">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <Label htmlFor="receipt_date" className="text-xs font-medium shrink-0">
             Filter by Date:
@@ -147,7 +148,7 @@ function SellerReceiptsPage() {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="h-8 text-xs max-w-[180px]"
+            className="h-8 min-w-0 flex-1 text-xs sm:max-w-[180px]"
           />
           {selectedDate && (
             <Button
@@ -186,7 +187,7 @@ function SellerReceiptsPage() {
                   className="relative aspect-video w-full bg-muted cursor-pointer overflow-hidden"
                   onClick={() => setPreviewImage(r.receipt_image_url)}
                 >
-                  <img
+                  <StorageImage
                     src={r.receipt_image_url}
                     alt="Receipt"
                     className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -225,7 +226,7 @@ function SellerReceiptsPage() {
             onClick={() => setPreviewImage(null)}
           >
             <div className="relative max-w-2xl max-h-[90vh] overflow-hidden rounded-xl bg-card p-2" onClick={e => e.stopPropagation()}>
-              <img
+              <StorageImage
                 src={previewImage}
                 alt="Receipt Preview"
                 className="max-h-[80vh] w-auto mx-auto object-contain rounded-lg"

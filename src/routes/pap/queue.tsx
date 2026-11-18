@@ -124,10 +124,10 @@ function PapQueuePage() {
     <AppShell role="pap_staff">
       <div className="space-y-4 max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold text-foreground flex items-center gap-2">
+              <Inbox className="h-5 w-5 shrink-0 text-primary" />
               Incoming Parcels Queue
             </h1>
             <p className="text-xs text-muted-foreground">
@@ -140,7 +140,7 @@ function PapQueuePage() {
             aria-label="Refresh list"
             onClick={refetch}
             disabled={loading}
-            className="h-9 w-9"
+            className="h-9 w-9 shrink-0"
             title="Refresh queue"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-primary' : ''}`} />

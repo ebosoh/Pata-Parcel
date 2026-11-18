@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
 import { Route as PapProfileRouteImport } from './routes/pap/profile'
 import { Route as PapQueueRouteImport } from './routes/pap/queue'
@@ -28,6 +30,16 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStatsRoute = AdminStatsRouteImport.update({
+  id: '/admin/stats',
+  path: '/admin/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PapDispatchRoute = PapDispatchRouteImport.update({
@@ -74,6 +86,8 @@ const SellerReceiptsRoute = SellerReceiptsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
@@ -86,6 +100,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
@@ -99,6 +115,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
@@ -113,6 +131,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/admin/dashboard'
+    | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
@@ -125,6 +145,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/dashboard'
+    | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
@@ -137,6 +159,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/admin/dashboard'
+    | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
@@ -150,6 +174,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminStatsRoute: typeof AdminStatsRoute
   PapDispatchRoute: typeof PapDispatchRoute
   PapProfileRoute: typeof PapProfileRoute
   PapQueueRoute: typeof PapQueueRoute
@@ -174,6 +200,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/stats': {
+      id: '/admin/stats'
+      path: '/admin/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pap/dispatch': {
@@ -238,6 +278,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
+  AdminStatsRoute: AdminStatsRoute,
   PapDispatchRoute: PapDispatchRoute,
   PapProfileRoute: PapProfileRoute,
   PapQueueRoute: PapQueueRoute,
