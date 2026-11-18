@@ -39,6 +39,9 @@ import {
 import { formatPhoneDisplay } from '@/lib/constants';
 
 export const Route = createFileRoute('/pap/dispatch')({
+  validateSearch: (s: Record<string, unknown>): { tab?: 'transit' | 'sorting' | undefined } => ({
+    tab: s['tab'] === 'transit' || s['tab'] === 'sorting' ? s['tab'] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: 'Sorting & Dispatch — Pata Parcel Operations Hub' },
@@ -62,6 +65,8 @@ export function PapDispatchPage() {
 
   // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit)
   const [activeTab, setActiveTab] = useState<'sorting' | 'transit'>('sorting');
+  const { tab: tabParam } = Route.useSearch();
+  useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Dispatch Modal state
