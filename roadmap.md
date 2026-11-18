@@ -1,9 +1,10 @@
 # Roadmap
 
 ## Open
-- Colour the bottom nav bar (Dispatch / Receipts / Issues / Profile) like the header banner, with labels and icons clearly readable on it. Verify at phone width for seller, staff and admin (7 items).
+- (none)
 
 ## Done
+- Bottom bar (Dispatch / Receipts / Issues / Profile) now uses the header's green banner with a yellow top edge; unselected labels are solid white, the selected one is yellow. Checked at phone width with all 7 admin items — nothing clipped or blending in.
 - Platform fee raised to KES 15/package.
 - Dispatch form: pkg count and fee-per-pkg defaults are deletable placeholders.
 - Pending-receipts red banner for staff/admin.
