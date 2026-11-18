@@ -36,6 +36,13 @@
       "when": 1794992081342,
       "tag": "0004_scope_receipt_storage_access",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795000000000,
+      "tag": "0005_add_pick_point_to_parcels",
+      "breakpoints": true
     }
   ]
 }

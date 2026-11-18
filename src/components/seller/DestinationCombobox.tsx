@@ -9,6 +9,7 @@ interface DestinationComboboxProps {
   value: string;
   onChange: (value: string) => void;
   destinations?: Destination[];
+  options?: readonly string[] | string[];
   placeholder?: string;
   id?: string;
   required?: boolean;
@@ -19,6 +20,7 @@ export function DestinationCombobox({
   value,
   onChange,
   destinations = [],
+  options,
   placeholder = 'Type destination town (e.g. Mombasa, Nakuru)...',
   id = 'destination',
   required = false,
@@ -36,8 +38,11 @@ export function DestinationCombobox({
     setQuery(value || '');
   }, [value]);
 
-  // Combine database destinations with constants to ensure completeness
+  // Combine database destinations with constants or custom options
   const allTowns = useMemo(() => {
+    if (options && options.length > 0) {
+      return Array.from(new Set(options));
+    }
     const set = new Set<string>();
     // Add destinations from DB if any
     destinations.forEach((d) => {
@@ -46,7 +51,7 @@ export function DestinationCombobox({
     // Add all 149 standard towns + Nairobi
     DESTINATION_TOWNS.forEach((t) => set.add(t));
     return Array.from(set);
-  }, [destinations]);
+  }, [destinations, options]);
 
   // Filtered options based on user typing
   const filteredTowns = useMemo(() => {
@@ -131,6 +136,12 @@ export function DestinationCombobox({
     inputRef.current?.focus();
   };
 
+  const countLabel = options
+    ? filteredTowns.length === 1 ? 'location' : 'locations'
+    : filteredTowns.length === 1 ? 'town' : 'towns';
+
+  const defaultHeader = options ? 'All Pick-Points' : 'All Destination Towns';
+
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
       <div className="relative flex items-center">
@@ -177,7 +188,7 @@ export function DestinationCombobox({
               inputRef.current?.focus();
             }}
             className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
-            title="Toggle destination list"
+            title="Toggle list"
           >
             <ChevronsUpDown className="h-4 w-4" />
           </button>
@@ -188,12 +199,12 @@ export function DestinationCombobox({
       {isOpen && (
         <div className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-border/80 bg-popover text-popover-foreground shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
           <div className="px-3 py-1.5 bg-muted/50 border-b border-border/60 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Search className="h-3 w-3" />
-              {query ? `Filtering for "${query}"` : 'All Destination Towns'}
+            <span className="flex items-center gap-1 truncate max-w-[70%]">
+              <Search className="h-3 w-3 shrink-0" />
+              <span className="truncate">{query ? `Filtering for "${query}"` : defaultHeader}</span>
             </span>
-            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold">
-              {filteredTowns.length} {filteredTowns.length === 1 ? 'town' : 'towns'}
+            <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0">
+              {filteredTowns.length} {countLabel}
             </span>
           </div>
 
@@ -218,13 +229,13 @@ export function DestinationCombobox({
                       isSelected && 'bg-primary/10 text-primary font-bold'
                     )}
                   >
-                    <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-2 truncate">
                       <MapPin className={cn('h-3.5 w-3.5 shrink-0', isSelected ? 'text-primary' : 'text-muted-foreground')} />
-                      <span>{town}</span>
+                      <span className="truncate">{town}</span>
                     </span>
 
                     {isSelected && (
-                      <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0 ml-2" />
                     )}
                   </button>
                 );
@@ -232,7 +243,7 @@ export function DestinationCombobox({
             ) : (
               <div className="p-3 text-center space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  No predefined destination found matching &ldquo;{query}&rdquo;
+                  No predefined location found matching &ldquo;{query}&rdquo;
                 </p>
                 {query.trim() && (
                   <button

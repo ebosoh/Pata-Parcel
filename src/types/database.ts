@@ -61,6 +61,7 @@ export type Database = {
           destination: string;
           sending_method: SendingMethod;
           psv_sacco: string | null;
+          pick_point?: string | null;
           package_type: string;
           num_packages: number;
           sending_fee_per_package: number;
@@ -81,6 +82,7 @@ export type Database = {
           destination: string;
           sending_method: SendingMethod;
           psv_sacco?: string | null;
+          pick_point?: string | null;
           package_type: string;
           num_packages?: number;
           sending_fee_per_package: number;
@@ -101,6 +103,7 @@ export type Database = {
           destination?: string;
           sending_method?: SendingMethod;
           psv_sacco?: string | null;
+          pick_point?: string | null;
           package_type?: string;
           num_packages?: number;
           sending_fee_per_package?: number;

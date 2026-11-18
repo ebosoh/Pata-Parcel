@@ -8,6 +8,7 @@ export interface CreateParcelInput {
   destination: string;
   sending_method: SendingMethod;
   psv_sacco?: string | null;
+  pick_point?: string | null;
   package_type: string;
   num_packages: number;
   sending_fee_per_package: number;
@@ -118,23 +119,41 @@ export function useParcels(sellerId?: string | null) {
       const calculatedTotal = input.num_packages * input.sending_fee_per_package;
       const platformFee = input.num_packages * 10;
 
-      const { data, error: insertErr } = await supabase
+      const insertPayload: Record<string, any> = {
+        seller_id: sellerId,
+        buyer_name: input.buyer_name.trim(),
+        buyer_phone: input.buyer_phone.trim(),
+        destination: input.destination,
+        sending_method: input.sending_method,
+        psv_sacco: input.sending_method === 'psv' ? (input.psv_sacco || null) : null,
+        pick_point: input.sending_method === 'door_to_door' ? (input.pick_point || null) : null,
+        package_type: input.package_type,
+        num_packages: input.num_packages,
+        sending_fee_per_package: input.sending_fee_per_package,
+        payment_status: input.payment_status,
+        tracking_status: 'dispatched_to_pap' as TrackingStatus,
+      };
+
+      let { data, error: insertErr } = await supabase
         .from('parcels')
-        .insert({
-          seller_id: sellerId,
-          buyer_name: input.buyer_name.trim(),
-          buyer_phone: input.buyer_phone.trim(),
-          destination: input.destination,
-          sending_method: input.sending_method,
-          psv_sacco: input.sending_method === 'psv' ? (input.psv_sacco || null) : null,
-          package_type: input.package_type,
-          num_packages: input.num_packages,
-          sending_fee_per_package: input.sending_fee_per_package,
-          payment_status: input.payment_status,
-          tracking_status: 'dispatched_to_pap' as TrackingStatus,
-        } as any)
+        .insert(insertPayload as any)
         .select()
         .single();
+
+      // Graceful fallback if remote database column 'pick_point' is not yet migrated
+      if (insertErr && (insertErr.message?.includes('pick_point') || (insertErr as any).code === '42703')) {
+        delete insertPayload.pick_point;
+        if (input.pick_point && !insertPayload.destination.includes(input.pick_point)) {
+          insertPayload.destination = `${insertPayload.destination} - ${input.pick_point}`;
+        }
+        const retryResult = await supabase
+          .from('parcels')
+          .insert(insertPayload as any)
+          .select()
+          .single();
+        data = retryResult.data;
+        insertErr = retryResult.error;
+      }
 
       if (insertErr) {
         return { data: null, error: insertErr };
@@ -142,11 +161,15 @@ export function useParcels(sellerId?: string | null) {
 
       // Add initial tracking entry
       if (data?.id) {
+        const trackingNotes = input.sending_method === 'door_to_door' && input.pick_point
+          ? `Parcel dispatched by seller to Pata Parcel (Door-to-Door, Pick-Point: ${input.pick_point})`
+          : 'Parcel dispatched by seller to Pata Parcel';
+
         await supabase.from('parcel_tracking').insert({
           parcel_id: data.id,
           status: 'dispatched_to_pap' as TrackingStatus,
           updated_by: sellerId,
-          notes: 'Parcel dispatched by seller to Pata Parcel',
+          notes: trackingNotes,
         } as any);
       }
 

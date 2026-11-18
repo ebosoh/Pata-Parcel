@@ -6,7 +6,8 @@ import {
   PACKAGE_TYPES, 
   SENDING_METHODS, 
   isValidKenyanPhone, 
-  PLATFORM_FEE_PER_PACKAGE 
+  PLATFORM_FEE_PER_PACKAGE,
+  NAIROBI_PICK_POINTS
 } from '@/lib/constants';
 import type { SendingMethod, PaymentStatus, Destination, Sacco } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
@@ -34,6 +35,7 @@ export function DispatchForm({
   const [destination, setDestination] = useState('');
   const [sendingMethod, setSendingMethod] = useState<SendingMethod>('pickup_mtaani');
   const [psvSacco, setPsvSacco] = useState('');
+  const [pickPoint, setPickPoint] = useState('');
   const [packageType, setPackageType] = useState<string>(PACKAGE_TYPES[0]);
   const [customPackageType, setCustomPackageType] = useState('');
   const [numPackages, setNumPackages] = useState<number>(1);
@@ -83,6 +85,11 @@ export function DispatchForm({
       return;
     }
 
+    if (sendingMethod === 'door_to_door' && !pickPoint.trim()) {
+      setFormError('Please select or type a Pick-Point for Door to Door delivery');
+      return;
+    }
+
     const finalPackageType = packageType === 'Other' && customPackageType.trim()
       ? customPackageType.trim()
       : packageType;
@@ -95,6 +102,7 @@ export function DispatchForm({
       destination,
       sending_method: sendingMethod,
       psv_sacco: sendingMethod === 'psv' ? psvSacco : null,
+      pick_point: sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
       num_packages: Math.max(1, numPackages),
       sending_fee_per_package: Math.max(0, sendingFeePerPackage),
@@ -110,6 +118,7 @@ export function DispatchForm({
       setBuyerName('');
       setBuyerPhone('');
       setDestination('');
+      setPickPoint('');
       setNumPackages(1);
       if (onSuccess) onSuccess();
     }
@@ -225,6 +234,26 @@ export function DispatchForm({
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {/* Pick-Point selector for Door to Door */}
+        {sendingMethod === 'door_to_door' && (
+          <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
+            <Label htmlFor="pick_point" className="text-xs font-medium text-primary">
+              Pick-Point (Within Nairobi) *
+            </Label>
+            <DestinationCombobox
+              id="pick_point"
+              value={pickPoint}
+              onChange={setPickPoint}
+              options={NAIROBI_PICK_POINTS}
+              placeholder="Type pick-point (e.g. Westlands, Kasarani)..."
+              required
+            />
+            <p className="text-[11px] text-muted-foreground">
+              The Nairobi location where the rider will collect or deliver the parcel.
+            </p>
           </div>
         )}
       </div>
