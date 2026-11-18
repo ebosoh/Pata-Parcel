@@ -19,6 +19,7 @@ const PAP_STAFF_NAV: NavItem[] = [
   { to: '/pap/queue', label: 'Queue', icon: Inbox },
   { to: '/pap/dispatch', label: 'Dispatch', icon: Package },
   { to: '/pap/receipts', label: 'Receipts', icon: FileText },
+  { to: '/pap/issues', label: 'Issues', icon: AlertCircle },
   { to: '/pap/profile', label: 'Profile', icon: User },
 ];
 
@@ -28,6 +29,7 @@ const PAP_ADMIN_NAV: NavItem[] = [
   { to: '/pap/queue', label: 'Queue', icon: Inbox },
   { to: '/pap/dispatch', label: 'Dispatch', icon: Package },
   { to: '/pap/receipts', label: 'Receipts', icon: FileText },
+  { to: '/pap/issues', label: 'Issues', icon: AlertCircle },
 ];
 
 function getNavItems(role: UserRole | null): NavItem[] {
@@ -63,7 +65,7 @@ export function BottomNav({ role }: BottomNavProps) {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium transition-colors ${
+              className={`flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium transition-colors ${
                 isActive
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'

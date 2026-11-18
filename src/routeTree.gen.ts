@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
+import { Route as PapIssuesRouteImport } from './routes/pap/issues'
 import { Route as PapProfileRouteImport } from './routes/pap/profile'
 import { Route as PapQueueRouteImport } from './routes/pap/queue'
 import { Route as PapReceiptsRouteImport } from './routes/pap/receipts'
@@ -45,6 +46,11 @@ const AdminStatsRoute = AdminStatsRouteImport.update({
 const PapDispatchRoute = PapDispatchRouteImport.update({
   id: '/pap/dispatch',
   path: '/pap/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PapIssuesRoute = PapIssuesRouteImport.update({
+  id: '/pap/issues',
+  path: '/pap/issues',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PapProfileRoute = PapProfileRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
+  '/pap/issues': typeof PapIssuesRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
   '/pap/receipts': typeof PapReceiptsRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
+  '/pap/issues': typeof PapIssuesRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
   '/pap/receipts': typeof PapReceiptsRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
+  '/pap/issues': typeof PapIssuesRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
   '/pap/receipts': typeof PapReceiptsRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/stats'
     | '/pap/dispatch'
+    | '/pap/issues'
     | '/pap/profile'
     | '/pap/queue'
     | '/pap/receipts'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/stats'
     | '/pap/dispatch'
+    | '/pap/issues'
     | '/pap/profile'
     | '/pap/queue'
     | '/pap/receipts'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/stats'
     | '/pap/dispatch'
+    | '/pap/issues'
     | '/pap/profile'
     | '/pap/queue'
     | '/pap/receipts'
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminStatsRoute: typeof AdminStatsRoute
   PapDispatchRoute: typeof PapDispatchRoute
+  PapIssuesRoute: typeof PapIssuesRoute
   PapProfileRoute: typeof PapProfileRoute
   PapQueueRoute: typeof PapQueueRoute
   PapReceiptsRoute: typeof PapReceiptsRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/pap/dispatch'
       fullPath: '/pap/dispatch'
       preLoaderRoute: typeof PapDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pap/issues': {
+      id: '/pap/issues'
+      path: '/pap/issues'
+      fullPath: '/pap/issues'
+      preLoaderRoute: typeof PapIssuesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pap/profile': {
@@ -281,6 +301,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminStatsRoute: AdminStatsRoute,
   PapDispatchRoute: PapDispatchRoute,
+  PapIssuesRoute: PapIssuesRoute,
   PapProfileRoute: PapProfileRoute,
   PapQueueRoute: PapQueueRoute,
   PapReceiptsRoute: PapReceiptsRoute,
