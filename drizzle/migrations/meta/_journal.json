@@ -29,6 +29,13 @@
       "when": 1794412152388,
       "tag": "0003_update_super_admin_email",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794992081342,
+      "tag": "0004_scope_receipt_storage_access",
+      "breakpoints": true
     }
   ]
 }
