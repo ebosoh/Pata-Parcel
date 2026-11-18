@@ -1,4 +1,5 @@
 import { StorageImage } from '@/components/shared/StorageImage';
+import { ReceiptScanner } from '@/components/shared/ReceiptScanner';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -246,32 +247,8 @@ function PapReceiptsPage() {
 
             {/* Photo Capture / Select */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Receipt Photo *</Label>
-              <div className="flex items-center gap-3">
-                <Label htmlFor="staff-rcpt-input" className="cursor-pointer flex-1">
-                  <div className="border-2 border-dashed border-primary/40 rounded-xl p-4 text-center hover:bg-primary/5 transition-colors">
-                    <Camera className="h-6 w-6 mx-auto text-primary mb-1" />
-                    <span className="text-xs font-semibold text-primary block">
-                      {receiptFile ? receiptFile.name : 'Take Photo or Browse Gallery'}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">Tap to activate phone camera</span>
-                  </div>
-                </Label>
-                <input
-                  id="staff-rcpt-input"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-
-                {previewLocalUrl && (
-                  <div className="h-16 w-16 rounded-xl overflow-hidden border border-border shrink-0">
-                    <img src={previewLocalUrl} alt="Preview" className="h-full w-full object-cover" />
-                  </div>
-                )}
-              </div>
+              <Label className="text-xs font-semibold">Receipt Scan *</Label>
+              <ReceiptScanner file={receiptFile} onChange={(f, url) => { setReceiptFile(f); setPreviewLocalUrl(url); }} />
             </div>
 
             <Button
@@ -280,7 +257,7 @@ function PapReceiptsPage() {
               className="w-full h-10 text-xs font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
             >
               {uploading ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading to Supabase Storage...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
               ) : (
                 <><CheckCircle2 className="mr-2 h-4 w-4" /> Upload & Share with Seller</>
               )}

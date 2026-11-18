@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
+import { ReceiptScanner } from '@/components/shared/ReceiptScanner';
 import { useAuth } from '@/hooks/useAuth';
 import { usePapOperations, type PapDispatchType, type DispatchOptions } from '@/hooks/usePapOperations';
 import { Card } from '@/components/ui/card';
@@ -539,29 +540,10 @@ export function PapDispatchPage() {
 
             <form onSubmit={handleUploadReceiptSubmit} className="space-y-3.5 pt-2">
               <p className="text-xs text-muted-foreground">
-                Photograph the official courier or SACCO receipt so the online seller can verify proof of dispatch.
+                Scan the official courier or SACCO receipt so the online seller can verify proof of dispatch.
               </p>
 
-              <div className="space-y-2">
-                <Label htmlFor="modal-rcpt-file" className="block cursor-pointer">
-                  <div className="border-2 border-dashed border-primary/40 rounded-xl p-4 text-center hover:bg-primary/5 transition-colors">
-                    <Camera className="h-8 w-8 mx-auto text-primary mb-2" />
-                    <span className="text-xs font-semibold text-primary block">
-                      {receiptFile ? receiptFile.name : 'Take Photo or Choose File'}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">JPG, PNG supported</span>
-                  </div>
-                </Label>
-                <input
-                  id="modal-rcpt-file"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
-                  required
-                  className="hidden"
-                />
-              </div>
+              <ReceiptScanner file={receiptFile} onChange={(f) => setReceiptFile(f)} />
 
               <div className="flex gap-2 pt-2">
                 <Button

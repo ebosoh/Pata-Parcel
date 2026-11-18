@@ -24,7 +24,7 @@ export function LoginForm({
   error,
   initialMode = 'signin',
 }: LoginFormProps) {
-  const [authMethod, setAuthMethod] = useState<'phone' | 'email'>(initialMode === 'signup' ? 'email' : 'phone');
+  const [authMethod] = useState<'phone' | 'email'>('email');
   const [emailMode, setEmailMode] = useState<'signin' | 'signup'>(initialMode);
 
   // Phone state
@@ -125,40 +125,6 @@ export function LoginForm({
 
       {/* Login Card */}
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
-        {/* Auth Method Tabs */}
-        <div className="flex rounded-lg bg-muted p-1 mb-5">
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMethod('phone');
-              setLocalError(null);
-            }}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-all ${
-              authMethod === 'phone'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Phone SMS
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMethod('email');
-              setLocalError(null);
-            }}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-md flex items-center justify-center gap-1.5 transition-all ${
-              authMethod === 'email'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Email Login
-          </button>
-        </div>
-
         {displayError && (
           <div className="mb-4 text-xs text-destructive bg-destructive/10 p-2.5 rounded-lg border border-destructive/20">
             {displayError}
