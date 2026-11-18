@@ -2,7 +2,6 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Package, Truck, Shield, Zap, ArrowRight, Store, Inbox } from 'lucide-react';
 import { InstallPrompt } from '@/components/shared/InstallPrompt';
-import { Footer } from '@/components/layout/Footer';
 
 export const Route = createFileRoute('/')({
   head: () => ({
@@ -127,7 +126,11 @@ function LandingPage() {
       </section>
 
       {/* Footer */}
-      <Footer />
+      <footer className="border-t border-border px-6 py-4 text-center">
+        <p className="text-[11px] text-muted-foreground">
+          © {new Date().getFullYear()} Pata Parcel Kenya. Delivering Trust, Every Time.
+        </p>
+      </footer>
 
       {/* PWA Install Prompt */}
       <InstallPrompt />
