@@ -33,6 +33,24 @@ export function usePapOperations(staffUserId?: string | null) {
   const [parcels, setParcels] = useState<ParcelWithSeller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Latest shared receipt per parcel (parcel_id -> receipt)
+  const [receiptsByParcel, setReceiptsByParcel] = useState<Record<string, ParcelReceipt>>({});
+
+  // Fetch every receipt shared so far, keeping the newest one per parcel
+  const fetchReceipts = useCallback(async () => {
+    const { data, error: rErr } = await supabase
+      .from('parcel_receipts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (rErr) return;
+
+    const map: Record<string, ParcelReceipt> = {};
+    (data || []).forEach(r => {
+      if (!map[r.parcel_id]) map[r.parcel_id] = r;
+    });
+    setReceiptsByParcel(map);
+  }, []);
 
   // Fetch all parcels with seller details
   const fetchParcels = useCallback(async () => {
@@ -79,6 +97,7 @@ export function usePapOperations(staffUserId?: string | null) {
   // Realtime subscription
   useEffect(() => {
     fetchParcels();
+    fetchReceipts();
 
     const channel = supabase
       .channel('pap_operations_parcels')
@@ -89,12 +108,19 @@ export function usePapOperations(staffUserId?: string | null) {
           fetchParcels();
         }
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'parcel_receipts' },
+        () => {
+          fetchReceipts();
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchParcels]);
+  }, [fetchParcels, fetchReceipts]);
 
   // Batch or single receive parcels into "sorting"
   const receiveParcels = useCallback(async (parcelIds: string[]) => {
@@ -242,16 +268,18 @@ export function usePapOperations(staffUserId?: string | null) {
 
       if (insertErr) throw insertErr;
 
+      await fetchReceipts();
       return { data: receiptRecord as ParcelReceipt, error: null };
     } catch (err: any) {
       return { data: null, error: err };
     }
-  }, [staffUserId]);
+  }, [staffUserId, fetchReceipts]);
 
   return {
     parcels,
     loading,
     error,
+    receiptsByParcel,
     receiveParcels,
     dispatchParcel,
     deliverParcel,

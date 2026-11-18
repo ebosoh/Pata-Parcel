@@ -1,4 +1,5 @@
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { StorageImage } from '@/components/shared/StorageImage';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useState, useMemo, useEffect } from 'react';
@@ -57,7 +58,7 @@ export function PapDispatchPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const { parcels, loading, error, dispatchParcel, deliverParcel, uploadReceipt, refetch } = usePapOperations(user?.id);
+  const { parcels, loading, error, dispatchParcel, deliverParcel, uploadReceipt, receiptsByParcel, refetch } = usePapOperations(user?.id);
 
   // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit)
   const [activeTab, setActiveTab] = useState<'sorting' | 'transit'>('sorting');
@@ -99,6 +100,11 @@ export function PapDispatchPage() {
   const transitParcels = useMemo(() => {
     return parcels.filter(p => p.tracking_status === 'on_transit');
   }, [parcels]);
+
+  // Receipt already shared for the parcel open in the receipt modal, if any
+  const receiptModalExisting = receiptModalParcel
+    ? receiptsByParcel[receiptModalParcel.id]
+    : undefined;
 
   const displayList = useMemo(() => {
     const list = activeTab === 'sorting' ? sortingParcels : transitParcels;
@@ -331,15 +337,41 @@ export function PapDispatchPage() {
                       Dispatch Parcel
                     </Button>
                   ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
-                      disabled={submitting}
-                      className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
-                    >
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      Confirm Delivered
-                    </Button>
+                    <>
+                      {parcel.sending_method === 'psv' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setReceiptModalParcel(parcel)}
+                          className={`h-8 font-bold text-xs flex items-center gap-1.5 ${
+                            receiptsByParcel[parcel.id]
+                              ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300'
+                              : 'border-primary/40 text-primary hover:bg-primary/5'
+                          }`}
+                        >
+                          {receiptsByParcel[parcel.id] ? (
+                            <>
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Receipt Shared
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="h-3.5 w-3.5" />
+                              Share Receipt
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
+                        disabled={submitting}
+                        className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
+                      >
+                        <CheckCircle className="h-3.5 w-3.5" />
+                        Confirm Delivered
+                      </Button>
+                    </>
                   )}
                 </div>
               </Card>
@@ -539,12 +571,20 @@ export function PapDispatchPage() {
         </Dialog>
 
         {/* 2. Modal: Prompt to Upload Receipt Photo */}
-        <Dialog open={!!receiptModalParcel} onOpenChange={(open) => !open && setReceiptModalParcel(null)}>
+        <Dialog
+          open={!!receiptModalParcel}
+          onOpenChange={(open) => {
+            if (!open) {
+              setReceiptModalParcel(null);
+              setReceiptFile(null);
+            }
+          }}
+        >
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle className="text-base font-bold text-primary flex items-center gap-2">
                 <Camera className="h-5 w-5" />
-                Upload Receipt for {receiptModalParcel?.reference_number}
+                Share Receipt for {receiptModalParcel?.reference_number}
               </DialogTitle>
             </DialogHeader>
 
@@ -552,6 +592,24 @@ export function PapDispatchPage() {
               <p className="text-xs text-muted-foreground">
                 Scan the official courier or SACCO receipt so the online seller can verify proof of dispatch.
               </p>
+
+              {receiptModalExisting && (
+                <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2 dark:border-emerald-900 dark:bg-emerald-950/40">
+                  <StorageImage
+                    src={receiptModalExisting.receipt_image_url}
+                    alt="Receipt already shared"
+                    className="h-16 w-14 shrink-0 rounded-md border border-border object-contain"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      Receipt already shared
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(receiptModalExisting.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <ReceiptScanner file={receiptFile} onChange={(f) => setReceiptFile(f)} />
 
@@ -571,6 +629,8 @@ export function PapDispatchPage() {
                 >
                   {uploadingReceipt ? (
                     <><Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Uploading...</>
+                  ) : receiptModalExisting ? (
+                    'Share Another Receipt'
                   ) : (
                     'Upload & Share'
                   )}
