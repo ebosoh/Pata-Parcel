@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
 import { Route as PapProfileRouteImport } from './routes/pap/profile'
 import { Route as PapQueueRouteImport } from './routes/pap/queue'
@@ -34,6 +35,11 @@ const LoginRoute = LoginRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStatsRoute = AdminStatsRouteImport.update({
+  id: '/admin/stats',
+  path: '/admin/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PapDispatchRoute = PapDispatchRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/profile': typeof PapProfileRoute
   '/pap/queue': typeof PapQueueRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/dashboard'
+    | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/dashboard'
+    | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/dashboard'
+    | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/profile'
     | '/pap/queue'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminStatsRoute: typeof AdminStatsRoute
   PapDispatchRoute: typeof PapDispatchRoute
   PapProfileRoute: typeof PapProfileRoute
   PapQueueRoute: typeof PapQueueRoute
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/dashboard'
       fullPath: '/admin/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/stats': {
+      id: '/admin/stats'
+      path: '/admin/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pap/dispatch': {
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminStatsRoute: AdminStatsRoute,
   PapDispatchRoute: PapDispatchRoute,
   PapProfileRoute: PapProfileRoute,
   PapQueueRoute: PapQueueRoute,

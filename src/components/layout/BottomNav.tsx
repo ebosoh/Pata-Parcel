@@ -1,5 +1,5 @@
 import { useLocation, Link } from '@tanstack/react-router';
-import { Package, FileText, AlertCircle, LayoutDashboard, User, Inbox } from 'lucide-react';
+import { BarChart3, Package, FileText, AlertCircle, LayoutDashboard, User, Inbox } from 'lucide-react';
 import type { UserRole } from '@/types/database';
 
 interface NavItem {
@@ -23,6 +23,7 @@ const PAP_STAFF_NAV: NavItem[] = [
 ];
 
 const PAP_ADMIN_NAV: NavItem[] = [
+  { to: '/admin/stats', label: 'Stats', icon: BarChart3 },
   { to: '/admin/dashboard', label: 'Staff', icon: LayoutDashboard },
   { to: '/pap/queue', label: 'Queue', icon: Inbox },
   { to: '/pap/dispatch', label: 'Dispatch', icon: Package },

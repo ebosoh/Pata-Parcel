@@ -12,7 +12,7 @@ interface AppShellProps {
 }
 
 const ADMIN_AREAS = [
-  { to: '/admin/dashboard', prefix: '/admin', label: 'Admin' },
+  { to: '/admin/stats', prefix: '/admin', label: 'Admin' },
   { to: '/pap/queue', prefix: '/pap', label: 'Staff' },
   { to: '/seller/dispatch', prefix: '/seller', label: 'Seller' },
 ] as const;
@@ -48,14 +48,14 @@ function AdminAreaSwitcher() {
 export function AppShell({ children, role, showNav = true }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header />
+      <div className="print:hidden"><Header /></div>
       <main className="flex-1 pb-20">
         <div className="mx-auto max-w-7xl px-4 py-4">
-          <AdminAreaSwitcher />
+          <div className="print:hidden"><AdminAreaSwitcher /></div>
           {children}
         </div>
       </main>
-      {showNav && <BottomNav role={role} />}
+      {showNav && <div className="print:hidden"><BottomNav role={role} /></div>}
     </div>
   );
 }
