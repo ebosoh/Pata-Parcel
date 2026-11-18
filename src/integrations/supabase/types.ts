@@ -324,6 +324,7 @@ export type Database = {
         Returns: boolean
       }
       is_pap_staff: { Args: { _uid: string }; Returns: boolean }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
     }
     Enums: {
       app_role: "pap_admin" | "pap_staff"

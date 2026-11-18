@@ -57,6 +57,13 @@
       "when": 1795013441989,
       "tag": "0007_admin_delete_parcel",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795016969652,
+      "tag": "0008_unique_buyer_phone",
+      "breakpoints": true
     }
   ]
 }

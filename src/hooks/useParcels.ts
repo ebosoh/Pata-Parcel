@@ -156,6 +156,18 @@ export function useParcels(sellerId?: string | null) {
       }
 
       if (insertErr) {
+        // Buyer phone numbers must be unique across the whole system
+        if (
+          (insertErr as any).code === '23505' ||
+          insertErr.message?.includes('parcels_buyer_phone_unique')
+        ) {
+          return {
+            data: null,
+            error: new Error(
+              `The phone number ${input.buyer_phone} already belongs to another buyer in the system. Each buyer must have a unique phone number.`
+            ),
+          };
+        }
         return { data: null, error: insertErr };
       }
 
