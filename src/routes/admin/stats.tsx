@@ -152,9 +152,9 @@ function StatsPage() {
               {activity.length === 0 ? <p className="text-xs text-muted-foreground">No activity in this period.</p> : (
                 <ul className="divide-y divide-border">
                   {activity.map((a, i) => (
-                    <li key={i} className="flex gap-3 py-1.5 text-xs">
-                      <span className="w-36 shrink-0 text-muted-foreground">{new Date(a.at).toLocaleString()}</span>
-                      <span>{a.text}</span>
+                    <li key={i} className="flex flex-col gap-0.5 py-1.5 text-xs sm:flex-row sm:gap-3">
+                      <span className="shrink-0 text-muted-foreground sm:w-36">{new Date(a.at).toLocaleString()}</span>
+                      <span className="min-w-0">{a.text}</span>
                     </li>
                   ))}
                 </ul>

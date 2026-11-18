@@ -138,7 +138,7 @@ function SellerReceiptsPage() {
         </div>
 
         {/* Date Filter */}
-        <div className="flex items-center gap-2 bg-card p-3 rounded-xl border border-border/80">
+        <div className="flex flex-wrap items-center gap-2 bg-card p-3 rounded-xl border border-border/80">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <Label htmlFor="receipt_date" className="text-xs font-medium shrink-0">
             Filter by Date:
@@ -148,7 +148,7 @@ function SellerReceiptsPage() {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="h-8 text-xs max-w-[180px]"
+            className="h-8 min-w-0 flex-1 text-xs sm:max-w-[180px]"
           />
           {selectedDate && (
             <Button
