@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrackingProgressBar } from './TrackingProgressBar';
+import { PLATFORM_FEE_PER_PACKAGE } from '@/lib/constants';
 import { 
   Package, 
   MapPin, 
@@ -171,7 +172,7 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Platform Service Fee:</span>
-              <span className="text-foreground">KES {parcel.platform_fee} (KES 10/pkg)</span>
+              <span className="text-foreground">KES {parcel.platform_fee} (KES {PLATFORM_FEE_PER_PACKAGE}/pkg)</span>
             </div>
           </div>
         )}

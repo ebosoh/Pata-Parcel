@@ -35,7 +35,7 @@ export const SENDING_METHODS = [
 ] as const;
 
 // Platform fee per package in KES
-export const PLATFORM_FEE_PER_PACKAGE = 10;
+export const PLATFORM_FEE_PER_PACKAGE = 15;
 
 // All Kenyan destination towns
 export const KENYAN_TOWNS = [

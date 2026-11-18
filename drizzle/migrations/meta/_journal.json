@@ -71,6 +71,13 @@
       "when": 1795017170688,
       "tag": "0009_allow_repeat_buyer_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795019926601,
+      "tag": "0010_raise_platform_fee_to_15",
+      "breakpoints": true
     }
   ]
 }

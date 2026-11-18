@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { PLATFORM_FEE_PER_PACKAGE } from '@/lib/constants';
 import type { Parcel, Destination, Sacco, SendingMethod, PaymentStatus, TrackingStatus } from '@/types/database';
 
 export interface CreateParcelInput {
@@ -117,7 +118,7 @@ export function useParcels(sellerId?: string | null) {
 
     try {
       const calculatedTotal = input.num_packages * input.sending_fee_per_package;
-      const platformFee = input.num_packages * 10;
+      const platformFee = input.num_packages * PLATFORM_FEE_PER_PACKAGE;
 
       const insertPayload: Record<string, any> = {
         seller_id: sellerId,

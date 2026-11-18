@@ -344,7 +344,7 @@ export function DispatchForm({
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1">
             <span>Pata Parcel Platform Fee:</span>
-            <span>KES {totalPlatformFee} (KES 10/pkg)</span>
+            <span>KES {totalPlatformFee} (KES {PLATFORM_FEE_PER_PACKAGE}/pkg)</span>
           </div>
         </div>
 
