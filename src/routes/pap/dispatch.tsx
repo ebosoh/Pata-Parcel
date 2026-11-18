@@ -296,6 +296,9 @@ export function PapDispatchPage() {
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       {parcel.destination}
                     </p>
+                    {parcel.pick_point && (
+                      <p className="text-[11px] font-medium text-foreground">Pick-point: {parcel.pick_point}</p>
+                    )}
                     <p className="text-[11px] text-muted-foreground">
                       Seller: {parcel.seller?.business_name || 'Online Seller'}
                     </p>

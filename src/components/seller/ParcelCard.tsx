@@ -127,6 +127,14 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
           </div>
         </div>
 
+        {parcel.pick_point && (
+          <div className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="text-muted-foreground">Pick-point:</span>
+            <span className="truncate font-semibold text-foreground">{parcel.pick_point}</span>
+          </div>
+        )}
+
         {/* Method & Package Details */}
         <div className="grid grid-cols-2 gap-2 text-xs bg-muted/20 p-2.5 rounded-lg border border-border/40">
           <div>
