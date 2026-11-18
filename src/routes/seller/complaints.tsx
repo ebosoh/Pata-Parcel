@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPhoneDisplay, isValidKenyanPhone } from '@/lib/constants';
+import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 import type { Complaint, ComplaintStatus } from '@/types/database';
 
 export const Route = createFileRoute('/seller/complaints')({
@@ -238,13 +239,12 @@ function SellerComplaintsPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label htmlFor="c_dest" className="text-xs font-medium">Destination *</Label>
-                    <Input
+                    <DestinationCombobox
                       id="c_dest"
                       placeholder="e.g. Eldoret"
                       value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
+                      onChange={setDestination}
                       required
-                      className="h-9 text-xs"
                     />
                   </div>
 
