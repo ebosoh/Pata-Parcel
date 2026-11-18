@@ -106,6 +106,13 @@ export function PapDispatchPage() {
     ? receiptsByParcel[receiptModalParcel.id]
     : undefined;
 
+  // Prefill the SACCO name from the SACCO the seller selected on the dispatch form
+  useEffect(() => {
+    if (selectedParcel?.psv_sacco) {
+      setSaccoName(selectedParcel.psv_sacco);
+    }
+  }, [selectedParcel]);
+
   const displayList = useMemo(() => {
     const list = activeTab === 'sorting' ? sortingParcels : transitParcels;
     if (!searchQuery.trim()) return list;
@@ -446,7 +453,7 @@ export function PapDispatchPage() {
                     className="h-9 text-xs"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    You will be prompted to take a photo of the office receipt after dispatch.
+                    Prefilled from the SACCO the seller selected — edit only if it changed. You will be prompted to take a photo of the office receipt after dispatch.
                   </p>
                 </div>
               )}
