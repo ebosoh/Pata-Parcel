@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import { Header } from './Header';
+import { Footer } from './Footer';
 import { BottomNav } from './BottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { PendingReceiptsBanner } from '@/components/pap/PendingReceiptsBanner';
@@ -63,6 +64,9 @@ export function AppShell({ children, role, showNav = true }: AppShellProps) {
           {children}
         </div>
       </main>
+      <div className="print:hidden">
+        <Footer className={showNav ? 'pb-20' : ''} />
+      </div>
       {showNav && <div className="print:hidden"><BottomNav role={role} /></div>}
     </div>
   );
