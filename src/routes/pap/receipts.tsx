@@ -1,6 +1,6 @@
 import { StorageImage } from '@/components/shared/StorageImage';
 import { ReceiptScanner } from '@/components/shared/ReceiptScanner';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,6 +26,9 @@ import { toast } from 'sonner';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/pap/receipts')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search['code'] === 'string' && search['code'].trim() ? search['code'].trim() : undefined,
+  }),
   head: () => ({
     meta: [
       { title: 'Courier Receipts — Pata Parcel Operations Hub' },
@@ -53,12 +56,14 @@ interface StaffReceiptWithParcel extends ParcelReceipt {
 function PapReceiptsPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { code } = Route.useSearch();
 
-  const { parcels, uploadReceipt } = usePapOperations(user?.id);
+  const { parcels, loading: parcelsLoading, uploadReceipt } = usePapOperations(user?.id);
 
-  // Upload Form State
+  // Upload Form State — tracking code prefilled when arriving from a parcel
   const [selectedParcelId, setSelectedParcelId] = useState('');
-  const [parcelSearch, setParcelSearch] = useState('');
+  const [parcelSearch, setParcelSearch] = useState(code ?? '');
+  const appliedCodeRef = useRef<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [previewLocalUrl, setPreviewLocalUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,6 +81,24 @@ function PapReceiptsPage() {
       navigate({ to: '/login' as any });
     }
   }, [authLoading, isAuthenticated, navigate]);
+
+  // Auto-select the parcel whose tracking code arrived in the link
+  useEffect(() => {
+    if (!code || appliedCodeRef.current === code) return;
+    const match = parcels.find(
+      p => p.sending_method === 'psv' && p.reference_number?.toLowerCase() === code.toLowerCase(),
+    );
+    if (match) {
+      setSelectedParcelId(match.id);
+      setParcelSearch(match.reference_number || code);
+      appliedCodeRef.current = code;
+    }
+  }, [code, parcels]);
+
+  const selectedParcel = useMemo(
+    () => parcels.find(p => p.id === selectedParcelId) || null,
+    [parcels, selectedParcelId],
+  );
 
   // Handle local image preview
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,6 +209,8 @@ function PapReceiptsPage() {
       setSelectedParcelId('');
       setReceiptFile(null);
       setPreviewLocalUrl(null);
+      appliedCodeRef.current = null;
+      navigate({ to: '/pap/receipts', search: { code: undefined }, replace: true });
       await fetchRecentReceipts();
       setTimeout(() => setSuccessMsg(null), 4000);
     }
@@ -255,7 +280,12 @@ function PapReceiptsPage() {
               />
               <select
                 value={selectedParcelId}
-                onChange={(e) => setSelectedParcelId(e.target.value)}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedParcelId(id);
+                  const chosen = parcels.find(p => p.id === id);
+                  if (chosen?.reference_number) setParcelSearch(chosen.reference_number);
+                }}
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">-- Or choose PSV parcel ({selectableParcels.length} available) --</option>
@@ -265,6 +295,20 @@ function PapReceiptsPage() {
                   </option>
                 ))}
               </select>
+              {selectedParcel && (
+                <p className="text-[11px] text-muted-foreground">
+                  Receipt goes to <span className="font-semibold text-foreground">{selectedParcel.buyer_name}</span>
+                  {' '}· {selectedParcel.destination} · Seller{' '}
+                  <span className="font-semibold text-foreground">
+                    {selectedParcel.seller?.business_name || selectedParcel.seller?.owner_name || 'Online Seller'}
+                  </span>
+                </p>
+              )}
+              {!selectedParcel && code && !parcelsLoading && (
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                  No PSV parcel matches "{code}". Pick the parcel from the list above.
+                </p>
+              )}
             </div>
 
             {/* Photo Capture / Select */}

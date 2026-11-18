@@ -342,7 +342,7 @@ export function PapDispatchPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setReceiptModalParcel(parcel)}
+                          onClick={() => navigate({ to: '/pap/receipts', search: { code: parcel.reference_number || '' } })}
                           className={`h-8 font-bold text-xs flex items-center gap-1.5 ${
                             receiptsByParcel[parcel.id]
                               ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300'
