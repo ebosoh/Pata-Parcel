@@ -71,6 +71,8 @@ function StatsPage() {
   const [complaints, setComplaints] = useState<C[]>([]);
   const [profiles, setProfiles] = useState<Pr[]>([]);
   const isAdmin = profile?.role === 'pap_admin';
+  const [generatedAt, setGeneratedAt] = useState('');
+  useEffect(() => { setGeneratedAt(new Date().toLocaleString()); }, [parcels]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -102,6 +104,9 @@ function StatsPage() {
     ...complaints.slice(0, 100).map(c => ({ at: c.created_at, text: `${nameOf(c.seller_id)} raised an issue (${c.status}): ${c.issue_description}` })),
   ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 100), [parcels, tracking, complaints, nameOf, refOf]);
 
+  if (!authLoading && !profile) {
+    return <AppShell role="seller"><p className="py-10 text-center text-sm text-muted-foreground">Please sign in with an admin account to view statistics.</p></AppShell>;
+  }
   if (!authLoading && profile && !isAdmin) {
     return <AppShell role={profile.role as any}><p className="py-10 text-center text-sm text-muted-foreground">Only Pata Parcel admins can open this page.</p></AppShell>;
   }
@@ -133,7 +138,7 @@ function StatsPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold">Platform Statistics</h1>
-            <p className="text-xs text-muted-foreground">Period: {label} · generated {new Date().toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">Period: {label} · generated {generatedAt}</p>
           </div>
           <div className="flex flex-wrap gap-2 print:hidden">
             {PERIODS.map(p => (
