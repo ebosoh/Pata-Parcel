@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -156,7 +158,10 @@ export function PapDispatchPage() {
     setUploadingReceipt(false);
 
     if (!uErr) {
-      setFeedback(`Receipt uploaded & shared with online seller!`);
+      const { data: prof } = await supabase.from('profiles').select('owner_name, business_name').eq('id', receiptModalParcel.seller_id).maybeSingle();
+      const msg = `Receipt shared successfully with ${prof?.owner_name || prof?.business_name || 'the seller'}`;
+      toast.success(msg, { description: receiptModalParcel.reference_number });
+      setFeedback(msg);
       setReceiptModalParcel(null);
       setReceiptFile(null);
       setTimeout(() => setFeedback(null), 4000);

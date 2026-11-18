@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/pap/receipts')({
@@ -88,9 +89,12 @@ function PapReceiptsPage() {
 
   // Filter parcels for dropdown selector
   const selectableParcels = useMemo(() => {
-    if (!parcelSearch.trim()) return parcels.slice(0, 30);
-    const q = parcelSearch.toLowerCase();
-    return parcels.filter(p => 
+    const psv = parcels.filter(p => p.sending_method === 'psv');
+    if (!parcelSearch.trim()) return psv.slice(0, 30);
+    const q = parcelSearch.trim().toLowerCase();
+    const exact = psv.filter(p => p.reference_number?.toLowerCase() === q);
+    if (exact.length) return exact;
+    return psv.filter(p => 
       p.reference_number?.toLowerCase().includes(q) ||
       p.buyer_name?.toLowerCase().includes(q) ||
       p.destination?.toLowerCase().includes(q)
@@ -146,8 +150,15 @@ function PapReceiptsPage() {
     setSuccessMsg(null);
     setErrorMsg(null);
 
-    if (!selectedParcelId) {
-      setErrorMsg('Please select a parcel to attach the receipt to');
+    let targetId = selectedParcelId;
+    if (!targetId && selectableParcels.length === 1 && parcelSearch.trim()) targetId = selectableParcels[0]!.id;
+    if (!targetId) {
+      setErrorMsg('Enter the parcel tracking code (e.g. HudsonEboso-012548)');
+      return;
+    }
+    const target = parcels.find(p => p.id === targetId);
+    if (target && target.sending_method !== 'psv') {
+      setErrorMsg('Receipts are only for PSV (SACCO) parcels');
       return;
     }
 
@@ -157,13 +168,21 @@ function PapReceiptsPage() {
     }
 
     setUploading(true);
-    const { error: uErr } = await uploadReceipt(selectedParcelId, receiptFile);
+    const { error: uErr } = await uploadReceipt(targetId, receiptFile);
     setUploading(false);
 
     if (uErr) {
       setErrorMsg(uErr.message || 'Failed to upload receipt');
     } else {
-      setSuccessMsg('Receipt uploaded and immediately shared with the online seller!');
+      let sellerName = 'the seller';
+      if (target?.seller_id) {
+        const { data: prof } = await supabase.from('profiles').select('owner_name, business_name').eq('id', target.seller_id).maybeSingle();
+        sellerName = prof?.owner_name || prof?.business_name || sellerName;
+      }
+      const msg = `Receipt shared successfully with ${sellerName}`;
+      toast.success(msg, { description: target?.reference_number });
+      setSuccessMsg(msg);
+      setParcelSearch('');
       setSelectedParcelId('');
       setReceiptFile(null);
       setPreviewLocalUrl(null);
@@ -223,20 +242,23 @@ function PapReceiptsPage() {
           <form onSubmit={handleUploadSubmit} className="space-y-3.5">
             {/* Parcel Selector */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Select Parcel to Attach *</Label>
+              <Label className="text-xs font-semibold">Parcel Tracking Code * (PSV / SACCO only)</Label>
               <Input
-                placeholder="Type to filter parcels (ref, buyer, destination)..."
+                placeholder="e.g. HudsonEboso-012548"
                 value={parcelSearch}
-                onChange={(e) => setParcelSearch(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value; setParcelSearch(v);
+                  const m = parcels.find(p => p.sending_method === 'psv' && p.reference_number?.toLowerCase() === v.trim().toLowerCase());
+                  setSelectedParcelId(m ? m.id : '');
+                }}
                 className="h-9 text-xs mb-1"
               />
               <select
                 value={selectedParcelId}
                 onChange={(e) => setSelectedParcelId(e.target.value)}
-                required
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">-- Choose Parcel ({selectableParcels.length} available) --</option>
+                <option value="">-- Or choose PSV parcel ({selectableParcels.length} available) --</option>
                 {selectableParcels.map(p => (
                   <option key={p.id} value={p.id}>
                     {p.reference_number || 'PAP-PARCEL'} - {p.buyer_name} ({p.destination}) - [{p.tracking_status}]
