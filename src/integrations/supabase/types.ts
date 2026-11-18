@@ -162,10 +162,10 @@ export type Database = {
           num_packages: number
           package_type: string
           payment_status: string
+          pick_point: string | null
           platform_fee: number
           platform_fee_paid: boolean
           psv_sacco: string | null
-          pick_point?: string | null
           reference_number: string
           seller_id: string
           sending_fee_per_package: number
@@ -183,10 +183,10 @@ export type Database = {
           num_packages?: number
           package_type: string
           payment_status?: string
+          pick_point?: string | null
           platform_fee?: number
           platform_fee_paid?: boolean
           psv_sacco?: string | null
-          pick_point?: string | null
           reference_number?: string
           seller_id: string
           sending_fee_per_package?: number
@@ -204,10 +204,10 @@ export type Database = {
           num_packages?: number
           package_type?: string
           payment_status?: string
+          pick_point?: string | null
           platform_fee?: number
           platform_fee_paid?: boolean
           psv_sacco?: string | null
-          pick_point?: string | null
           reference_number?: string
           seller_id?: string
           sending_fee_per_package?: number
