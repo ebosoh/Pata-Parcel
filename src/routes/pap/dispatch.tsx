@@ -1,3 +1,4 @@
+import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useState, useMemo, useEffect } from 'react';
@@ -312,7 +313,8 @@ export function PapDispatchPage() {
 
                 <TrackingProgressBar status={parcel.tracking_status} compact />
 
-                <div className="pt-1 flex justify-end gap-2 border-t border-border/50">
+                <div className="pt-1 flex flex-wrap justify-end gap-2 border-t border-border/50">
+                  <AdminParcelControls parcel={parcel} onChanged={refetch} />
                   {activeTab === 'sorting' ? (
                     <Button
                       size="sm"

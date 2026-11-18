@@ -301,6 +301,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_parcel: { Args: { _parcel_id: string }; Returns: undefined }
       admin_list_staff: {
         Args: never
         Returns: {

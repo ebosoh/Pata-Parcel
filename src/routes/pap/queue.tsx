@@ -1,3 +1,4 @@
+import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -313,7 +314,8 @@ function PapQueuePage() {
                     <TrackingProgressBar status={parcel.tracking_status} compact />
 
                     {/* Action Button */}
-                    <div className="pt-1 flex justify-end">
+                    <div className="pt-1 flex flex-wrap justify-end gap-2">
+                      <AdminParcelControls parcel={parcel} onChanged={refetch} />
                       <Button
                         size="sm"
                         onClick={() => handleReceiveSingle(parcel.id)}
