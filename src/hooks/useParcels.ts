@@ -142,9 +142,9 @@ export function useParcels(sellerId?: string | null) {
 
       // Graceful fallback if remote database column 'pick_point' is not yet migrated
       if (insertErr && (insertErr.message?.includes('pick_point') || (insertErr as any).code === '42703')) {
-        delete insertPayload.pick_point;
-        if (input.pick_point && !insertPayload.destination.includes(input.pick_point)) {
-          insertPayload.destination = `${insertPayload.destination} - ${input.pick_point}`;
+        delete insertPayload['pick_point'];
+        if (input.pick_point && !(insertPayload['destination'] as string).includes(input.pick_point)) {
+          insertPayload['destination'] = `${insertPayload['destination']} - ${input.pick_point}`;
         }
         const retryResult = await supabase
           .from('parcels')

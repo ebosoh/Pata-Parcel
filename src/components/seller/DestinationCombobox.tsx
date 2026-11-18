@@ -118,7 +118,7 @@ export function DestinationCombobox({
       if (highlightedIndex >= 0 && filteredTowns[highlightedIndex]) {
         handleSelectTown(filteredTowns[highlightedIndex]);
       } else if (filteredTowns.length > 0) {
-        handleSelectTown(filteredTowns[0]);
+        handleSelectTown(filteredTowns[0]!);
       } else if (query.trim()) {
         handleSelectTown(query.trim());
       }

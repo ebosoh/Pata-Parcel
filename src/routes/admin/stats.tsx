@@ -30,7 +30,7 @@ const PERIODS: { v: Period; label: string; days: number | null }[] = [
   { v: 'all', label: 'All time', days: null },
 ];
 
-interface P { id: string; reference_number: string; seller_id: string; destination: string; sending_method: string; num_packages: number; total_sending_fee: number; platform_fee: number; tracking_status: string; payment_status: string; created_at: string }
+interface P { id: string; reference_number: string; seller_id: string; destination: string; sending_method: string; num_packages: number; total_sending_fee: number; platform_fee: number; platform_fee_paid: boolean; tracking_status: string; payment_status: string; created_at: string }
 interface T { id: string; parcel_id: string; status: string; notes: string | null; created_at: string; updated_by: string }
 interface C { id: string; seller_id: string; destination: string; status: string; issue_description: string; created_at: string }
 interface Pr { id: string; owner_name: string; business_name: string | null }
@@ -107,6 +107,14 @@ function StatsPage() {
   }
 
   const pkgs = parcels.reduce((s, p) => s + p.num_packages, 0);
+  const sumFee = (pred: (p: P) => boolean) => parcels.filter(pred).reduce((s, p) => s + Number(p.total_sending_fee), 0);
+  const payStats: [string, string, string][] = [
+    ['Paid', kes(sumFee(p => p.payment_status === 'paid')), `${parcels.filter(p => p.payment_status === 'paid').length} parcels`],
+    ['Unpaid', kes(sumFee(p => p.payment_status === 'unpaid')), `${parcels.filter(p => p.payment_status === 'unpaid').length} parcels`],
+    ['Pay on delivery', kes(sumFee(p => p.payment_status === 'pay_on_delivery')), `${parcels.filter(p => p.payment_status === 'pay_on_delivery').length} parcels`],
+    ['Platform fees collected', kes(parcels.filter(p => p.platform_fee_paid).reduce((s, p) => s + Number(p.platform_fee), 0)), `${parcels.filter(p => p.platform_fee_paid).length} parcels`],
+    ['Platform fees pending', kes(parcels.filter(p => !p.platform_fee_paid).reduce((s, p) => s + Number(p.platform_fee), 0)), `${parcels.filter(p => !p.platform_fee_paid).length} parcels`],
+  ];
   const label = PERIODS.find(p => p.v === period)!.label;
   const kpis: [string, string][] = [
     ['Parcels', String(parcels.length)],
@@ -138,6 +146,18 @@ function StatsPage() {
           <>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {kpis.map(([k, v]) => <Card key={k} className="p-3"><p className="text-xs text-muted-foreground">{k}</p><p className="text-lg font-bold">{v}</p></Card>)}
+            </div>
+            <div>
+              <h2 className="mb-2 text-sm font-semibold">Payments</h2>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                {payStats.map(([k, v, sub]) => (
+                  <Card key={k} className="p-3">
+                    <p className="text-xs text-muted-foreground">{k}</p>
+                    <p className="text-lg font-bold">{v}</p>
+                    <p className="text-[11px] text-muted-foreground">{sub}</p>
+                  </Card>
+                ))}
+              </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <Bars title="Parcels per day" data={daily} />
