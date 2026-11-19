@@ -82,7 +82,12 @@ export const SACCO_NAMES = [
 ] as const;
 
 // Platform fee per package in KES
-export const PLATFORM_FEE_PER_PACKAGE = 15;
+/** Platform service fee: 15% of the parcel's total sending fee, rounded to whole shillings. */
+export const PLATFORM_FEE_RATE = 0.15;
+
+export function computePlatformFee(totalSendingFee: number): number {
+  return Math.round(totalSendingFee * PLATFORM_FEE_RATE);
+}
 
 // All Kenyan destination towns
 export const KENYAN_TOWNS = [

@@ -1,6 +1,13 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { SENDING_METHODS, SACCO_NAMES } from './constants';
+import { SENDING_METHODS, SACCO_NAMES, PLATFORM_FEE_RATE, computePlatformFee } from './constants';
+
+test('the platform fee is 15% of the total sending fee, rounded to whole shillings', () => {
+  assert.equal(PLATFORM_FEE_RATE, 0.15);
+  assert.equal(computePlatformFee(150), 23); // 1 pkg at KES 150 -> 22.5 rounds to 23
+  assert.equal(computePlatformFee(450), 68); // 3 pkgs at KES 150 -> 67.5 rounds to 68
+  assert.equal(computePlatformFee(1000), 150);
+});
 
 test('the SACCO picker offers the 42 SACCOs the platform serves', () => {
   assert.equal(SACCO_NAMES.length, 42);

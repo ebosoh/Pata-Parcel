@@ -7,7 +7,7 @@ import {
   SENDING_METHODS, 
   SACCO_NAMES,
   isValidKenyanPhone, 
-  PLATFORM_FEE_PER_PACKAGE,
+  computePlatformFee,
   NAIROBI_PICK_POINTS
 } from '@/lib/constants';
 import type { SendingMethod, PaymentStatus, Destination } from '@/types/database';
@@ -55,11 +55,8 @@ export function DispatchForm({
     return qty * fee;
   }, [numPackages, sendingFeePerPackage]);
 
-  // Platform fee
-  const totalPlatformFee = useMemo(() => {
-    const qty = Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES);
-    return qty * PLATFORM_FEE_PER_PACKAGE;
-  }, [numPackages]);
+  // Platform fee: 15% of the total sending fee
+  const totalPlatformFee = useMemo(() => computePlatformFee(totalSendingFee), [totalSendingFee]);
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -361,7 +358,7 @@ export function DispatchForm({
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1">
             <span>Pata Parcel Platform Fee:</span>
-            <span>KES {totalPlatformFee} (KES {PLATFORM_FEE_PER_PACKAGE}/pkg)</span>
+            <span>KES {totalPlatformFee} (15% of sending fee)</span>
           </div>
         </div>
 
