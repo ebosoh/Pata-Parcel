@@ -32,6 +32,7 @@ export const SENDING_METHODS = [
   { value: 'pata_parcel', label: 'Pata Parcel (PAP Pick-up Points)' },
   { value: 'door_to_door', label: 'Door to Door (Within Nairobi)' },
   { value: 'psv', label: 'PSV (SACCO)' },
+  { value: 'psv_driver', label: 'PSV-Driver' },
 ] as const;
 
 // Platform fee per package in KES

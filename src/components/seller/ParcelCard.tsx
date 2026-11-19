@@ -31,6 +31,8 @@ function getMethodLabel(method: SendingMethod, sacco?: string | null): string {
       return 'Door to Door (Nairobi)';
     case 'psv':
       return sacco ? `PSV (${sacco})` : 'PSV (SACCO)';
+    case 'psv_driver':
+      return sacco ? `PSV-Driver (${sacco})` : 'PSV-Driver';
     default:
       return method;
   }

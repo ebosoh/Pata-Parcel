@@ -105,7 +105,7 @@ export function DispatchForm({
       buyer_phone: cleanPhone,
       destination,
       sending_method: sendingMethod,
-      psv_sacco: sendingMethod === 'psv' ? psvSacco : null,
+      psv_sacco: sendingMethod === 'psv' || sendingMethod === 'psv_driver' ? (psvSacco || null) : null,
       pick_point: sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
       num_packages: Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES),
@@ -219,17 +219,17 @@ export function DispatchForm({
           </select>
         </div>
 
-        {/* PSV SACCO selector if method is PSV */}
-        {sendingMethod === 'psv' && (
+        {/* PSV SACCO selector if method is PSV or PSV-Driver */}
+        {(sendingMethod === 'psv' || sendingMethod === 'psv_driver') && (
           <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
             <Label htmlFor="psv_sacco" className="text-xs font-medium text-primary">
-              Select SACCO *
+              {sendingMethod === 'psv' ? 'Select SACCO *' : 'Select SACCO (optional)'}
             </Label>
             <select
               id="psv_sacco"
               value={psvSacco}
               onChange={(e) => setPsvSacco(e.target.value)}
-              required
+              required={sendingMethod === 'psv'}
               className="w-full h-10 rounded-md border border-primary/50 bg-secondary/10 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">-- Select SACCO --</option>
@@ -239,6 +239,11 @@ export function DispatchForm({
                 </option>
               ))}
             </select>
+            {sendingMethod === 'psv_driver' && (
+              <p className="text-[11px] text-muted-foreground">
+                Handing the parcel straight to a driver? Leave SACCO blank if you don't know it.
+              </p>
+            )}
           </div>
         )}
 

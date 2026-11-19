@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type UserRole = 'seller' | 'pap_admin' | 'pap_staff';
-export type SendingMethod = 'pickup_mtaani' | 'pata_parcel' | 'door_to_door' | 'psv';
+export type SendingMethod = 'pickup_mtaani' | 'pata_parcel' | 'door_to_door' | 'psv' | 'psv_driver';
 export type PaymentStatus = 'paid' | 'unpaid' | 'pay_on_delivery';
 export type TrackingStatus = 'dispatched_to_pap' | 'sorting' | 'on_transit' | 'delivered';
 export type ComplaintStatus = 'open' | 'investigating' | 'resolved';

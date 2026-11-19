@@ -365,6 +365,7 @@ export function PapDispatchPage() {
                       onClick={() => {
                         setSelectedParcel(parcel);
                         if (parcel.sending_method === 'psv') setDispatchType('psv_official');
+                        else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
                         else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
                         else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
                         else setDispatchType('pata_parcel');

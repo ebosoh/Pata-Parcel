@@ -126,7 +126,7 @@ export function useParcels(sellerId?: string | null) {
         buyer_phone: input.buyer_phone.trim(),
         destination: input.destination,
         sending_method: input.sending_method,
-        psv_sacco: input.sending_method === 'psv' ? (input.psv_sacco || null) : null,
+        psv_sacco: input.sending_method === 'psv' || input.sending_method === 'psv_driver' ? (input.psv_sacco || null) : null,
         pick_point: input.sending_method === 'door_to_door' ? (input.pick_point || null) : null,
         package_type: input.package_type,
         num_packages: input.num_packages,
