@@ -34,7 +34,8 @@ import {
   Loader2, 
   Camera, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  MessageCircle
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
@@ -350,6 +351,21 @@ export function PapDispatchPage() {
                     </Button>
                   ) : (
                     <>
+                      <a
+                        href={`https://wa.me/${(() => { const c = parcel.buyer_phone.replace(/\D/g, ''); return c.startsWith('0') ? `254${c.slice(1)}` : c.startsWith('254') ? c : `254${c}`; })()}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Chat with buyer on WhatsApp"
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 font-bold text-xs flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          WhatsApp
+                        </Button>
+                      </a>
                       {parcel.sending_method === 'psv' && (
                         <Button
                           size="sm"
