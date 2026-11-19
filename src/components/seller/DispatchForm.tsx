@@ -231,7 +231,7 @@ export function DispatchForm({
               options={SACCO_NAMES}
               listHeader="All SACCOs"
               noun="SACCO"
-              placeholder="Type SACCO (e.g. Ena Coach, Ketro)..."
+              placeholder="Type SACCO (e.g. Ena Coach)..."
               required={sendingMethod === 'psv'}
             />
             {sendingMethod === 'psv_driver' && (
