@@ -73,7 +73,7 @@ export function PapDispatchPage() {
   // Dispatch Modal state
   const [selectedParcel, setSelectedParcel] = useState<any | null>(null);
   const [dispatchType, setDispatchType] = useState<PapDispatchType>('psv_official');
-  const [saccoName, setSaccoName] = useState('2NK Sacco');
+  const [saccoName, setSaccoName] = useState('');
   const [driverName, setDriverName] = useState('');
   const [driverPhone, setDriverPhone] = useState('');
   const [vehiclePlate, setVehiclePlate] = useState('');
@@ -115,11 +115,10 @@ export function PapDispatchPage() {
     ? receiptsByParcel[receiptModalParcel.id]
     : undefined;
 
-  // Prefill the SACCO name from the SACCO the seller selected on the dispatch form
+  // Always fill the SACCO name from the SACCO the seller selected on the dispatch
+  // form; clear it when the seller left it blank so no stale name carries over.
   useEffect(() => {
-    if (selectedParcel?.psv_sacco) {
-      setSaccoName(selectedParcel.psv_sacco);
-    }
+    setSaccoName(selectedParcel?.psv_sacco ?? '');
   }, [selectedParcel]);
 
   const displayList = useMemo(() => {
