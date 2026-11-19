@@ -4,6 +4,7 @@
 - (none)
 
 ## Done
+- Receipts: green "Share Receipt" button sends the receipt to the buyer on WhatsApp; it then reads grey "Receipt Shared".
 - Dispatch Receipts: filter by date and sending method (PSV, Pata Parcel, Pick-up Mtaani, Door to Door).
 - Buyer complaints: WhatsApp, Call, and Resolve; verified resolved complaints leave the active list for sellers, staff, and admins.
 - Confirm Delivered: the button disappears from the Active Transit card the moment it is tapped, and a red message appears if the save fails.

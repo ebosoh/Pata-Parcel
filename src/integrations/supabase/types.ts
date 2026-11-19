@@ -91,6 +91,7 @@ export type Database = {
           id: string
           parcel_id: string
           receipt_image_url: string
+          shared_with_buyer_at: string | null
           uploaded_by: string
         }
         Insert: {
@@ -98,6 +99,7 @@ export type Database = {
           id?: string
           parcel_id: string
           receipt_image_url: string
+          shared_with_buyer_at?: string | null
           uploaded_by: string
         }
         Update: {
@@ -105,6 +107,7 @@ export type Database = {
           id?: string
           parcel_id?: string
           receipt_image_url?: string
+          shared_with_buyer_at?: string | null
           uploaded_by?: string
         }
         Relationships: [
@@ -324,6 +327,10 @@ export type Database = {
         Returns: boolean
       }
       is_pap_staff: { Args: { _uid: string }; Returns: boolean }
+      mark_receipt_shared_with_buyer: {
+        Args: { p_receipt_id: string }
+        Returns: boolean
+      }
       normalize_phone: { Args: { _phone: string }; Returns: string }
       resolve_buyer_complaint: {
         Args: { p_complaint_id: string }

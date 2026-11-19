@@ -151,6 +151,7 @@ export type Database = {
           uploaded_by: string;
           receipt_image_url: string;
           created_at: string;
+          shared_with_buyer_at: string | null;
         };
         Insert: {
           id?: string;
@@ -158,6 +159,7 @@ export type Database = {
           uploaded_by: string;
           receipt_image_url: string;
           created_at?: string;
+          shared_with_buyer_at?: string | null;
         };
         Update: {
           id?: string;
@@ -165,6 +167,7 @@ export type Database = {
           uploaded_by?: string;
           receipt_image_url?: string;
           created_at?: string;
+          shared_with_buyer_at?: string | null;
         };
         Relationships: [];
       };
@@ -258,6 +261,7 @@ export type Database = {
     };
     Functions: {
       resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };
+      mark_receipt_shared_with_buyer: { Args: { p_receipt_id: string }; Returns: boolean };
     };
     Enums: {
       user_role: UserRole;

@@ -1,4 +1,5 @@
 import { StorageImage } from '@/components/shared/StorageImage';
+import { ReceiptShareButton } from '@/components/shared/ReceiptShareButton';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
@@ -34,9 +35,11 @@ interface ReceiptWithParcel {
   id: string;
   receipt_image_url: string;
   created_at: string;
+  shared_with_buyer_at: string | null;
   parcel: {
     reference_number: string;
     buyer_name: string;
+    buyer_phone: string;
     destination: string;
     sending_method: string;
     psv_sacco: string | null;
@@ -70,7 +73,7 @@ function SellerReceiptsPage() {
       // First get seller's parcel IDs
       const { data: parcelsData } = await supabase
         .from('parcels')
-        .select('id, reference_number, buyer_name, destination, sending_method, psv_sacco')
+        .select('id, reference_number, buyer_name, buyer_phone, destination, sending_method, psv_sacco')
         .eq('seller_id', user.id);
 
       const typedParcels = (parcelsData as any[]) || [];
@@ -142,6 +145,13 @@ function SellerReceiptsPage() {
     setSelectedDate('');
     setSelectedMethod('all');
     setSelectedSacco('');
+  };
+
+  // Keep the card in step with a receipt the buyer has just been sent
+  const markShared = (receiptId: string) => {
+    setReceipts(prev =>
+      prev.map(r => (r.id === receiptId ? { ...r, shared_with_buyer_at: new Date().toISOString() } : r)),
+    );
   };
 
   return (
@@ -285,6 +295,21 @@ function SellerReceiptsPage() {
                   <p className="text-muted-foreground truncate">
                     To: {r.parcel?.destination || 'Destination'}
                   </p>
+                  {r.parcel && (
+                    <div className="pt-1.5">
+                      <ReceiptShareButton
+                        receiptId={r.id}
+                        receiptImageUrl={r.receipt_image_url}
+                        sharedAt={r.shared_with_buyer_at}
+                        referenceNumber={r.parcel.reference_number}
+                        buyerName={r.parcel.buyer_name}
+                        buyerPhone={r.parcel.buyer_phone}
+                        destination={r.parcel.destination}
+                        saco={r.parcel.psv_sacco}
+                        onShared={markShared}
+                      />
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}
