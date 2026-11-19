@@ -78,6 +78,13 @@
       "when": 1795019926601,
       "tag": "0010_raise_platform_fee_to_15",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795083837290,
+      "tag": "0011_resolve_buyer_complaints",
+      "breakpoints": true
     }
   ]
 }

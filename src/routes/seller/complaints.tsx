@@ -24,11 +24,11 @@ import {
   MapPin, 
   Package, 
   Loader2,
-  RefreshCw 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPhoneDisplay, isValidKenyanPhone } from '@/lib/constants';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
+import { ComplaintActions } from '@/components/shared/ComplaintActions';
 import type { Complaint, ComplaintStatus } from '@/types/database';
 
 export const Route = createFileRoute('/seller/complaints')({
@@ -59,12 +59,6 @@ function getComplaintStatusBadge(status: ComplaintStatus) {
       return (
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400">
           Investigating
-        </Badge>
-      );
-    case 'resolved':
-      return (
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400">
-          <CheckCircle className="h-3 w-3 mr-1" /> Resolved
         </Badge>
       );
     default:
@@ -105,6 +99,7 @@ function SellerComplaintsPage() {
         .from('complaints')
         .select('*')
         .eq('seller_id', user.id)
+        .neq('status', 'resolved')
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -124,6 +119,7 @@ function SellerComplaintsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+    if (!user) return;
 
     if (!buyerName.trim()) {
       setFormError('Please enter buyer name');
@@ -150,7 +146,7 @@ function SellerComplaintsPage() {
 
     try {
       const { error } = await supabase.from('complaints').insert({
-        seller_id: user!.id,
+        seller_id: user.id,
         buyer_name: buyerName.trim(),
         buyer_phone: cleanPhone,
         destination: destination.trim(),
@@ -309,7 +305,7 @@ function SellerComplaintsPage() {
         ) : complaints.length === 0 ? (
           <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border bg-card/50">
             <CheckCircle className="h-12 w-12 mx-auto text-emerald-500/70 mb-3" />
-            <h2 className="font-semibold text-foreground text-sm">No reported complaints</h2>
+            <h2 className="font-semibold text-foreground text-sm">No active complaints</h2>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
               All your buyers' parcels are running smoothly! If any customer calls with a delivery concern, click "Report Issue" above.
             </p>
@@ -318,10 +314,10 @@ function SellerComplaintsPage() {
           <div className="space-y-3">
             {complaints.map((c) => (
               <Card key={c.id} className="p-4 border border-border/80 bg-card space-y-2.5">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-0.5">
-                    <h2 className="font-semibold text-sm text-foreground">{c.buyer_name}</h2>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 space-y-0.5">
+                    <h2 className="break-words font-semibold text-sm text-foreground">{c.buyer_name}</h2>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Phone className="h-3 w-3 text-primary" /> {formatPhoneDisplay(c.buyer_phone)}
                       </span>
@@ -345,12 +341,8 @@ function SellerComplaintsPage() {
 
                 <div className="flex justify-between items-center text-[10px] text-muted-foreground pt-1">
                   <span>Reported on {new Date(c.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                  {c.resolved_at && (
-                    <span className="text-emerald-600 font-medium">
-                      Resolved on {new Date(c.resolved_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
-                    </span>
-                  )}
                 </div>
+                <ComplaintActions complaint={c} onResolved={(id) => setComplaints(current => current.filter(item => item.id !== id))} />
               </Card>
             ))}
           </div>

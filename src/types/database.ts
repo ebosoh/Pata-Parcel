@@ -257,7 +257,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };
     };
     Enums: {
       user_role: UserRole;

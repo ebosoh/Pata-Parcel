@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Phone, MapPin, Package, RefreshCw, Store, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPhoneDisplay } from '@/lib/constants';
+import { matchesComplaintFilter, type ComplaintFilter } from '@/lib/complaints';
+import { ComplaintActions } from '@/components/shared/ComplaintActions';
 import type { Complaint, ComplaintStatus } from '@/types/database';
 
 export const Route = createFileRoute('/pap/issues')({
@@ -26,14 +28,14 @@ export const Route = createFileRoute('/pap/issues')({
 });
 
 type Row = Complaint & { seller_label: string };
-const FILTERS: (ComplaintStatus | 'all')[] = ['open', 'investigating', 'resolved', 'all'];
-const LABEL: Record<string, string> = { open: 'Open', investigating: 'Investigating', resolved: 'Resolved', all: 'All' };
+const FILTERS: ComplaintFilter[] = ['active', 'open', 'investigating', 'resolved'];
+const LABEL: Record<ComplaintFilter, string> = { active: 'Active', open: 'Open', investigating: 'Investigating', resolved: 'Resolved' };
 
 function PapIssuesPage() {
   const { profile } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<ComplaintStatus | 'all'>('open');
+  const [filter, setFilter] = useState<ComplaintFilter>('active');
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -52,18 +54,21 @@ function PapIssuesPage() {
 
   useEffect(() => { if (profile) load(); }, [profile, load]);
 
-  const setStatus = async (c: Row, status: ComplaintStatus) => {
+  const setStatus = async (c: Row, status: Exclude<ComplaintStatus, 'resolved'>) => {
     setBusy(c.id);
     const { error } = await supabase
       .from('complaints')
-      .update({ status, resolved_at: status === 'resolved' ? new Date().toISOString() : null } as any)
+      .update({ status, resolved_at: null })
       .eq('id', c.id);
     setBusy(null);
     if (error) toast.error(error.message);
     else { toast.success(`Issue marked ${LABEL[status]}`); load(); }
   };
 
-  const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter);
+  const shown = rows.filter((r) => matchesComplaintFilter(r.status, filter));
+  const onResolved = (id: string) => {
+    setRows(current => current.map(row => row.id === id ? { ...row, status: 'resolved' } : row));
+  };
 
   return (
     <AppShell role={profile?.role ?? 'pap_staff'}>
@@ -78,12 +83,12 @@ function PapIssuesPage() {
           </Button>
         </div>
 
-        <div className="flex gap-1 overflow-x-auto rounded-lg border border-border bg-muted p-0.5">
+        <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-0.5 sm:grid-cols-4">
           {FILTERS.map((f) => (
-            <button key={f} onClick={() => setFilter(f)}
-              className={`flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold ${filter === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}>
-              {LABEL[f]} ({f === 'all' ? rows.length : rows.filter((r) => r.status === f).length})
-            </button>
+            <Button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
+              variant={filter === f ? 'default' : 'ghost'} className="h-11 px-2 text-xs font-semibold">
+              {LABEL[f]} ({rows.filter((r) => matchesComplaintFilter(r.status, f)).length})
+            </Button>
           ))}
         </div>
 
@@ -117,16 +122,15 @@ function PapIssuesPage() {
                   <span className="text-[10px] text-muted-foreground">
                     Reported {new Date(c.created_at).toLocaleString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  <div className="flex gap-2">
-                    {c.status !== 'investigating' && c.status !== 'resolved' && (
-                      <Button size="sm" variant="outline" className="h-8 text-xs" disabled={busy === c.id} onClick={() => setStatus(c, 'investigating')}>Investigate</Button>
-                    )}
-                    {c.status !== 'resolved' ? (
-                      <Button size="sm" className="h-8 text-xs" disabled={busy === c.id} onClick={() => setStatus(c, 'resolved')}>Mark Resolved</Button>
-                    ) : (
-                      <Button size="sm" variant="outline" className="h-8 text-xs" disabled={busy === c.id} onClick={() => setStatus(c, 'open')}>Reopen</Button>
-                    )}
-                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <ComplaintActions complaint={c} disabled={busy === c.id} onResolved={onResolved} />
+                  {c.status === 'open' && (
+                    <Button variant="outline" className="h-11 text-xs" disabled={busy === c.id} onClick={() => setStatus(c, 'investigating')}>Investigate</Button>
+                  )}
+                  {c.status === 'resolved' && (
+                    <Button variant="outline" className="h-11 text-xs" disabled={busy === c.id} onClick={() => setStatus(c, 'open')}>Reopen</Button>
+                  )}
                 </div>
               </Card>
             ))}
