@@ -4,6 +4,7 @@
 - (none)
 
 ## Done
+- Confirm Delivered: the button disappears from the Active Transit card the moment it is tapped, and a red message appears if the save fails.
 - Bottom bar (Dispatch / Receipts / Issues / Profile) now uses the header's green banner with a yellow top edge; unselected labels are solid white, the selected one is yellow. Checked at phone width with all 7 admin items — nothing clipped or blending in.
 - Platform fee raised to KES 15/package.
 - Dispatch form: pkg count and fee-per-pkg defaults are deletable placeholders.

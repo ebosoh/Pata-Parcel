@@ -89,6 +89,9 @@ export function PapDispatchPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  // Parcels whose delivery was just confirmed — their button is hidden at once
+  const [deliveredIds, setDeliveredIds] = useState<Record<string, boolean>>({});
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   // Auth guard
   useEffect(() => {
@@ -191,12 +194,27 @@ export function PapDispatchPage() {
   // Handle Mark as Delivered
   const handleMarkDelivered = async (parcelId: string, refNum: string) => {
     setSubmitting(true);
+    setDeliveryError(null);
+    // Hide the button the moment it is pressed, before the list refreshes
+    setDeliveredIds(prev => ({ ...prev, [parcelId]: true }));
+
     const { error: delErr } = await deliverParcel(parcelId);
     setSubmitting(false);
-    if (!delErr) {
-      setFeedback(`Parcel ${refNum} marked as Delivered!`);
-      setTimeout(() => setFeedback(null), 3000);
+
+    if (delErr) {
+      // Save failed — bring the button back and say why
+      setDeliveredIds(prev => {
+        const next = { ...prev };
+        delete next[parcelId];
+        return next;
+      });
+      setDeliveryError(`Could not mark ${refNum} as delivered. Please try again.`);
+      setTimeout(() => setDeliveryError(null), 5000);
+      return;
     }
+
+    setFeedback(`Parcel ${refNum} marked as Delivered!`);
+    setTimeout(() => setFeedback(null), 3000);
   };
 
   return (
@@ -229,6 +247,13 @@ export function PapDispatchPage() {
         {feedback && (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold">
             {feedback}
+          </div>
+        )}
+
+        {/* Delivery save failed */}
+        {deliveryError && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800 dark:bg-red-950/40 dark:text-red-300 font-semibold">
+            {deliveryError}
           </div>
         )}
 
@@ -390,15 +415,17 @@ export function PapDispatchPage() {
                           )}
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
-                        disabled={submitting}
-                        className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Confirm Delivered
-                      </Button>
+                      {!deliveredIds[parcel.id] && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
+                          disabled={submitting}
+                          className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Confirm Delivered
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
