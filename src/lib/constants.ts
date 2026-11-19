@@ -35,6 +35,52 @@ export const SENDING_METHODS = [
   { value: 'psv_driver', label: 'PSV-Driver' },
 ] as const;
 
+// SACCOs available for PSV (SACCO) and PSV-Driver dispatches
+export const SACCO_NAMES = [
+  'Tulaga',
+  'Latema',
+  'Nawaku',
+  'Lopha',
+  'Unique',
+  'Luxury',
+  'Ketro',
+  'Meiso',
+  'Ena Coach',
+  'Neno',
+  'Tahmid',
+  'Tawaka',
+  'Dream Line',
+  'Buscar',
+  'Kukena',
+  '2NK',
+  '4NT',
+  'Enabled',
+  'Super Metro',
+  'Forward',
+  'County Link',
+  'Kinatwa',
+  'South Rift',
+  'North Rift',
+  'Great Rift',
+  'Kam',
+  'Makos',
+  'Rembo Classic',
+  'Naekena',
+  'NNUS',
+  'GTC',
+  'MTN',
+  'Super Premior',
+  'Narok Line',
+  'Molo Line',
+  'Kagumo Travellers',
+  'Quick Shuttle',
+  'Maralal Safaris',
+  'Chania Genesis',
+  'Chania cool',
+  'Likana',
+  'Double M',
+] as const;
+
 // Platform fee per package in KES
 export const PLATFORM_FEE_PER_PACKAGE = 15;
 

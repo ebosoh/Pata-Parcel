@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label';
 import { 
   PACKAGE_TYPES, 
   SENDING_METHODS, 
+  SACCO_NAMES,
   isValidKenyanPhone, 
   PLATFORM_FEE_PER_PACKAGE,
   NAIROBI_PICK_POINTS
 } from '@/lib/constants';
-import type { SendingMethod, PaymentStatus, Destination, Sacco } from '@/types/database';
+import type { SendingMethod, PaymentStatus, Destination } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
 import { Send, Loader2, Calculator, AlertCircle } from 'lucide-react';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
@@ -20,7 +21,6 @@ const DEFAULT_FEE_PER_PACKAGE = 150;
 
 interface DispatchFormProps {
   destinations: Destination[];
-  saccos: Sacco[];
   onSubmit: (input: CreateParcelInput) => Promise<{ data: any; error: any }>;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -28,7 +28,6 @@ interface DispatchFormProps {
 
 export function DispatchForm({
   destinations,
-  saccos,
   onSubmit,
   onSuccess,
   onCancel,
@@ -225,20 +224,16 @@ export function DispatchForm({
             <Label htmlFor="psv_sacco" className="text-xs font-medium text-primary">
               {sendingMethod === 'psv' ? 'Select SACCO *' : 'Select SACCO (optional)'}
             </Label>
-            <select
+            <DestinationCombobox
               id="psv_sacco"
               value={psvSacco}
-              onChange={(e) => setPsvSacco(e.target.value)}
+              onChange={setPsvSacco}
+              options={SACCO_NAMES}
+              listHeader="All SACCOs"
+              noun="SACCO"
+              placeholder="Type SACCO (e.g. Ena Coach, Ketro)..."
               required={sendingMethod === 'psv'}
-              className="w-full h-10 rounded-md border border-primary/50 bg-secondary/10 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">-- Select SACCO --</option>
-              {saccos.map((s) => (
-                <option key={s.id} value={s.name}>
-                  {s.name} ({s.route})
-                </option>
-              ))}
-            </select>
+            />
             {sendingMethod === 'psv_driver' && (
               <p className="text-[11px] text-muted-foreground">
                 Handing the parcel straight to a driver? Leave SACCO blank if you don't know it.
