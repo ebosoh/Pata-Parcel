@@ -44,7 +44,7 @@ export function findFraudSuspects<T extends FraudComplaint>(list: T[]): FraudSus
     .filter(([, cs]) => cs.length > FRAUD_COMPLAINT_THRESHOLD)
     .map(([phoneKey, cs]) => ({
       phoneKey,
-      buyer_phone: cs[0].buyer_phone,
+      buyer_phone: cs[0]?.buyer_phone ?? '',
       names: Array.from(new Set(cs.map((c) => c.buyer_name.trim()))),
       destinations: Array.from(new Set(cs.map((c) => c.destination))),
       complaints: [...cs].sort((a, b) => b.created_at.localeCompare(a.created_at)),

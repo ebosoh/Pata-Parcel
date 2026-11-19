@@ -17,5 +17,5 @@ test('a buyer with exactly 2 complaints is not flagged for fraud', () => {
 test('a buyer with 3 complaints is flagged even with different phone formats', () => {
   const r = _ffs([mk('1', '0712345678'), mk('2', '+254712345678'), mk('3', '712 345 678')]);
   assert.equal(r.length, 1);
-  assert.equal(r[0].complaints.length, 3);
+  assert.equal(r[0]?.complaints.length, 3);
 });
