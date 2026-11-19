@@ -6,10 +6,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Phone, MapPin, Package, RefreshCw, Store, CheckCircle } from 'lucide-react';
+import { Phone, MapPin, Package, RefreshCw, Store, CheckCircle, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { formatPhoneDisplay } from '@/lib/constants';
-import { matchesComplaintFilter, type ComplaintFilter } from '@/lib/complaints';
+import { matchesComplaintFilter, findFraudSuspects, FRAUD_COMPLAINT_THRESHOLD, type ComplaintFilter } from '@/lib/complaints';
 import { ComplaintActions } from '@/components/shared/ComplaintActions';
 import type { Complaint, ComplaintStatus } from '@/types/database';
 
@@ -36,6 +36,7 @@ function PapIssuesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ComplaintFilter>('active');
+  const [view, setView] = useState<'issues' | 'fraud'>('issues');
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -65,6 +66,7 @@ function PapIssuesPage() {
     else { toast.success(`Issue marked ${LABEL[status]}`); load(); }
   };
 
+  const suspects = findFraudSuspects(rows);
   const shown = rows.filter((r) => matchesComplaintFilter(r.status, filter));
   const onResolved = (id: string) => {
     setRows(current => current.map(row => row.id === id ? { ...row, status: 'resolved' } : row));
@@ -83,6 +85,16 @@ function PapIssuesPage() {
           </Button>
         </div>
 
+        <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-0.5">
+          <Button onClick={() => setView('issues')} aria-pressed={view === 'issues'} variant={view === 'issues' ? 'default' : 'ghost'} className="h-11 text-xs font-semibold">Buyer Complaints</Button>
+          <Button onClick={() => setView('fraud')} aria-pressed={view === 'fraud'} variant={view === 'fraud' ? 'destructive' : 'ghost'} className="h-11 gap-1 text-xs font-semibold">
+            <ShieldAlert className="h-4 w-4" /> Fraud Check ({suspects.length})
+          </Button>
+        </div>
+
+        {view === 'fraud' ? (
+          <FraudCheckList suspects={suspects} loading={loading} />
+        ) : (<>
         <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-muted p-0.5 sm:grid-cols-4">
           {FILTERS.map((f) => (
             <Button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
@@ -136,7 +148,51 @@ function PapIssuesPage() {
             ))}
           </div>
         )}
+        </>)}
       </div>
     </AppShell>
+  );
+}
+
+function FraudCheckList({ suspects, loading }: { suspects: ReturnType<typeof findFraudSuspects<Row>>; loading: boolean }) {
+  if (loading) return <div className="h-32 animate-pulse rounded-xl bg-muted/40" />;
+  return (
+    <div className="space-y-3">
+      <p className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-foreground">
+        Buyers with more than {FRAUD_COMPLAINT_THRESHOLD} complaints. Before resolving, always check the buyer name, phone number, parcel and destination against delivery records.
+      </p>
+      {suspects.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-12 text-center">
+          <CheckCircle className="mx-auto mb-3 h-10 w-10 text-muted-foreground/60" />
+          <p className="text-sm font-semibold text-foreground">No suspect buyers</p>
+        </div>
+      ) : suspects.map((s) => (
+        <Card key={s.phoneKey} className="space-y-2.5 border border-destructive/40 p-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 space-y-0.5">
+              <h2 className="break-words text-sm font-semibold text-foreground">{s.names.join(' / ')}</h2>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Phone className="h-3 w-3 text-primary" />{formatPhoneDisplay(s.buyer_phone)}</span>
+                <span className="flex items-center gap-1"><MapPin className="h-3 w-3 text-primary" />{s.destinations.join(', ')}</span>
+              </div>
+              {s.names.length > 1 && <p className="text-[11px] font-medium text-destructive">Different names used with this phone number</p>}
+            </div>
+            <Badge variant="destructive">{s.complaints.length} complaints</Badge>
+          </div>
+          <ul className="space-y-1.5">
+            {s.complaints.map((c) => (
+              <li key={c.id} className="rounded-lg border border-border/50 bg-muted/30 p-2 text-xs">
+                <div className="flex flex-wrap justify-between gap-1 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1"><Package className="h-3 w-3" />{c.package_type} · {c.destination}</span>
+                  <span>{new Date(c.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <p className="mt-0.5 text-foreground/90">{c.buyer_name} — {c.issue_description}</p>
+                <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground"><Store className="h-3 w-3" />{c.seller_label} · {LABEL[c.status] ?? c.status}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ))}
+    </div>
   );
 }
