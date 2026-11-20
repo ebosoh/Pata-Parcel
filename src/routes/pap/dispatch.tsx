@@ -1,3 +1,7 @@
+import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { StorageImage } from '@/components/shared/StorageImage';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -30,11 +34,15 @@ import {
   Loader2, 
   Camera, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  MessageCircle
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
 export const Route = createFileRoute('/pap/dispatch')({
+  validateSearch: (s: Record<string, unknown>): { tab?: 'transit' | 'sorting' | undefined } => ({
+    tab: s['tab'] === 'transit' || s['tab'] === 'sorting' ? s['tab'] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: 'Sorting & Dispatch — Pata Parcel Operations Hub' },
@@ -54,16 +62,18 @@ export function PapDispatchPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const { parcels, loading, error, dispatchParcel, deliverParcel, uploadReceipt, refetch } = usePapOperations(user?.id);
+  const { parcels, loading, error, dispatchParcel, deliverParcel, uploadReceipt, receiptsByParcel, refetch } = usePapOperations(user?.id);
 
   // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit)
   const [activeTab, setActiveTab] = useState<'sorting' | 'transit'>('sorting');
+  const { tab: tabParam } = Route.useSearch();
+  useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Dispatch Modal state
   const [selectedParcel, setSelectedParcel] = useState<any | null>(null);
   const [dispatchType, setDispatchType] = useState<PapDispatchType>('psv_official');
-  const [saccoName, setSaccoName] = useState('2NK Sacco');
+  const [saccoName, setSaccoName] = useState('');
   const [driverName, setDriverName] = useState('');
   const [driverPhone, setDriverPhone] = useState('');
   const [vehiclePlate, setVehiclePlate] = useState('');
@@ -79,6 +89,9 @@ export function PapDispatchPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  // Parcels whose delivery was just confirmed — their button is hidden at once
+  const [deliveredIds, setDeliveredIds] = useState<Record<string, boolean>>({});
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   // Auth guard
   useEffect(() => {
@@ -96,6 +109,17 @@ export function PapDispatchPage() {
   const transitParcels = useMemo(() => {
     return parcels.filter(p => p.tracking_status === 'on_transit');
   }, [parcels]);
+
+  // Receipt already shared for the parcel open in the receipt modal, if any
+  const receiptModalExisting = receiptModalParcel
+    ? receiptsByParcel[receiptModalParcel.id]
+    : undefined;
+
+  // Always fill the SACCO name from the SACCO the seller selected on the dispatch
+  // form; clear it when the seller left it blank so no stale name carries over.
+  useEffect(() => {
+    setSaccoName(selectedParcel?.psv_sacco ?? '');
+  }, [selectedParcel]);
 
   const displayList = useMemo(() => {
     const list = activeTab === 'sorting' ? sortingParcels : transitParcels;
@@ -156,7 +180,10 @@ export function PapDispatchPage() {
     setUploadingReceipt(false);
 
     if (!uErr) {
-      setFeedback(`Receipt uploaded & shared with online seller!`);
+      const { data: prof } = await supabase.from('profiles').select('owner_name, business_name').eq('id', receiptModalParcel.seller_id).maybeSingle();
+      const msg = `Receipt shared successfully with ${prof?.owner_name || prof?.business_name || 'the seller'}`;
+      toast.success(msg, { description: receiptModalParcel.reference_number });
+      setFeedback(msg);
       setReceiptModalParcel(null);
       setReceiptFile(null);
       setTimeout(() => setFeedback(null), 4000);
@@ -166,12 +193,27 @@ export function PapDispatchPage() {
   // Handle Mark as Delivered
   const handleMarkDelivered = async (parcelId: string, refNum: string) => {
     setSubmitting(true);
+    setDeliveryError(null);
+    // Hide the button the moment it is pressed, before the list refreshes
+    setDeliveredIds(prev => ({ ...prev, [parcelId]: true }));
+
     const { error: delErr } = await deliverParcel(parcelId);
     setSubmitting(false);
-    if (!delErr) {
-      setFeedback(`Parcel ${refNum} marked as Delivered!`);
-      setTimeout(() => setFeedback(null), 3000);
+
+    if (delErr) {
+      // Save failed — bring the button back and say why
+      setDeliveredIds(prev => {
+        const next = { ...prev };
+        delete next[parcelId];
+        return next;
+      });
+      setDeliveryError(`Could not mark ${refNum} as delivered. Please try again.`);
+      setTimeout(() => setDeliveryError(null), 5000);
+      return;
     }
+
+    setFeedback(`Parcel ${refNum} marked as Delivered!`);
+    setTimeout(() => setFeedback(null), 3000);
   };
 
   return (
@@ -204,6 +246,13 @@ export function PapDispatchPage() {
         {feedback && (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold">
             {feedback}
+          </div>
+        )}
+
+        {/* Delivery save failed */}
+        {deliveryError && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-800 dark:bg-red-950/40 dark:text-red-300 font-semibold">
+            {deliveryError}
           </div>
         )}
 
@@ -296,6 +345,9 @@ export function PapDispatchPage() {
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
                       {parcel.destination}
                     </p>
+                    {parcel.pick_point && (
+                      <p className="text-[11px] font-medium text-foreground">Pick-point: {parcel.pick_point}</p>
+                    )}
                     <p className="text-[11px] text-muted-foreground">
                       Seller: {parcel.seller?.business_name || 'Online Seller'}
                     </p>
@@ -304,13 +356,15 @@ export function PapDispatchPage() {
 
                 <TrackingProgressBar status={parcel.tracking_status} compact />
 
-                <div className="pt-1 flex justify-end gap-2 border-t border-border/50">
+                <div className="pt-1 flex flex-wrap justify-end gap-2 border-t border-border/50">
+                  <AdminParcelControls parcel={parcel} onChanged={refetch} />
                   {activeTab === 'sorting' ? (
                     <Button
                       size="sm"
                       onClick={() => {
                         setSelectedParcel(parcel);
                         if (parcel.sending_method === 'psv') setDispatchType('psv_official');
+                        else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
                         else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
                         else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
                         else setDispatchType('pata_parcel');
@@ -321,15 +375,58 @@ export function PapDispatchPage() {
                       Dispatch Parcel
                     </Button>
                   ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
-                      disabled={submitting}
-                      className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
-                    >
-                      <CheckCircle className="h-3.5 w-3.5" />
-                      Confirm Delivered
-                    </Button>
+                    <>
+                      <a
+                        href={`https://wa.me/${(() => { const c = parcel.buyer_phone.replace(/\D/g, ''); return c.startsWith('0') ? `254${c.slice(1)}` : c.startsWith('254') ? c : `254${c}`; })()}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Chat with buyer on WhatsApp"
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 font-bold text-xs flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          WhatsApp
+                        </Button>
+                      </a>
+                      {parcel.sending_method === 'psv' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate({ to: '/pap/receipts', search: { code: parcel.reference_number || '' } })}
+                          className={`h-8 font-bold text-xs flex items-center gap-1.5 ${
+                            receiptsByParcel[parcel.id]
+                              ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300'
+                              : 'border-primary/40 text-primary hover:bg-primary/5'
+                          }`}
+                        >
+                          {receiptsByParcel[parcel.id] ? (
+                            <>
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Receipt Shared
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="h-3.5 w-3.5" />
+                              Share Receipt
+                            </>
+                          )}
+                        </Button>
+                      )}
+                      {!deliveredIds[parcel.id] && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
+                          disabled={submitting}
+                          className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Confirm Delivered
+                        </Button>
+                      )}
+                    </>
                   )}
                 </div>
               </Card>
@@ -404,7 +501,7 @@ export function PapDispatchPage() {
                     className="h-9 text-xs"
                   />
                   <p className="text-[11px] text-muted-foreground">
-                    You will be prompted to take a photo of the office receipt after dispatch.
+                    Prefilled from the SACCO the seller selected — edit only if it changed. You will be prompted to take a photo of the office receipt after dispatch.
                   </p>
                 </div>
               )}
@@ -529,12 +626,20 @@ export function PapDispatchPage() {
         </Dialog>
 
         {/* 2. Modal: Prompt to Upload Receipt Photo */}
-        <Dialog open={!!receiptModalParcel} onOpenChange={(open) => !open && setReceiptModalParcel(null)}>
+        <Dialog
+          open={!!receiptModalParcel}
+          onOpenChange={(open) => {
+            if (!open) {
+              setReceiptModalParcel(null);
+              setReceiptFile(null);
+            }
+          }}
+        >
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle className="text-base font-bold text-primary flex items-center gap-2">
                 <Camera className="h-5 w-5" />
-                Upload Receipt for {receiptModalParcel?.reference_number}
+                Share Receipt for {receiptModalParcel?.reference_number}
               </DialogTitle>
             </DialogHeader>
 
@@ -542,6 +647,24 @@ export function PapDispatchPage() {
               <p className="text-xs text-muted-foreground">
                 Scan the official courier or SACCO receipt so the online seller can verify proof of dispatch.
               </p>
+
+              {receiptModalExisting && (
+                <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2 dark:border-emerald-900 dark:bg-emerald-950/40">
+                  <StorageImage
+                    src={receiptModalExisting.receipt_image_url}
+                    alt="Receipt already shared"
+                    className="h-16 w-14 shrink-0 rounded-md border border-border object-contain"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      Receipt already shared
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(receiptModalExisting.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <ReceiptScanner file={receiptFile} onChange={(f) => setReceiptFile(f)} />
 
@@ -561,6 +684,8 @@ export function PapDispatchPage() {
                 >
                   {uploadingReceipt ? (
                     <><Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> Uploading...</>
+                  ) : receiptModalExisting ? (
+                    'Share Another Receipt'
                   ) : (
                     'Upload & Share'
                   )}

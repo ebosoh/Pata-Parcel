@@ -51,7 +51,6 @@ function SellerDispatchPage() {
   const { 
     parcels, 
     destinations, 
-    saccos, 
     loading: parcelsLoading, 
     error: parcelsError, 
     createParcel, 
@@ -159,7 +158,6 @@ function SellerDispatchPage() {
               </DialogHeader>
               <DispatchForm
                 destinations={destinations}
-                saccos={saccos}
                 onSubmit={createParcel}
                 onSuccess={() => setIsNewDialogOpen(false)}
                 onCancel={() => setIsNewDialogOpen(false)}

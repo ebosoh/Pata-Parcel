@@ -91,6 +91,7 @@ export type Database = {
           id: string
           parcel_id: string
           receipt_image_url: string
+          shared_with_buyer_at: string | null
           uploaded_by: string
         }
         Insert: {
@@ -98,6 +99,7 @@ export type Database = {
           id?: string
           parcel_id: string
           receipt_image_url: string
+          shared_with_buyer_at?: string | null
           uploaded_by: string
         }
         Update: {
@@ -105,6 +107,7 @@ export type Database = {
           id?: string
           parcel_id?: string
           receipt_image_url?: string
+          shared_with_buyer_at?: string | null
           uploaded_by?: string
         }
         Relationships: [
@@ -162,10 +165,10 @@ export type Database = {
           num_packages: number
           package_type: string
           payment_status: string
+          pick_point: string | null
           platform_fee: number
           platform_fee_paid: boolean
           psv_sacco: string | null
-          pick_point?: string | null
           reference_number: string
           seller_id: string
           sending_fee_per_package: number
@@ -183,10 +186,10 @@ export type Database = {
           num_packages?: number
           package_type: string
           payment_status?: string
+          pick_point?: string | null
           platform_fee?: number
           platform_fee_paid?: boolean
           psv_sacco?: string | null
-          pick_point?: string | null
           reference_number?: string
           seller_id: string
           sending_fee_per_package?: number
@@ -204,10 +207,10 @@ export type Database = {
           num_packages?: number
           package_type?: string
           payment_status?: string
+          pick_point?: string | null
           platform_fee?: number
           platform_fee_paid?: boolean
           psv_sacco?: string | null
-          pick_point?: string | null
           reference_number?: string
           seller_id?: string
           sending_fee_per_package?: number
@@ -301,6 +304,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_parcel: { Args: { _parcel_id: string }; Returns: undefined }
       admin_list_staff: {
         Args: never
         Returns: {
@@ -323,6 +327,15 @@ export type Database = {
         Returns: boolean
       }
       is_pap_staff: { Args: { _uid: string }; Returns: boolean }
+      mark_receipt_shared_with_buyer: {
+        Args: { p_receipt_id: string }
+        Returns: boolean
+      }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
+      resolve_buyer_complaint: {
+        Args: { p_complaint_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "pap_admin" | "pap_staff"

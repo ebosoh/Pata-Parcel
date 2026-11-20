@@ -14,6 +14,10 @@ interface DestinationComboboxProps {
   id?: string;
   required?: boolean;
   className?: string;
+  /** Heading shown above the list, e.g. "All SACCOs" */
+  listHeader?: string;
+  /** Singular noun for the items, e.g. "SACCO". Defaults to "location"/"town". */
+  noun?: string;
 }
 
 export function DestinationCombobox({
@@ -25,6 +29,8 @@ export function DestinationCombobox({
   id = 'destination',
   required = false,
   className,
+  listHeader,
+  noun,
 }: DestinationComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(value || '');
@@ -118,7 +124,7 @@ export function DestinationCombobox({
       if (highlightedIndex >= 0 && filteredTowns[highlightedIndex]) {
         handleSelectTown(filteredTowns[highlightedIndex]);
       } else if (filteredTowns.length > 0) {
-        handleSelectTown(filteredTowns[0]);
+        handleSelectTown(filteredTowns[0]!);
       } else if (query.trim()) {
         handleSelectTown(query.trim());
       }
@@ -136,11 +142,13 @@ export function DestinationCombobox({
     inputRef.current?.focus();
   };
 
-  const countLabel = options
-    ? filteredTowns.length === 1 ? 'location' : 'locations'
-    : filteredTowns.length === 1 ? 'town' : 'towns';
+  const countLabel = noun
+    ? filteredTowns.length === 1 ? noun : `${noun}s`
+    : options
+      ? filteredTowns.length === 1 ? 'location' : 'locations'
+      : filteredTowns.length === 1 ? 'town' : 'towns';
 
-  const defaultHeader = options ? 'All Pick-Points' : 'All Destination Towns';
+  const defaultHeader = listHeader ?? (options ? 'All Pick-Points' : 'All Destination Towns');
 
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
@@ -243,7 +251,7 @@ export function DestinationCombobox({
             ) : (
               <div className="p-3 text-center space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  No predefined location found matching &ldquo;{query}&rdquo;
+                  {noun ? `No predefined ${noun.toLowerCase()} found matching` : 'No predefined location found matching'} &ldquo;{query}&rdquo;
                 </p>
                 {query.trim() && (
                   <button

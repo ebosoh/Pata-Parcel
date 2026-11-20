@@ -67,11 +67,11 @@ export function TrackingProgressBar({ status, className = '', compact = false }:
       {/* Progress Track */}
       <div className="relative flex items-center justify-between">
         {/* Connecting Line Background */}
-        <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-muted rounded-full z-0" />
+        <div className="absolute left-4 right-4 top-[14px] h-1 bg-muted rounded-full z-0" />
         
         {/* Filled Connecting Line */}
         <div
-          className="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full z-0 transition-all duration-500 ease-out"
+          className="absolute left-4 top-[14px] h-1 bg-primary rounded-full z-0 transition-all duration-500 ease-out"
           style={{
             width: `calc(${((currentStep - 1) / (STAGES.length - 1)) * 100}% - 16px)`,
           }}
@@ -104,7 +104,7 @@ export function TrackingProgressBar({ status, className = '', compact = false }:
               </div>
 
               {/* Step Label */}
-              <div className="mt-1 text-center">
+              <div className="mt-1 max-w-[72px] text-center">
                 <p
                   className={`text-[11px] font-semibold leading-tight ${
                     isCurrent

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { computePlatformFee } from '@/lib/constants';
 import type { Parcel, Destination, Sacco, SendingMethod, PaymentStatus, TrackingStatus } from '@/types/database';
 
 export interface CreateParcelInput {
@@ -117,7 +118,7 @@ export function useParcels(sellerId?: string | null) {
 
     try {
       const calculatedTotal = input.num_packages * input.sending_fee_per_package;
-      const platformFee = input.num_packages * 10;
+      const platformFee = computePlatformFee(calculatedTotal);
 
       const insertPayload: Record<string, any> = {
         seller_id: sellerId,
@@ -125,7 +126,7 @@ export function useParcels(sellerId?: string | null) {
         buyer_phone: input.buyer_phone.trim(),
         destination: input.destination,
         sending_method: input.sending_method,
-        psv_sacco: input.sending_method === 'psv' ? (input.psv_sacco || null) : null,
+        psv_sacco: input.sending_method === 'psv' || input.sending_method === 'psv_driver' ? (input.psv_sacco || null) : null,
         pick_point: input.sending_method === 'door_to_door' ? (input.pick_point || null) : null,
         package_type: input.package_type,
         num_packages: input.num_packages,
@@ -142,9 +143,9 @@ export function useParcels(sellerId?: string | null) {
 
       // Graceful fallback if remote database column 'pick_point' is not yet migrated
       if (insertErr && (insertErr.message?.includes('pick_point') || (insertErr as any).code === '42703')) {
-        delete insertPayload.pick_point;
-        if (input.pick_point && !insertPayload.destination.includes(input.pick_point)) {
-          insertPayload.destination = `${insertPayload.destination} - ${input.pick_point}`;
+        delete insertPayload['pick_point'];
+        if (input.pick_point && !(insertPayload['destination'] as string).includes(input.pick_point)) {
+          insertPayload['destination'] = `${insertPayload['destination']} - ${input.pick_point}`;
         }
         const retryResult = await supabase
           .from('parcels')

@@ -43,6 +43,69 @@
       "when": 1795000000000,
       "tag": "0005_add_pick_point_to_parcels",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795012414879,
+      "tag": "0006_seller_name_tracking_code",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795013441989,
+      "tag": "0007_admin_delete_parcel",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795016969652,
+      "tag": "0008_unique_buyer_phone",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795017170688,
+      "tag": "0009_allow_repeat_buyer_phone",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795019926601,
+      "tag": "0010_raise_platform_fee_to_15",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795083837290,
+      "tag": "0011_resolve_buyer_complaints",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795086351863,
+      "tag": "0012_add_psv_driver_sending_method",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795089582328,
+      "tag": "0013_track_receipt_shared_with_buyer",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795093185675,
+      "tag": "0014_platform_fee_15_percent_of_sending_fee",
+      "breakpoints": true
     }
   ]
 }

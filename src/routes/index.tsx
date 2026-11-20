@@ -130,6 +130,16 @@ function LandingPage() {
         <p className="text-[11px] text-muted-foreground">
           © {new Date().getFullYear()} Pata Parcel Kenya. Delivering Trust, Every Time.
         </p>
+        <p className="mt-1 text-[11px]">
+          <a
+            href="https://www.techbrain.africa"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-destructive underline hover:opacity-80"
+          >
+            Powered by TechBrain
+          </a>
+        </p>
       </footer>
 
       {/* PWA Install Prompt */}

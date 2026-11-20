@@ -5,18 +5,22 @@ import { Label } from '@/components/ui/label';
 import { 
   PACKAGE_TYPES, 
   SENDING_METHODS, 
+  SACCO_NAMES,
   isValidKenyanPhone, 
-  PLATFORM_FEE_PER_PACKAGE,
+  computePlatformFee,
   NAIROBI_PICK_POINTS
 } from '@/lib/constants';
-import type { SendingMethod, PaymentStatus, Destination, Sacco } from '@/types/database';
+import type { SendingMethod, PaymentStatus, Destination } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
 import { Send, Loader2, Calculator, AlertCircle } from 'lucide-react';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 
+// Suggested values shown as placeholders so sellers can clear and retype them
+const DEFAULT_NUM_PACKAGES = 1;
+const DEFAULT_FEE_PER_PACKAGE = 150;
+
 interface DispatchFormProps {
   destinations: Destination[];
-  saccos: Sacco[];
   onSubmit: (input: CreateParcelInput) => Promise<{ data: any; error: any }>;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -24,7 +28,6 @@ interface DispatchFormProps {
 
 export function DispatchForm({
   destinations,
-  saccos,
   onSubmit,
   onSuccess,
   onCancel,
@@ -38,8 +41,8 @@ export function DispatchForm({
   const [pickPoint, setPickPoint] = useState('');
   const [packageType, setPackageType] = useState<string>(PACKAGE_TYPES[0]);
   const [customPackageType, setCustomPackageType] = useState('');
-  const [numPackages, setNumPackages] = useState<number>(1);
-  const [sendingFeePerPackage, setSendingFeePerPackage] = useState<number>(150);
+  const [numPackages, setNumPackages] = useState<number | null>(null);
+  const [sendingFeePerPackage, setSendingFeePerPackage] = useState<number | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('paid');
 
   const [loading, setLoading] = useState(false);
@@ -47,16 +50,13 @@ export function DispatchForm({
 
   // Auto-calculated total sending fee
   const totalSendingFee = useMemo(() => {
-    const qty = Math.max(1, Number(numPackages) || 1);
-    const fee = Math.max(0, Number(sendingFeePerPackage) || 0);
+    const qty = Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES);
+    const fee = Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE);
     return qty * fee;
   }, [numPackages, sendingFeePerPackage]);
 
-  // Platform fee
-  const totalPlatformFee = useMemo(() => {
-    const qty = Math.max(1, Number(numPackages) || 1);
-    return qty * PLATFORM_FEE_PER_PACKAGE;
-  }, [numPackages]);
+  // Platform fee: 15% of the total sending fee
+  const totalPlatformFee = useMemo(() => computePlatformFee(totalSendingFee), [totalSendingFee]);
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,11 +101,11 @@ export function DispatchForm({
       buyer_phone: cleanPhone,
       destination,
       sending_method: sendingMethod,
-      psv_sacco: sendingMethod === 'psv' ? psvSacco : null,
+      psv_sacco: sendingMethod === 'psv' || sendingMethod === 'psv_driver' ? (psvSacco || null) : null,
       pick_point: sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
-      num_packages: Math.max(1, numPackages),
-      sending_fee_per_package: Math.max(0, sendingFeePerPackage),
+      num_packages: Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES),
+      sending_fee_per_package: Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE),
       payment_status: paymentStatus,
     });
 
@@ -119,7 +119,8 @@ export function DispatchForm({
       setBuyerPhone('');
       setDestination('');
       setPickPoint('');
-      setNumPackages(1);
+      setNumPackages(null);
+      setSendingFeePerPackage(null);
       if (onSuccess) onSuccess();
     }
   };
@@ -214,26 +215,27 @@ export function DispatchForm({
           </select>
         </div>
 
-        {/* PSV SACCO selector if method is PSV */}
-        {sendingMethod === 'psv' && (
+        {/* PSV SACCO selector if method is PSV or PSV-Driver */}
+        {(sendingMethod === 'psv' || sendingMethod === 'psv_driver') && (
           <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
             <Label htmlFor="psv_sacco" className="text-xs font-medium text-primary">
-              Select SACCO *
+              {sendingMethod === 'psv' ? 'Select SACCO *' : 'Select SACCO (optional)'}
             </Label>
-            <select
+            <DestinationCombobox
               id="psv_sacco"
               value={psvSacco}
-              onChange={(e) => setPsvSacco(e.target.value)}
-              required
-              className="w-full h-10 rounded-md border border-primary/50 bg-secondary/10 px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">-- Select SACCO --</option>
-              {saccos.map((s) => (
-                <option key={s.id} value={s.name}>
-                  {s.name} ({s.route})
-                </option>
-              ))}
-            </select>
+              onChange={setPsvSacco}
+              options={SACCO_NAMES}
+              listHeader="All SACCOs"
+              noun="SACCO"
+              placeholder="Type SACCO (e.g. Ena Coach)..."
+              required={sendingMethod === 'psv'}
+            />
+            {sendingMethod === 'psv_driver' && (
+              <p className="text-[11px] text-muted-foreground">
+                Handing the parcel straight to a driver? Leave SACCO blank if you don't know it.
+              </p>
+            )}
           </div>
         )}
 
@@ -307,9 +309,13 @@ export function DispatchForm({
               type="number"
               min="1"
               max="500"
-              value={numPackages}
-              onChange={(e) => setNumPackages(Math.max(1, parseInt(e.target.value) || 1))}
-              required
+              inputMode="numeric"
+              placeholder={String(DEFAULT_NUM_PACKAGES)}
+              value={numPackages ?? ''}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setNumPackages(raw === '' ? null : Math.max(1, parseInt(raw) || 1));
+              }}
               className="h-10 text-sm"
             />
           </div>
@@ -323,13 +329,21 @@ export function DispatchForm({
               type="number"
               min="0"
               step="10"
-              value={sendingFeePerPackage}
-              onChange={(e) => setSendingFeePerPackage(Math.max(0, parseInt(e.target.value) || 0))}
-              required
+              inputMode="numeric"
+              placeholder={String(DEFAULT_FEE_PER_PACKAGE)}
+              value={sendingFeePerPackage ?? ''}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setSendingFeePerPackage(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
+              }}
               className="h-10 text-sm"
             />
           </div>
         </div>
+
+        <p className="text-[11px] text-muted-foreground">
+          Clear either box to type your own figure — if you leave it empty, the default in grey is used.
+        </p>
 
         {/* Auto Calculation Banner */}
         <div className="rounded-lg bg-secondary/30 p-3 border border-secondary">
@@ -344,7 +358,7 @@ export function DispatchForm({
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1">
             <span>Pata Parcel Platform Fee:</span>
-            <span>KES {totalPlatformFee} (KES 10/pkg)</span>
+            <span>KES {totalPlatformFee} (15% of sending fee)</span>
           </div>
         </div>
 

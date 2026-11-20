@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS public.parcels_buyer_phone_unique;

@@ -3,6 +3,7 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { Header } from './Header';
 import { BottomNav } from './BottomNav';
 import { useAuth } from '@/hooks/useAuth';
+import { PendingReceiptsBanner } from '@/components/pap/PendingReceiptsBanner';
 import type { UserRole } from '@/types/database';
 
 interface AppShellProps {
@@ -45,6 +46,12 @@ function AdminAreaSwitcher() {
   );
 }
 
+function StaffBanner() {
+  const { profile } = useAuth();
+  if (profile?.role !== 'pap_admin' && profile?.role !== 'pap_staff') return null;
+  return <div className="print:hidden"><PendingReceiptsBanner /></div>;
+}
+
 export function AppShell({ children, role, showNav = true }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -52,6 +59,7 @@ export function AppShell({ children, role, showNav = true }: AppShellProps) {
       <main className="flex-1 pb-20">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <div className="print:hidden"><AdminAreaSwitcher /></div>
+          <StaffBanner />
           {children}
         </div>
       </main>

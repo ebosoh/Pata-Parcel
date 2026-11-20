@@ -1,6 +1,7 @@
 import { StorageImage } from '@/components/shared/StorageImage';
+import { ReceiptShareButton } from '@/components/shared/ReceiptShareButton';
 import { ReceiptScanner } from '@/components/shared/ReceiptScanner';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
@@ -22,9 +23,13 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/pap/receipts')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    code: typeof search['code'] === 'string' && search['code'].trim() ? search['code'].trim() : undefined,
+  }),
   head: () => ({
     meta: [
       { title: 'Courier Receipts — Pata Parcel Operations Hub' },
@@ -44,6 +49,7 @@ interface StaffReceiptWithParcel extends ParcelReceipt {
   parcel?: {
     reference_number: string;
     buyer_name: string;
+    buyer_phone: string;
     destination: string;
     sending_method: string;
   } | null;
@@ -52,12 +58,14 @@ interface StaffReceiptWithParcel extends ParcelReceipt {
 function PapReceiptsPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { code } = Route.useSearch();
 
-  const { parcels, uploadReceipt } = usePapOperations(user?.id);
+  const { parcels, loading: parcelsLoading, uploadReceipt } = usePapOperations(user?.id);
 
-  // Upload Form State
+  // Upload Form State — tracking code prefilled when arriving from a parcel
   const [selectedParcelId, setSelectedParcelId] = useState('');
-  const [parcelSearch, setParcelSearch] = useState('');
+  const [parcelSearch, setParcelSearch] = useState(code ?? '');
+  const appliedCodeRef = useRef<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [previewLocalUrl, setPreviewLocalUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,6 +84,24 @@ function PapReceiptsPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  // Auto-select the parcel whose tracking code arrived in the link
+  useEffect(() => {
+    if (!code || appliedCodeRef.current === code) return;
+    const match = parcels.find(
+      p => p.sending_method === 'psv' && p.reference_number?.toLowerCase() === code.toLowerCase(),
+    );
+    if (match) {
+      setSelectedParcelId(match.id);
+      setParcelSearch(match.reference_number || code);
+      appliedCodeRef.current = code;
+    }
+  }, [code, parcels]);
+
+  const selectedParcel = useMemo(
+    () => parcels.find(p => p.id === selectedParcelId) || null,
+    [parcels, selectedParcelId],
+  );
+
   // Handle local image preview
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,9 +114,12 @@ function PapReceiptsPage() {
 
   // Filter parcels for dropdown selector
   const selectableParcels = useMemo(() => {
-    if (!parcelSearch.trim()) return parcels.slice(0, 30);
-    const q = parcelSearch.toLowerCase();
-    return parcels.filter(p => 
+    const psv = parcels.filter(p => p.sending_method === 'psv');
+    if (!parcelSearch.trim()) return psv.slice(0, 30);
+    const q = parcelSearch.trim().toLowerCase();
+    const exact = psv.filter(p => p.reference_number?.toLowerCase() === q);
+    if (exact.length) return exact;
+    return psv.filter(p => 
       p.reference_number?.toLowerCase().includes(q) ||
       p.buyer_name?.toLowerCase().includes(q) ||
       p.destination?.toLowerCase().includes(q)
@@ -114,7 +143,7 @@ function PapReceiptsPage() {
         if (parcelIds.length > 0) {
           const { data: pData } = await supabase
             .from('parcels')
-            .select('id, reference_number, buyer_name, destination, sending_method')
+            .select('id, reference_number, buyer_name, buyer_phone, destination, sending_method')
             .in('id', parcelIds);
 
           if (pData) {
@@ -140,14 +169,28 @@ function PapReceiptsPage() {
     fetchRecentReceipts();
   }, []);
 
+  // Keep the card in step with a receipt the buyer has just been sent
+  const markShared = (receiptId: string) => {
+    setRecentReceipts(prev =>
+      prev.map(r => (r.id === receiptId ? { ...r, shared_with_buyer_at: new Date().toISOString() } : r)),
+    );
+  };
+
   // Submit Receipt Upload
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccessMsg(null);
     setErrorMsg(null);
 
-    if (!selectedParcelId) {
-      setErrorMsg('Please select a parcel to attach the receipt to');
+    let targetId = selectedParcelId;
+    if (!targetId && selectableParcels.length === 1 && parcelSearch.trim()) targetId = selectableParcels[0]!.id;
+    if (!targetId) {
+      setErrorMsg('Enter the parcel tracking code (e.g. HudsonEboso-012548)');
+      return;
+    }
+    const target = parcels.find(p => p.id === targetId);
+    if (target && target.sending_method !== 'psv') {
+      setErrorMsg('Receipts are only for PSV (SACCO) parcels');
       return;
     }
 
@@ -157,16 +200,26 @@ function PapReceiptsPage() {
     }
 
     setUploading(true);
-    const { error: uErr } = await uploadReceipt(selectedParcelId, receiptFile);
+    const { error: uErr } = await uploadReceipt(targetId, receiptFile);
     setUploading(false);
 
     if (uErr) {
       setErrorMsg(uErr.message || 'Failed to upload receipt');
     } else {
-      setSuccessMsg('Receipt uploaded and immediately shared with the online seller!');
+      let sellerName = 'the seller';
+      if (target?.seller_id) {
+        const { data: prof } = await supabase.from('profiles').select('owner_name, business_name').eq('id', target.seller_id).maybeSingle();
+        sellerName = prof?.owner_name || prof?.business_name || sellerName;
+      }
+      const msg = `Receipt shared successfully with ${sellerName}`;
+      toast.success(msg, { description: target?.reference_number });
+      setSuccessMsg(msg);
+      setParcelSearch('');
       setSelectedParcelId('');
       setReceiptFile(null);
       setPreviewLocalUrl(null);
+      appliedCodeRef.current = null;
+      navigate({ to: '/pap/receipts', search: { code: undefined }, replace: true });
       await fetchRecentReceipts();
       setTimeout(() => setSuccessMsg(null), 4000);
     }
@@ -223,26 +276,48 @@ function PapReceiptsPage() {
           <form onSubmit={handleUploadSubmit} className="space-y-3.5">
             {/* Parcel Selector */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Select Parcel to Attach *</Label>
+              <Label className="text-xs font-semibold">Parcel Tracking Code * (PSV / SACCO only)</Label>
               <Input
-                placeholder="Type to filter parcels (ref, buyer, destination)..."
+                placeholder="e.g. HudsonEboso-012548"
                 value={parcelSearch}
-                onChange={(e) => setParcelSearch(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value; setParcelSearch(v);
+                  const m = parcels.find(p => p.sending_method === 'psv' && p.reference_number?.toLowerCase() === v.trim().toLowerCase());
+                  setSelectedParcelId(m ? m.id : '');
+                }}
                 className="h-9 text-xs mb-1"
               />
               <select
                 value={selectedParcelId}
-                onChange={(e) => setSelectedParcelId(e.target.value)}
-                required
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedParcelId(id);
+                  const chosen = parcels.find(p => p.id === id);
+                  if (chosen?.reference_number) setParcelSearch(chosen.reference_number);
+                }}
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-xs ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="">-- Choose Parcel ({selectableParcels.length} available) --</option>
+                <option value="">-- Or choose PSV parcel ({selectableParcels.length} available) --</option>
                 {selectableParcels.map(p => (
                   <option key={p.id} value={p.id}>
                     {p.reference_number || 'PAP-PARCEL'} - {p.buyer_name} ({p.destination}) - [{p.tracking_status}]
                   </option>
                 ))}
               </select>
+              {selectedParcel && (
+                <p className="text-[11px] text-muted-foreground">
+                  Receipt goes to <span className="font-semibold text-foreground">{selectedParcel.buyer_name}</span>
+                  {' '}· {selectedParcel.destination} · Seller{' '}
+                  <span className="font-semibold text-foreground">
+                    {selectedParcel.seller?.business_name || selectedParcel.seller?.owner_name || 'Online Seller'}
+                  </span>
+                </p>
+              )}
+              {!selectedParcel && code && !parcelsLoading && (
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                  No PSV parcel matches "{code}". Pick the parcel from the list above.
+                </p>
+              )}
             </div>
 
             {/* Photo Capture / Select */}
@@ -311,6 +386,20 @@ function PapReceiptsPage() {
                     <p className="text-[10px] text-muted-foreground">
                       {new Date(r.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
+                    {r.parcel && (
+                      <div className="pt-1.5">
+                        <ReceiptShareButton
+                          receiptId={r.id}
+                          receiptImageUrl={r.receipt_image_url}
+                          sharedAt={r.shared_with_buyer_at}
+                          referenceNumber={r.parcel.reference_number}
+                          buyerName={r.parcel.buyer_name}
+                          buyerPhone={r.parcel.buyer_phone}
+                          destination={r.parcel.destination}
+                          onShared={markShared}
+                        />
+                      </div>
+                    )}
                   </div>
                 </Card>
               ))}

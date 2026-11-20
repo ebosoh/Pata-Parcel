@@ -1,5 +1,6 @@
+import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 import { useState, useMemo, useEffect } from 'react';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { usePapOperations } from '@/hooks/usePapOperations';
@@ -120,9 +121,23 @@ function PapQueuePage() {
     }
   };
 
+  const sortingCount = parcels.filter((p) => p.tracking_status === 'sorting').length;
+  const transitCount = parcels.filter((p) => p.tracking_status === 'on_transit').length;
+
   return (
     <AppShell role="pap_staff">
       <div className="space-y-4 max-w-3xl mx-auto">
+        {(sortingCount > 0 || transitCount > 0) && (
+          <Link
+            to="/pap/dispatch"
+            className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-3 text-xs"
+          >
+            <span className="min-w-0 text-foreground">
+              <b>{sortingCount}</b> in Sorting · <b>{transitCount}</b> On Transit — move them to the next stage
+            </span>
+            <span className="shrink-0 font-bold text-primary">Open Dispatch →</span>
+          </Link>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -286,6 +301,9 @@ function PapQueuePage() {
                           <MapPin className="h-3.5 w-3.5 shrink-0" />
                           {parcel.destination}
                         </p>
+                        {parcel.pick_point && (
+                          <p className="text-[11px] font-medium text-foreground">Pick-point: {parcel.pick_point}</p>
+                        )}
                         <p className="text-[11px] text-muted-foreground">
                           {parcel.num_packages}x {parcel.package_type}
                         </p>
@@ -296,7 +314,8 @@ function PapQueuePage() {
                     <TrackingProgressBar status={parcel.tracking_status} compact />
 
                     {/* Action Button */}
-                    <div className="pt-1 flex justify-end">
+                    <div className="pt-1 flex flex-wrap justify-end gap-2">
+                      <AdminParcelControls parcel={parcel} onChanged={refetch} />
                       <Button
                         size="sm"
                         onClick={() => handleReceiveSingle(parcel.id)}

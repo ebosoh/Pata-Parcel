@@ -1,7 +1,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type UserRole = 'seller' | 'pap_admin' | 'pap_staff';
-export type SendingMethod = 'pickup_mtaani' | 'pata_parcel' | 'door_to_door' | 'psv';
+export type SendingMethod = 'pickup_mtaani' | 'pata_parcel' | 'door_to_door' | 'psv' | 'psv_driver';
 export type PaymentStatus = 'paid' | 'unpaid' | 'pay_on_delivery';
 export type TrackingStatus = 'dispatched_to_pap' | 'sorting' | 'on_transit' | 'delivered';
 export type ComplaintStatus = 'open' | 'investigating' | 'resolved';
@@ -151,6 +151,7 @@ export type Database = {
           uploaded_by: string;
           receipt_image_url: string;
           created_at: string;
+          shared_with_buyer_at: string | null;
         };
         Insert: {
           id?: string;
@@ -158,6 +159,7 @@ export type Database = {
           uploaded_by: string;
           receipt_image_url: string;
           created_at?: string;
+          shared_with_buyer_at?: string | null;
         };
         Update: {
           id?: string;
@@ -165,6 +167,7 @@ export type Database = {
           uploaded_by?: string;
           receipt_image_url?: string;
           created_at?: string;
+          shared_with_buyer_at?: string | null;
         };
         Relationships: [];
       };
@@ -257,7 +260,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };
+      mark_receipt_shared_with_buyer: { Args: { p_receipt_id: string }; Returns: boolean };
     };
     Enums: {
       user_role: UserRole;

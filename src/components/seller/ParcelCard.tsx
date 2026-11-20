@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrackingProgressBar } from './TrackingProgressBar';
+import { PLATFORM_FEE_RATE } from '@/lib/constants';
 import { 
   Package, 
   MapPin, 
@@ -30,6 +31,8 @@ function getMethodLabel(method: SendingMethod, sacco?: string | null): string {
       return 'Door to Door (Nairobi)';
     case 'psv':
       return sacco ? `PSV (${sacco})` : 'PSV (SACCO)';
+    case 'psv_driver':
+      return sacco ? `PSV-Driver (${sacco})` : 'PSV-Driver';
     default:
       return method;
   }
@@ -127,6 +130,14 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
           </div>
         </div>
 
+        {parcel.pick_point && (
+          <div className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="text-muted-foreground">Pick-point:</span>
+            <span className="truncate font-semibold text-foreground">{parcel.pick_point}</span>
+          </div>
+        )}
+
         {/* Method & Package Details */}
         <div className="grid grid-cols-2 gap-2 text-xs bg-muted/20 p-2.5 rounded-lg border border-border/40">
           <div>
@@ -163,7 +174,7 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Platform Service Fee:</span>
-              <span className="text-foreground">KES {parcel.platform_fee} (KES 10/pkg)</span>
+              <span className="text-foreground">KES {parcel.platform_fee} ({Math.round(PLATFORM_FEE_RATE * 100)}% of sending fee)</span>
             </div>
           </div>
         )}
