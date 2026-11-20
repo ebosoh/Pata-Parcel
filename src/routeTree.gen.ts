@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
 import { Route as PapIssuesRouteImport } from './routes/pap/issues'
@@ -36,6 +37,11 @@ const LoginRoute = LoginRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/admin/payments',
+  path: '/admin/payments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminStatsRoute = AdminStatsRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/issues': typeof PapIssuesRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/issues': typeof PapIssuesRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/issues': typeof PapIssuesRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/dashboard'
+    | '/admin/payments'
     | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/issues'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/dashboard'
+    | '/admin/payments'
     | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/issues'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/dashboard'
+    | '/admin/payments'
     | '/admin/stats'
     | '/pap/dispatch'
     | '/pap/issues'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminStatsRoute: typeof AdminStatsRoute
   PapDispatchRoute: typeof PapDispatchRoute
   PapIssuesRoute: typeof PapIssuesRoute
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/dashboard'
       fullPath: '/admin/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/stats': {
@@ -299,6 +319,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
   AdminStatsRoute: AdminStatsRoute,
   PapDispatchRoute: PapDispatchRoute,
   PapIssuesRoute: PapIssuesRoute,
