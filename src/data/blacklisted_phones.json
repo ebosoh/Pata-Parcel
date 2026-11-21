@@ -1,0 +1,67 @@
+[
+  {
+    "id": "bl-001",
+    "phone": "0722123456",
+    "normalizedPhone": "722123456",
+    "name": "Kevin Mwangi",
+    "reason": "M-Pesa Code Misuse (Reused duplicate code QGH7892KLM on multiple orders)",
+    "mpesaCode": "QGH7892KLM",
+    "incidentCount": 3,
+    "flaggedAt": "2026-11-19T14:32:00.000Z",
+    "status": "blacklisted",
+    "notes": "Submitted same M-Pesa transaction code for two different electronics dispatches to Kisumu and Nakuru.",
+    "addedBy": "Admin System"
+  },
+  {
+    "id": "bl-002",
+    "phone": "0733987654",
+    "normalizedPhone": "733987654",
+    "name": "Brian Omondi",
+    "reason": "M-Pesa Code Misuse (Reversed M-Pesa payment immediately after parcel intake)",
+    "mpesaCode": "RKL8934JHL",
+    "incidentCount": 2,
+    "flaggedAt": "2026-11-18T09:15:00.000Z",
+    "status": "blacklisted",
+    "notes": "Initiated Safaricom transaction reversal after dispatch receipt was generated.",
+    "addedBy": "Admin System"
+  },
+  {
+    "id": "bl-003",
+    "phone": "0711554433",
+    "normalizedPhone": "711554433",
+    "name": "Faith Wanjiku",
+    "reason": "M-Pesa Code Misuse (Altered SMS confirmation & fabricated transaction code)",
+    "mpesaCode": "SHG478KJH9",
+    "incidentCount": 4,
+    "flaggedAt": "2026-11-15T11:45:00.000Z",
+    "status": "blacklisted",
+    "notes": "Generated fake confirmation text; transaction reference did not exist in Safaricom ledger.",
+    "addedBy": "Admin System"
+  },
+  {
+    "id": "bl-004",
+    "phone": "0799887766",
+    "normalizedPhone": "799887766",
+    "name": "Dennis Kipchumba",
+    "reason": "Fraudulent Delivery Disputes (Repeatedly claims non-receipt on delivered parcels)",
+    "mpesaCode": "PKL6218XYZ",
+    "incidentCount": 3,
+    "flaggedAt": "2026-11-12T16:20:00.000Z",
+    "status": "under_review",
+    "notes": "Flagged by automatic fraud check after 3 separate delivery complaints in Eldoret.",
+    "addedBy": "Fraud Detection System"
+  },
+  {
+    "id": "bl-005",
+    "phone": "0700112233",
+    "normalizedPhone": "700112233",
+    "name": "Samuel Otieno",
+    "reason": "M-Pesa Code Misuse (Invalid transaction code format submitted)",
+    "mpesaCode": "INVALID-MP99",
+    "incidentCount": 2,
+    "flaggedAt": "2026-11-10T13:10:00.000Z",
+    "status": "blacklisted",
+    "notes": "Repeatedly attempted entering mock alphanumeric codes during checkout.",
+    "addedBy": "Admin System"
+  }
+]

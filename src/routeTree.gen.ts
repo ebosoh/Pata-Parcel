@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminBlacklistRouteImport } from './routes/admin/blacklist'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
@@ -37,6 +38,11 @@ const LoginRoute = LoginRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBlacklistRoute = AdminBlacklistRouteImport.update({
+  id: '/admin/blacklist',
+  path: '/admin/blacklist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
@@ -98,6 +104,7 @@ const SellerReceiptsRoute = SellerReceiptsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/admin/blacklist'
     | '/admin/dashboard'
     | '/admin/payments'
     | '/admin/stats'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/blacklist'
     | '/admin/dashboard'
     | '/admin/payments'
     | '/admin/stats'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/admin/blacklist'
     | '/admin/dashboard'
     | '/admin/payments'
     | '/admin/stats'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  AdminBlacklistRoute: typeof AdminBlacklistRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminStatsRoute: typeof AdminStatsRoute
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/blacklist': {
+      id: '/admin/blacklist'
+      path: '/admin/blacklist'
+      fullPath: '/admin/blacklist'
+      preLoaderRoute: typeof AdminBlacklistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/dashboard': {
@@ -318,6 +338,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  AdminBlacklistRoute: AdminBlacklistRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminStatsRoute: AdminStatsRoute,
