@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { computePlatformFee } from '@/lib/constants';
-import type { Parcel, Destination, Sacco, SendingMethod, PaymentStatus, TrackingStatus } from '@/types/database';
+import type { Parcel, Destination, Sacco, SendingMethod } from '@/types/database';
 
 export interface CreateParcelInput {
   buyer_name: string;
@@ -11,9 +10,11 @@ export interface CreateParcelInput {
   psv_sacco?: string | null;
   pick_point?: string | null;
   package_type: string;
-  num_packages: number;
-  sending_fee_per_package: number;
-  payment_status: PaymentStatus;
+  package_description?: string | null;
+  /** Total sending fee in KES; ignored (0) for PSV-Driver, which is paid on delivery. */
+  sending_fee: number;
+  goods_amount?: number | null;
+  payment_code?: string | null;
 }
 
 export function useParcels(sellerId?: string | null) {
@@ -117,66 +118,26 @@ export function useParcels(sellerId?: string | null) {
     }
 
     try {
-      const calculatedTotal = input.num_packages * input.sending_fee_per_package;
-      const platformFee = computePlatformFee(calculatedTotal);
-
-      const insertPayload: Record<string, any> = {
-        seller_id: sellerId,
-        buyer_name: input.buyer_name.trim(),
-        buyer_phone: input.buyer_phone.trim(),
-        destination: input.destination,
-        sending_method: input.sending_method,
-        psv_sacco: input.sending_method === 'psv' || input.sending_method === 'psv_driver' ? (input.psv_sacco || null) : null,
-        pick_point: input.sending_method === 'door_to_door' ? (input.pick_point || null) : null,
-        package_type: input.package_type,
-        num_packages: input.num_packages,
-        sending_fee_per_package: input.sending_fee_per_package,
-        payment_status: input.payment_status,
-        tracking_status: 'dispatched_to_pap' as TrackingStatus,
-      };
-
-      let { data, error: insertErr } = await supabase
-        .from('parcels')
-        .insert(insertPayload as any)
-        .select()
-        .single();
-
-      // Graceful fallback if remote database column 'pick_point' is not yet migrated
-      if (insertErr && (insertErr.message?.includes('pick_point') || (insertErr as any).code === '42703')) {
-        delete insertPayload['pick_point'];
-        if (input.pick_point && !(insertPayload['destination'] as string).includes(input.pick_point)) {
-          insertPayload['destination'] = `${insertPayload['destination']} - ${input.pick_point}`;
-        }
-        const retryResult = await supabase
-          .from('parcels')
-          .insert(insertPayload as any)
-          .select()
-          .single();
-        data = retryResult.data;
-        insertErr = retryResult.error;
-      }
-
+      const { data, error: insertErr } = await supabase.rpc('seller_create_parcel', {
+        _input: { ...input },
+      });
       if (insertErr) {
         return { data: null, error: insertErr };
       }
-
-      // Add initial tracking entry
-      if (data?.id) {
-        const trackingNotes = input.sending_method === 'door_to_door' && input.pick_point
-          ? `Parcel dispatched by seller to Pata Parcel (Door-to-Door, Pick-Point: ${input.pick_point})`
-          : 'Parcel dispatched by seller to Pata Parcel';
-
-        await supabase.from('parcel_tracking').insert({
-          parcel_id: data.id,
-          status: 'dispatched_to_pap' as TrackingStatus,
-          updated_by: sellerId,
-          notes: trackingNotes,
-        } as any);
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return { data: null, error: new Error('Order could not be created') };
+      }
+      if (typeof data['error'] === 'string') {
+        return { data: null, error: new Error(data['error']) };
+      }
+      const parcel = data['parcel'];
+      if (!parcel || typeof parcel !== 'object' || Array.isArray(parcel)) {
+        return { data: null, error: new Error('Order could not be created') };
       }
 
       // Refresh list to ensure trigger values (ref number, computed fees) are present
       await fetchParcels();
-      return { data: data as Parcel, error: null };
+      return { data: parcel as unknown as Parcel, error: null };
     } catch (err: any) {
       return { data: null, error: err };
     }

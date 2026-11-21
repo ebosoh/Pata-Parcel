@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { SENDING_METHODS, SACCO_NAMES, PLATFORM_FEE_RATE, computePlatformFee } from './constants';
+import { suggestedSendingFee, SENDING_METHODS, SACCO_NAMES, PLATFORM_FEE_RATE, computePlatformFee } from './constants';
 
 test('the platform fee is 15% of the total sending fee, rounded to whole shillings', () => {
   assert.equal(PLATFORM_FEE_RATE, 0.15);
@@ -9,10 +9,10 @@ test('the platform fee is 15% of the total sending fee, rounded to whole shillin
   assert.equal(computePlatformFee(1000), 150);
 });
 
-test('the SACCO picker offers the 42 SACCOs the platform serves', () => {
-  assert.equal(SACCO_NAMES.length, 42);
-  assert.equal(new Set(SACCO_NAMES).size, 42);
-  for (const name of ['Tulaga', 'Ena Coach', 'Kagumo Travellers', 'Chania cool', 'Double M']) {
+test('the SACCO picker offers the 43 SACCOs the platform serves', () => {
+  assert.equal(SACCO_NAMES.length, 43);
+  assert.equal(new Set(SACCO_NAMES).size, 43);
+  for (const name of ['Tulaga', 'Ena Coach', 'Kagumo Travellers', 'Chania cool', 'Double M', 'Ganaki']) {
     assert.ok(SACCO_NAMES.includes(name as (typeof SACCO_NAMES)[number]), `missing ${name}`);
   }
 });
@@ -25,4 +25,19 @@ test('PSV (SACCO) stays a separate sending method from PSV-Driver', () => {
   const values = SENDING_METHODS.map((m) => m.value);
   assert.ok(values.includes('psv'));
   assert.notEqual(values.indexOf('psv'), values.indexOf('psv_driver'));
+});
+
+test('sending fees prefill from the method, or the SACCO for PSV', () => {
+  assert.equal(suggestedSendingFee('pickup_mtaani'), 140);
+  assert.equal(suggestedSendingFee('pata_parcel'), 50);
+  assert.equal(suggestedSendingFee('door_to_door'), 100);
+  assert.equal(suggestedSendingFee('psv', 'Tulaga'), 200);
+  assert.equal(suggestedSendingFee('psv', 'Ena Coach'), 300);
+  assert.equal(suggestedSendingFee('psv', 'Chania Genesis'), 350);
+  assert.equal(suggestedSendingFee('psv', 'Ganaki'), 100);
+  assert.equal(suggestedSendingFee('psv', ''), null);
+});
+
+test('PSV-Driver sending fee is paid on delivery', () => {
+  assert.equal(suggestedSendingFee('psv_driver', 'Tulaga'), 'on_delivery');
 });

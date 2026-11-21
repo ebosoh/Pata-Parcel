@@ -1,29 +1,34 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { serializePackageTypes } from '@/lib/packageDetails';
 import { 
   PACKAGE_TYPES, 
   SENDING_METHODS, 
   SACCO_NAMES,
   isValidKenyanPhone, 
   computePlatformFee,
+  suggestedSendingFee,
   NAIROBI_PICK_POINTS
 } from '@/lib/constants';
-import type { SendingMethod, PaymentStatus, Destination } from '@/types/database';
+import type { SendingMethod, Destination } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
 import { Send, Loader2, Calculator, AlertCircle } from 'lucide-react';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
-const DEFAULT_NUM_PACKAGES = 1;
-const DEFAULT_FEE_PER_PACKAGE = 150;
+const DEFAULT_SENDING_FEE = 150;
 
 interface DispatchFormProps {
   destinations: Destination[];
   onSubmit: (input: CreateParcelInput) => Promise<{ data: any; error: any }>;
   onSuccess?: () => void;
   onCancel?: () => void;
+  /** 'buyer' = public order-link form: goods amount and payment code required. */
+  mode?: 'seller' | 'buyer';
 }
 
 export function DispatchForm({
@@ -31,7 +36,9 @@ export function DispatchForm({
   onSubmit,
   onSuccess,
   onCancel,
+  mode = 'seller',
 }: DispatchFormProps) {
+  const isBuyer = mode === 'buyer';
   // Form State
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -39,21 +46,32 @@ export function DispatchForm({
   const [sendingMethod, setSendingMethod] = useState<SendingMethod>('pickup_mtaani');
   const [psvSacco, setPsvSacco] = useState('');
   const [pickPoint, setPickPoint] = useState('');
-  const [packageType, setPackageType] = useState<string>(PACKAGE_TYPES[0]);
+  const [packageTypes, setPackageTypes] = useState<string[]>([PACKAGE_TYPES[0]]);
+  const [packageDescription, setPackageDescription] = useState('');
   const [customPackageType, setCustomPackageType] = useState('');
-  const [numPackages, setNumPackages] = useState<number | null>(null);
-  const [sendingFeePerPackage, setSendingFeePerPackage] = useState<number | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('paid');
+  const [sendingFee, setSendingFee] = useState<number | null>(null);
+  const [goodsAmount, setGoodsAmount] = useState('');
+  const [paymentCode, setPaymentCode] = useState('');
+
+  // Prefill the sending fee whenever the method (or SACCO for PSV) changes
+  const suggestedFee = suggestedSendingFee(sendingMethod, psvSacco);
+  const payOnDelivery = suggestedFee === 'on_delivery';
+  useEffect(() => {
+    setSendingFee(typeof suggestedFee === 'number' ? suggestedFee : null);
+  }, [suggestedFee]);
 
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (formError) errorRef.current?.scrollIntoView({ block: 'center' });
+  }, [formError]);
 
-  // Auto-calculated total sending fee
-  const totalSendingFee = useMemo(() => {
-    const qty = Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES);
-    const fee = Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE);
-    return qty * fee;
-  }, [numPackages, sendingFeePerPackage]);
+  // Total sending fee as entered by the seller (no multiplication)
+  const totalSendingFee = useMemo(
+    () => (payOnDelivery ? 0 : Math.max(0, sendingFee ?? DEFAULT_SENDING_FEE)),
+    [sendingFee, payOnDelivery],
+  );
 
   // Platform fee: 15% of the total sending fee
   const totalPlatformFee = useMemo(() => computePlatformFee(totalSendingFee), [totalSendingFee]);
@@ -90,9 +108,26 @@ export function DispatchForm({
       return;
     }
 
-    const finalPackageType = packageType === 'Other' && customPackageType.trim()
-      ? customPackageType.trim()
-      : packageType;
+    const finalPackageType = serializePackageTypes(packageTypes, customPackageType);
+    if (!finalPackageType) {
+      setFormError('Please select at least one package type');
+      return;
+    }
+
+    const amount = goodsAmount.trim() === '' ? null : Number(goodsAmount);
+    if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
+      setFormError('Please enter a valid amount for the goods');
+      return;
+    }
+    const code = paymentCode.trim();
+    if (isBuyer && amount === null) {
+      setFormError('Please enter the amount you paid for the goods');
+      return;
+    }
+    if ((isBuyer || code) && !/^[A-Za-z0-9]{6,20}$/.test(code)) {
+      setFormError('Please enter a valid M-Pesa / Airtel Money code (e.g. SKL4ABC12D)');
+      return;
+    }
 
     setLoading(true);
 
@@ -104,9 +139,10 @@ export function DispatchForm({
       psv_sacco: sendingMethod === 'psv' || sendingMethod === 'psv_driver' ? (psvSacco || null) : null,
       pick_point: sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
-      num_packages: Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES),
-      sending_fee_per_package: Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE),
-      payment_status: paymentStatus,
+      package_description: packageDescription.trim() || null,
+      sending_fee: totalSendingFee,
+      goods_amount: amount,
+      payment_code: code || null,
     });
 
     setLoading(false);
@@ -119,8 +155,11 @@ export function DispatchForm({
       setBuyerPhone('');
       setDestination('');
       setPickPoint('');
-      setNumPackages(null);
-      setSendingFeePerPackage(null);
+      setPackageTypes([PACKAGE_TYPES[0]]);
+      setPackageDescription('');
+      setCustomPackageType('');
+      setGoodsAmount('');
+      setPaymentCode('');
       if (onSuccess) onSuccess();
     }
   };
@@ -128,7 +167,7 @@ export function DispatchForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {formError && (
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div ref={errorRef} role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{formError}</span>
         </div>
@@ -137,7 +176,7 @@ export function DispatchForm({
       {/* 1. Buyer Information */}
       <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          1. Buyer Details
+          {isBuyer ? '1. Your Details' : '1. Buyer Details'}
         </h3>
 
         <div className="space-y-2">
@@ -173,7 +212,7 @@ export function DispatchForm({
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Buyer will receive an automated SMS with your WhatsApp contact once dispatched.
+            {isBuyer ? 'The seller and Pata Parcel will use this number to reach you.' : 'Buyer will receive an automated SMS with your WhatsApp contact once dispatched.'}
           </p>
         </div>
       </div>
@@ -266,25 +305,24 @@ export function DispatchForm({
           3. Package & Fees
         </h3>
 
-        <div className="space-y-2">
-          <Label htmlFor="package_type" className="text-xs font-medium">
-            Type of Package *
-          </Label>
-          <select
-            id="package_type"
-            value={packageType}
-            onChange={(e) => setPackageType(e.target.value)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {PACKAGE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-medium">Type of Package *</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {PACKAGE_TYPES.map(type => (
+              <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
+                <Checkbox
+                  checked={packageTypes.includes(type)}
+                  onCheckedChange={checked => setPackageTypes(current => checked === true
+                    ? [...current, type]
+                    : current.filter(value => value !== type))}
+                />
+                <span className="break-words">{type}</span>
+              </label>
             ))}
-          </select>
-        </div>
+          </div>
+        </fieldset>
 
-        {packageType === 'Other' && (
+        {packageTypes.includes('Other') && (
           <div className="space-y-2">
             <Label htmlFor="custom_type" className="text-xs font-medium">
               Describe Package Type
@@ -299,90 +337,106 @@ export function DispatchForm({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="num_packages" className="text-xs font-medium">
-              Number of Pkgs *
-            </Label>
-            <Input
-              id="num_packages"
-              type="number"
-              min="1"
-              max="500"
-              inputMode="numeric"
-              placeholder={String(DEFAULT_NUM_PACKAGES)}
-              value={numPackages ?? ''}
-              onChange={(e) => {
-                const raw = e.target.value;
-                setNumPackages(raw === '' ? null : Math.max(1, parseInt(raw) || 1));
-              }}
-              className="h-10 text-sm"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="package_description" className="text-xs font-medium">
+            Short Description (optional)
+          </Label>
+          <Textarea
+            id="package_description"
+            placeholder="e.g. Mummy jeans, Size 42, blue in colour"
+            value={packageDescription}
+            onChange={e => setPackageDescription(e.target.value)}
+            rows={2}
+            className="min-h-20 text-sm"
+          />
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="fee_per_pkg" className="text-xs font-medium">
-              Fee / Pkg (KES) *
-            </Label>
+        <div className="space-y-2">
+          <Label htmlFor="sending_fee" className="text-xs font-medium">
+            Sending Fee (KES) *
+          </Label>
+          {payOnDelivery ? (
+            <div id="sending_fee" className="flex h-10 items-center rounded-md border border-amber-400 bg-amber-100 dark:bg-amber-950/40 px-3 text-sm font-bold text-foreground">
+              Pay on Delivery
+            </div>
+          ) : (
             <Input
-              id="fee_per_pkg"
+              id="sending_fee"
               type="number"
               min="0"
               step="10"
               inputMode="numeric"
-              placeholder={String(DEFAULT_FEE_PER_PACKAGE)}
-              value={sendingFeePerPackage ?? ''}
+              placeholder={sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE)}
+              value={sendingFee ?? ''}
               onChange={(e) => {
                 const raw = e.target.value;
-                setSendingFeePerPackage(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
+                setSendingFee(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
               }}
               className="h-10 text-sm"
             />
-          </div>
+          )}
+          <p className="text-[11px] text-muted-foreground">
+            {payOnDelivery
+              ? 'PSV-Driver sending fee is paid to the driver on delivery.'
+              : 'Filled in from the sending method you chose.'}
+          </p>
         </div>
 
-        <p className="text-[11px] text-muted-foreground">
-          Clear either box to type your own figure — if you leave it empty, the default in grey is used.
-        </p>
-
         {/* Auto Calculation Banner */}
-        <div className="rounded-lg bg-secondary/30 p-3 border border-secondary">
+        {!isBuyer && <div className="rounded-lg bg-secondary/30 p-3 border border-secondary">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs text-foreground font-semibold">
               <Calculator className="h-4 w-4 text-primary" />
-              <span>Total Sending Fee (Auto-Calculated):</span>
+              <span>Total Sending Fee:</span>
             </div>
             <span className="text-base font-extrabold text-primary">
-              KES {totalSendingFee}
+              {payOnDelivery ? 'Pay on Delivery' : `KES ${totalSendingFee}`}
             </span>
           </div>
           <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1">
             <span>Pata Parcel Platform Fee:</span>
             <span>KES {totalPlatformFee} (15% of sending fee)</span>
           </div>
-        </div>
+        </div>}
 
-        {/* Payment Status */}
-        <div className="space-y-2 pt-1">
-          <Label htmlFor="payment_status" className="text-xs font-medium">
-            Payment Status *
+      </div>
+
+      {/* 4. Goods Payment */}
+      <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+          4. Goods Payment
+        </h3>
+        <div className="space-y-2">
+          <Label htmlFor="goods_amount" className="text-xs font-medium">
+            Total Amount (goods) {isBuyer ? '*' : '(optional)'}
           </Label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['paid', 'unpaid', 'pay_on_delivery'] as PaymentStatus[]).map((status) => (
-              <button
-                type="button"
-                key={status}
-                onClick={() => setPaymentStatus(status)}
-                className={`py-2 px-1 text-xs font-semibold rounded-lg border transition-all ${
-                  paymentStatus === status
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                    : 'bg-muted/30 text-muted-foreground border-border hover:bg-muted/50'
-                }`}
-              >
-                {status === 'paid' ? 'Paid' : status === 'unpaid' ? 'Unpaid' : 'On Delivery'}
-              </button>
-            ))}
-          </div>
+          <Input
+            id="goods_amount"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            placeholder="e.g. 2500"
+            value={goodsAmount}
+            onChange={(e) => setGoodsAmount(e.target.value)}
+            required={isBuyer}
+            className="h-10 text-sm"
+          />
+          <p className="text-[11px] text-muted-foreground">Amount paid for the goods, not including sending fees.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="payment_code" className="text-xs font-medium">
+            M-Pesa / Airtel Money Code {isBuyer ? '*' : '(optional)'}
+          </Label>
+          <Input
+            id="payment_code"
+            placeholder="e.g. SKL4ABC12D"
+            value={paymentCode}
+            onChange={(e) => setPaymentCode(e.target.value.toUpperCase())}
+            required={isBuyer}
+            maxLength={20}
+            autoCapitalize="characters"
+            className="h-10 font-mono text-sm uppercase"
+          />
         </div>
       </div>
 
@@ -407,12 +461,12 @@ export function DispatchForm({
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Dispatching...
+              {isBuyer ? 'Sending...' : 'Creating...'}
             </>
           ) : (
             <>
               <Send className="mr-2 h-4 w-4" />
-              Dispatch to Pata Parcel
+              {isBuyer ? 'Submit My Order' : 'Create Dispatch'}
             </>
           )}
         </Button>

@@ -22,6 +22,7 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { OrderLinkCard } from '@/components/seller/OrderLinkCard';
 
 export const Route = createFileRoute('/seller/profile')({
   head: () => ({
@@ -185,6 +186,10 @@ function SellerProfilePage() {
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
+        )}
+
+        {profile?.order_link_code && (
+          <OrderLinkCard code={profile.order_link_code} businessName={profile.business_name || profile.owner_name} />
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

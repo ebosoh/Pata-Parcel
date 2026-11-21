@@ -161,9 +161,14 @@ export type Database = {
           buyer_phone: string
           created_at: string
           destination: string
+          goods_amount: number | null
+          goods_paid: boolean
           id: string
           num_packages: number
+          order_source: string
+          package_description: string | null
           package_type: string
+          payment_code: string | null
           payment_status: string
           pick_point: string | null
           platform_fee: number
@@ -182,9 +187,14 @@ export type Database = {
           buyer_phone: string
           created_at?: string
           destination: string
+          goods_amount?: number | null
+          goods_paid?: boolean
           id?: string
           num_packages?: number
+          order_source?: string
+          package_description?: string | null
           package_type: string
+          payment_code?: string | null
           payment_status?: string
           pick_point?: string | null
           platform_fee?: number
@@ -203,9 +213,14 @@ export type Database = {
           buyer_phone?: string
           created_at?: string
           destination?: string
+          goods_amount?: number | null
+          goods_paid?: boolean
           id?: string
           num_packages?: number
+          order_source?: string
+          package_description?: string | null
           package_type?: string
+          payment_code?: string | null
           payment_status?: string
           pick_point?: string | null
           platform_fee?: number
@@ -221,6 +236,72 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_code_attempts: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: string
+          outcome: string
+          phone: string
+          seller_id: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          outcome: string
+          phone: string
+          seller_id: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          outcome?: string
+          phone?: string
+          seller_id?: string
+        }
+        Relationships: []
+      }
+      payment_code_reservations: {
+        Row: {
+          code: string
+          created_at: string
+          parcel_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          parcel_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          parcel_id?: string
+        }
+        Relationships: []
+      }
+      payment_fraud_phones: {
+        Row: {
+          blacklisted_at: string | null
+          duplicate_attempts: number
+          last_attempt_at: string
+          phone: string
+        }
+        Insert: {
+          blacklisted_at?: string | null
+          duplicate_attempts?: number
+          last_attempt_at?: string
+          phone: string
+        }
+        Update: {
+          blacklisted_at?: string | null
+          duplicate_attempts?: number
+          last_attempt_at?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_name: string | null
@@ -228,6 +309,7 @@ export type Database = {
           created_at: string
           id: string
           location: string | null
+          order_link_code: string
           owner_name: string
           phone: string
           profile_picture_url: string | null
@@ -240,6 +322,7 @@ export type Database = {
           created_at?: string
           id: string
           location?: string | null
+          order_link_code?: string
           owner_name?: string
           phone?: string
           profile_picture_url?: string | null
@@ -252,6 +335,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string | null
+          order_link_code?: string
           owner_name?: string
           phone?: string
           profile_picture_url?: string | null
@@ -319,6 +403,14 @@ export type Database = {
         Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
       }
+      get_order_seller: {
+        Args: { _code: string }
+        Returns: {
+          business_name: string
+          location: string
+          owner_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -335,6 +427,32 @@ export type Database = {
       resolve_buyer_complaint: {
         Args: { p_complaint_id: string }
         Returns: boolean
+      }
+      seller_create_parcel: { Args: { _input: Json }; Returns: Json }
+      seller_set_parcel_payment: {
+        Args: { _fee_status: string; _goods_paid: boolean; _parcel_id: string }
+        Returns: undefined
+      }
+      seller_verify_and_dispatch: {
+        Args: { _parcel_id: string }
+        Returns: undefined
+      }
+      submit_buyer_order: {
+        Args: {
+          _buyer_name: string
+          _buyer_phone: string
+          _code: string
+          _destination: string
+          _goods_amount: number
+          _package_description: string
+          _package_type: string
+          _payment_code: string
+          _pick_point: string
+          _psv_sacco: string
+          _sending_fee: number
+          _sending_method: string
+        }
+        Returns: string
       }
     }
     Enums: {

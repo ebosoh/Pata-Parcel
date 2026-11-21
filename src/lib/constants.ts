@@ -79,7 +79,38 @@ export const SACCO_NAMES = [
   'Chania cool',
   'Likana',
   'Double M',
+  'Ganaki',
 ] as const;
+
+// Sending fee (KES) per method; PSV (SACCO) depends on the SACCO; PSV-Driver is paid on delivery.
+export const METHOD_SENDING_FEES: Record<'pickup_mtaani' | 'pata_parcel' | 'door_to_door', number> = {
+  pickup_mtaani: 140,
+  pata_parcel: 50,
+  door_to_door: 100,
+};
+
+export const SACCO_SENDING_FEES: Record<(typeof SACCO_NAMES)[number], number> = {
+  Tulaga: 200, Latema: 100, Nawaku: 100, Lopha: 150, Unique: 200, Luxury: 200, Ketro: 200, Meiso: 200,
+  'Ena Coach': 300, Neno: 200, Tahmid: 300, Tawaka: 350, 'Dream Line': 350, Buscar: 300, Kukena: 200,
+  '2NK': 200, '4NT': 200, Enabled: 100, 'Super Metro': 150, Forward: 100, 'County Link': 100, Kinatwa: 200,
+  'South Rift': 300, 'North Rift': 300, 'Great Rift': 300, Kam: 200, Makos: 200, 'Rembo Classic': 100,
+  Naekena: 300, NNUS: 200, GTC: 150, MTN: 200, 'Super Premior': 200, 'Narok Line': 200, 'Molo Line': 300,
+  'Kagumo Travellers': 200, 'Quick Shuttle': 300, 'Maralal Safaris': 300, 'Chania Genesis': 350,
+  'Chania cool': 350, Likana: 100, 'Double M': 100, Ganaki: 100,
+};
+
+/**
+ * The sending fee to prefill: a number in KES, 'on_delivery' for PSV-Driver,
+ * or null when it depends on a SACCO that hasn't been picked yet.
+ */
+export function suggestedSendingFee(method: string, sacco?: string | null): number | 'on_delivery' | null {
+  if (method === 'psv_driver') return 'on_delivery';
+  if (method === 'psv') {
+    const match = SACCO_NAMES.find((n) => n.toLowerCase() === (sacco ?? '').trim().toLowerCase());
+    return match ? SACCO_SENDING_FEES[match] : null;
+  }
+  return (METHOD_SENDING_FEES as Record<string, number>)[method] ?? null;
+}
 
 // Platform fee per package in KES
 /** Platform service fee: 15% of the parcel's total sending fee, rounded to whole shillings. */
@@ -377,6 +408,7 @@ export function filterTowns(query: string, townsList: readonly string[] | string
 
 // Tracking stages for progress bar
 export const TRACKING_STAGES = [
+  { key: 'awaiting_verification', label: 'Awaiting Payment Verification', step: 0 },
   { key: 'dispatched_to_pap', label: 'Dispatched to PAP', step: 1 },
   { key: 'sorting', label: 'Sorting', step: 2 },
   { key: 'on_transit', label: 'On Transit', step: 3 },

@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { TrackingProgressBar } from './TrackingProgressBar';
 import { PLATFORM_FEE_RATE } from '@/lib/constants';
@@ -12,13 +17,16 @@ import {
   ChevronUp, 
   MessageCircle, 
   Truck, 
-  Calendar 
+  Calendar,
+  ShieldCheck
 } from 'lucide-react';
-import type { Parcel, SendingMethod, PaymentStatus } from '@/types/database';
+import type { Parcel, SendingMethod } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/constants';
 
 interface ParcelCardProps {
   parcel: Parcel;
+  /** Called after the seller changes a payment status or dispatches. */
+  onChanged?: () => void;
 }
 
 function getMethodLabel(method: SendingMethod, sacco?: string | null): string {
@@ -38,33 +46,37 @@ function getMethodLabel(method: SendingMethod, sacco?: string | null): string {
   }
 }
 
-function getPaymentBadge(status: PaymentStatus) {
-  switch (status) {
-    case 'paid':
-      return (
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400">
-          Paid
-        </Badge>
-      );
-    case 'unpaid':
-      return (
-        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400">
-          Unpaid
-        </Badge>
-      );
-    case 'pay_on_delivery':
-      return (
-        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400">
-          Pay on Delivery
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-}
+const PAID_PILL = 'bg-emerald-600 text-white border-emerald-700';
+const NOT_PAID_PILL = 'bg-red-600 text-white border-red-700';
+const ON_DELIVERY_PILL = 'bg-amber-300 text-amber-950 border-amber-400';
 
-export function ParcelCard({ parcel }: ParcelCardProps) {
+export function ParcelCard({ parcel, onChanged }: ParcelCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const awaiting = parcel.tracking_status === 'awaiting_verification';
+  const goodsPaid = parcel.goods_paid === true;
+  const feeOnDelivery = parcel.payment_status !== 'paid';
+  const isPsvDriver = parcel.sending_method === 'psv_driver';
+
+  const setPayment = async (nextGoodsPaid: boolean, nextFeeStatus: 'paid' | 'pay_on_delivery') => {
+    setBusy(true);
+    const { error } = await supabase.rpc('seller_set_parcel_payment', {
+      _parcel_id: parcel.id, _goods_paid: nextGoodsPaid, _fee_status: nextFeeStatus,
+    });
+    setBusy(false);
+    if (error) toast.error(error.message);
+    else onChanged?.();
+  };
+
+  const verifyAndDispatch = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc('seller_verify_and_dispatch', { _parcel_id: parcel.id });
+    setBusy(false);
+    setConfirmOpen(false);
+    if (error) toast.error(error.message);
+    else { toast.success(`${parcel.buyer_name}'s parcel dispatched to Pata Parcel`); onChanged?.(); }
+  };
 
   // Format WhatsApp link for Kenyan phone
   const cleanPhone = parcel.buyer_phone.replace(/\D/g, '');
@@ -95,9 +107,11 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
             {createdDate}
           </span>
         </div>
-        <div>
-          {getPaymentBadge(parcel.payment_status)}
-        </div>
+        {awaiting && (
+          <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-950/50 dark:text-red-300">
+            Awaiting verification
+          </span>
+        )}
       </div>
 
       {/* Main Info */}
@@ -149,12 +163,84 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px]">Package</span>
-            <span className="font-medium text-foreground flex items-center gap-1">
+            <span className="font-medium text-foreground flex items-start gap-1 break-words">
               <Package className="h-3 w-3 text-primary shrink-0" />
-              {parcel.num_packages}x {parcel.package_type}
+              {parcel.package_type}
             </span>
           </div>
         </div>
+
+        {parcel.package_description && (
+          <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-1.5 text-xs">
+            <span className="block text-[10px] text-muted-foreground">Short Description</span>
+            <p className="break-words whitespace-pre-wrap font-medium text-foreground">{parcel.package_description}</p>
+          </div>
+        )}
+
+        {/* Payment statuses (tap to change) */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="mb-1 block text-[10px] text-muted-foreground">Goods Status{parcel.goods_amount != null ? ` · KES ${parcel.goods_amount}` : ''}</span>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setPayment(!goodsPaid, feeOnDelivery ? 'pay_on_delivery' : 'paid')}
+              className={`h-9 w-full rounded-lg border font-bold ${goodsPaid ? PAID_PILL : NOT_PAID_PILL}`}
+              title="Tap to change"
+            >
+              {goodsPaid ? 'Paid' : 'Not Paid'}
+            </button>
+          </div>
+          <div>
+            <span className="mb-1 block text-[10px] text-muted-foreground">Sending Fee Status{!feeOnDelivery && !isPsvDriver ? ` · KES ${parcel.total_sending_fee}` : ''}</span>
+            <button
+              type="button"
+              disabled={busy || isPsvDriver}
+              onClick={() => setPayment(goodsPaid, feeOnDelivery ? 'paid' : 'pay_on_delivery')}
+              className={`h-9 w-full rounded-lg border font-bold ${feeOnDelivery ? ON_DELIVERY_PILL : PAID_PILL}`}
+              title={isPsvDriver ? 'PSV-Driver is always paid on delivery' : 'Tap to change'}
+            >
+              {feeOnDelivery ? 'On Delivery' : 'Paid'}
+            </button>
+          </div>
+        </div>
+        {parcel.payment_code && (
+          <p className="text-xs text-muted-foreground">
+            M-Pesa / Airtel code: <span className="font-mono font-bold text-foreground">{parcel.payment_code}</span>
+            {parcel.order_source === 'buyer_link' && <span className="ml-1">· sent by buyer</span>}
+          </p>
+        )}
+
+        {awaiting && (
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => setConfirmOpen(true)}
+            className="h-11 w-full bg-red-600 font-bold text-white hover:bg-red-700"
+          >
+            <ShieldCheck className="mr-2 h-4 w-4" /> Verify Payment &amp; Dispatch
+          </Button>
+        )}
+
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Have you verified the payment?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Check your M-Pesa / Airtel Money messages for
+                {parcel.goods_amount != null ? ` KES ${parcel.goods_amount}` : ' the payment'}
+                {parcel.payment_code ? ` with code ${parcel.payment_code}` : ''} from {parcel.buyer_name}.
+                Dispatching marks the goods as Paid and sends the parcel to Pata Parcel.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={busy}>Not yet</AlertDialogCancel>
+              <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); void verifyAndDispatch(); }} className="bg-red-600 text-white hover:bg-red-700">
+                Verified — Dispatch
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Live Tracking Progress Bar */}
         <div className="pt-1">
@@ -165,12 +251,8 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
         {expanded && (
           <div className="pt-2 border-t border-dashed border-border/80 text-xs space-y-1.5">
             <div className="flex justify-between text-muted-foreground">
-              <span>Fee per Package:</span>
-              <span className="font-medium text-foreground">KES {parcel.sending_fee_per_package}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Total Sending Fee:</span>
-              <span className="font-bold text-foreground">KES {parcel.total_sending_fee}</span>
+              <span>Sending Fee:</span>
+              <span className="font-bold text-foreground">{isPsvDriver ? 'Pay on Delivery' : `KES ${parcel.total_sending_fee}`}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
               <span>Platform Service Fee:</span>

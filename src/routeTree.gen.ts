@@ -15,6 +15,7 @@ import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminBlacklistRouteImport } from './routes/admin/blacklist'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
+import { Route as OrderCodeRouteImport } from './routes/order/$code'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
 import { Route as PapIssuesRouteImport } from './routes/pap/issues'
 import { Route as PapProfileRouteImport } from './routes/pap/profile'
@@ -53,6 +54,11 @@ const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
 const AdminStatsRoute = AdminStatsRouteImport.update({
   id: '/admin/stats',
   path: '/admin/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderCodeRoute = OrderCodeRouteImport.update({
+  id: '/order/$code',
+  path: '/order/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PapDispatchRoute = PapDispatchRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/order/$code': typeof OrderCodeRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/issues': typeof PapIssuesRoute
   '/pap/profile': typeof PapProfileRoute
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/order/$code': typeof OrderCodeRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/issues': typeof PapIssuesRoute
   '/pap/profile': typeof PapProfileRoute
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/order/$code': typeof OrderCodeRoute
   '/pap/dispatch': typeof PapDispatchRoute
   '/pap/issues': typeof PapIssuesRoute
   '/pap/profile': typeof PapProfileRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/payments'
     | '/admin/stats'
+    | '/order/$code'
     | '/pap/dispatch'
     | '/pap/issues'
     | '/pap/profile'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/payments'
     | '/admin/stats'
+    | '/order/$code'
     | '/pap/dispatch'
     | '/pap/issues'
     | '/pap/profile'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/payments'
     | '/admin/stats'
+    | '/order/$code'
     | '/pap/dispatch'
     | '/pap/issues'
     | '/pap/profile'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminStatsRoute: typeof AdminStatsRoute
+  OrderCodeRoute: typeof OrderCodeRoute
   PapDispatchRoute: typeof PapDispatchRoute
   PapIssuesRoute: typeof PapIssuesRoute
   PapProfileRoute: typeof PapProfileRoute
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/stats'
       fullPath: '/admin/stats'
       preLoaderRoute: typeof AdminStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order/$code': {
+      id: '/order/$code'
+      path: '/order/$code'
+      fullPath: '/order/$code'
+      preLoaderRoute: typeof OrderCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pap/dispatch': {
@@ -342,6 +362,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminStatsRoute: AdminStatsRoute,
+  OrderCodeRoute: OrderCodeRoute,
   PapDispatchRoute: PapDispatchRoute,
   PapIssuesRoute: PapIssuesRoute,
   PapProfileRoute: PapProfileRoute,
