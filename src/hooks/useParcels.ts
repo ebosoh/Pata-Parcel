@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { computePlatformFee } from '@/lib/constants';
 import type { Parcel, Destination, Sacco, SendingMethod, PaymentStatus, TrackingStatus } from '@/types/database';
 
 export interface CreateParcelInput {
@@ -13,7 +12,8 @@ export interface CreateParcelInput {
   package_type: string;
   package_description?: string | null;
   num_packages: number;
-  sending_fee_per_package: number;
+  /** Total sending fee in KES, entered directly by the seller (no multiplication). */
+  sending_fee: number;
   payment_status: PaymentStatus;
 }
 
@@ -118,9 +118,6 @@ export function useParcels(sellerId?: string | null) {
     }
 
     try {
-      const calculatedTotal = input.num_packages * input.sending_fee_per_package;
-      const platformFee = computePlatformFee(calculatedTotal);
-
       const insertPayload: Record<string, any> = {
         seller_id: sellerId,
         buyer_name: input.buyer_name.trim(),
@@ -132,7 +129,9 @@ export function useParcels(sellerId?: string | null) {
         package_type: input.package_type,
         package_description: input.package_description?.trim() || null,
         num_packages: input.num_packages,
-        sending_fee_per_package: input.sending_fee_per_package,
+        // Total fee entered by the seller; per-package column is deprecated but kept populated.
+        sending_fee_per_package: input.sending_fee,
+        total_sending_fee: input.sending_fee,
         payment_status: input.payment_status,
         tracking_status: 'dispatched_to_pap' as TrackingStatus,
       };

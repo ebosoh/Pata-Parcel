@@ -157,7 +157,10 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
         </div>
 
         {parcel.package_description && (
-          <p className="break-words whitespace-pre-wrap text-xs text-muted-foreground">{parcel.package_description}</p>
+          <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-1.5 text-xs">
+            <span className="block text-[10px] text-muted-foreground">Short Description</span>
+            <p className="break-words whitespace-pre-wrap font-medium text-foreground">{parcel.package_description}</p>
+          </div>
         )}
 
         {/* Live Tracking Progress Bar */}
@@ -169,11 +172,7 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
         {expanded && (
           <div className="pt-2 border-t border-dashed border-border/80 text-xs space-y-1.5">
             <div className="flex justify-between text-muted-foreground">
-              <span>Fee per Package:</span>
-              <span className="font-medium text-foreground">KES {parcel.sending_fee_per_package}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Total Sending Fee:</span>
+              <span>Sending Fee:</span>
               <span className="font-bold text-foreground">KES {parcel.total_sending_fee}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">

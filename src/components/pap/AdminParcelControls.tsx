@@ -40,7 +40,7 @@ export function AdminParcelControls({ parcel, onChanged }: { parcel: Parcel; onC
         psv_sacco: form.psv_sacco.trim() || null,
         package_type: form.package_type,
         num_packages: Math.max(1, Number(form.num_packages) || 1),
-        sending_fee_per_package: Math.max(0, Number(form.sending_fee_per_package) || 0),
+        total_sending_fee: Math.max(0, Number(form.total_sending_fee) || 0),
         payment_status: form.payment_status,
         tracking_status: form.tracking_status,
         updated_at: new Date().toISOString(),
@@ -112,7 +112,7 @@ export function AdminParcelControls({ parcel, onChanged }: { parcel: Parcel; onC
               </select>
             </Field>
             <Field label="Packages"><Input type="number" min={1} value={form.num_packages} onChange={(e) => set('num_packages', e.target.value)} /></Field>
-            <Field label="Fee per package (KES)"><Input type="number" min={0} value={form.sending_fee_per_package} onChange={(e) => set('sending_fee_per_package', e.target.value)} /></Field>
+            <Field label="Sending fee (KES)"><Input type="number" min={0} value={form.total_sending_fee} onChange={(e) => set('total_sending_fee', e.target.value)} /></Field>
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
@@ -151,7 +151,7 @@ function toForm(p: Parcel) {
     buyer_name: p.buyer_name ?? '', buyer_phone: p.buyer_phone ?? '', destination: p.destination ?? '',
     pick_point: p.pick_point ?? '', sending_method: (p.sending_method ?? 'psv') as string, psv_sacco: p.psv_sacco ?? '',
     package_type: (p.package_type ?? 'Other') as string, num_packages: String(p.num_packages ?? 1),
-    sending_fee_per_package: String(p.sending_fee_per_package ?? 0),
+    total_sending_fee: String(p.total_sending_fee ?? 0),
     payment_status: (p.payment_status ?? 'unpaid') as string, tracking_status: (p.tracking_status ?? 'dispatched_to_pap') as string,
   };
 }

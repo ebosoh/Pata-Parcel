@@ -20,7 +20,7 @@ import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
 const DEFAULT_NUM_PACKAGES = 1;
-const DEFAULT_FEE_PER_PACKAGE = 150;
+const DEFAULT_SENDING_FEE = 150;
 
 interface DispatchFormProps {
   destinations: Destination[];
@@ -46,18 +46,17 @@ export function DispatchForm({
   const [packageDescription, setPackageDescription] = useState('');
   const [customPackageType, setCustomPackageType] = useState('');
   const [numPackages, setNumPackages] = useState<number | null>(null);
-  const [sendingFeePerPackage, setSendingFeePerPackage] = useState<number | null>(null);
+  const [sendingFee, setSendingFee] = useState<number | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('paid');
 
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Auto-calculated total sending fee
-  const totalSendingFee = useMemo(() => {
-    const qty = Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES);
-    const fee = Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE);
-    return qty * fee;
-  }, [numPackages, sendingFeePerPackage]);
+  // Total sending fee as entered by the seller (no multiplication)
+  const totalSendingFee = useMemo(
+    () => Math.max(0, sendingFee ?? DEFAULT_SENDING_FEE),
+    [sendingFee],
+  );
 
   // Platform fee: 15% of the total sending fee
   const totalPlatformFee = useMemo(() => computePlatformFee(totalSendingFee), [totalSendingFee]);
@@ -112,7 +111,7 @@ export function DispatchForm({
       package_type: finalPackageType,
       package_description: packageDescription.trim() || null,
       num_packages: Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES),
-      sending_fee_per_package: Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE),
+      sending_fee: Math.max(0, sendingFee ?? DEFAULT_SENDING_FEE),
       payment_status: paymentStatus,
     });
 
@@ -130,7 +129,7 @@ export function DispatchForm({
       setPackageDescription('');
       setCustomPackageType('');
       setNumPackages(null);
-      setSendingFeePerPackage(null);
+      setSendingFee(null);
       if (onSuccess) onSuccess();
     }
   };
@@ -344,20 +343,20 @@ export function DispatchForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="fee_per_pkg" className="text-xs font-medium">
-              Fee / Pkg (KES) *
+            <Label htmlFor="sending_fee" className="text-xs font-medium">
+              Sending Fee (KES) *
             </Label>
             <Input
-              id="fee_per_pkg"
+              id="sending_fee"
               type="number"
               min="0"
               step="10"
               inputMode="numeric"
-              placeholder={String(DEFAULT_FEE_PER_PACKAGE)}
-              value={sendingFeePerPackage ?? ''}
+              placeholder={String(DEFAULT_SENDING_FEE)}
+              value={sendingFee ?? ''}
               onChange={(e) => {
                 const raw = e.target.value;
-                setSendingFeePerPackage(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
+                setSendingFee(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
               }}
               className="h-10 text-sm"
             />
@@ -373,7 +372,7 @@ export function DispatchForm({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs text-foreground font-semibold">
               <Calculator className="h-4 w-4 text-primary" />
-              <span>Total Sending Fee (Auto-Calculated):</span>
+              <span>Total Sending Fee:</span>
             </div>
             <span className="text-base font-extrabold text-primary">
               KES {totalSendingFee}
