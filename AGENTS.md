@@ -15,3 +15,4 @@
 - Use the scoped complaint-resolution database function on both issue pages so sellers can close their own complaints without broader edit permissions.
 - Serialize multiple package categories into the existing package_type text and store optional details separately in package_description, so existing parcel views remain compatible.
 - Buyer order links: public /order/$code page writes only through the scoped submit_buyer_order database function; seller payment changes and dispatch go through seller_* functions, so sellers never get broad parcel edit rights.
+- Enforce payment-code reservations and phone reuse counters in a parcel trigger; scoped order functions return committed rejection results instead of raising errors, so fraud records survive rejected submissions and concurrent requests cannot reuse a code.

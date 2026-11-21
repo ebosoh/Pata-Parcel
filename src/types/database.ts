@@ -268,6 +268,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      seller_create_parcel: { Args: { _input: Json }; Returns: Json };
       resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };
       mark_receipt_shared_with_buyer: { Args: { p_receipt_id: string }; Returns: boolean };
       get_order_seller: { Args: { _code: string }; Returns: { business_name: string | null; owner_name: string; location: string | null }[] };

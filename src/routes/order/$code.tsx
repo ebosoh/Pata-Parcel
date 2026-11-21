@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { supabase } from '@/lib/supabase';
 import { DispatchForm } from '@/components/seller/DispatchForm';
+import { paymentCodeRejection } from '@/lib/paymentCode';
 import type { CreateParcelInput } from '@/hooks/useParcels';
 import type { Destination } from '@/types/database';
 import { CheckCircle2, Loader2, PackageCheck, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -55,7 +56,9 @@ function BuyerOrderPage() {
       _goods_amount: input.goods_amount ?? 0,
       _payment_code: input.payment_code ?? '',
     });
-    if (!error) setDoneRef(data as string);
+    const rejection = paymentCodeRejection(data);
+    if (rejection) return { data: null, error: new Error(rejection) };
+    if (!error && typeof data === 'string') setDoneRef(data);
     return { data, error };
   };
 

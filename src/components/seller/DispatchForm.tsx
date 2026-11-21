@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,6 +62,10 @@ export function DispatchForm({
 
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (formError) errorRef.current?.scrollIntoView({ block: 'center' });
+  }, [formError]);
 
   // Total sending fee as entered by the seller (no multiplication)
   const totalSendingFee = useMemo(
@@ -163,7 +167,7 @@ export function DispatchForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {formError && (
-        <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <div ref={errorRef} role="alert" className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{formError}</span>
         </div>

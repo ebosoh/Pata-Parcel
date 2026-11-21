@@ -236,6 +236,72 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_code_attempts: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: string
+          outcome: string
+          phone: string
+          seller_id: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          outcome: string
+          phone: string
+          seller_id: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          outcome?: string
+          phone?: string
+          seller_id?: string
+        }
+        Relationships: []
+      }
+      payment_code_reservations: {
+        Row: {
+          code: string
+          created_at: string
+          parcel_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          parcel_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          parcel_id?: string
+        }
+        Relationships: []
+      }
+      payment_fraud_phones: {
+        Row: {
+          blacklisted_at: string | null
+          duplicate_attempts: number
+          last_attempt_at: string
+          phone: string
+        }
+        Insert: {
+          blacklisted_at?: string | null
+          duplicate_attempts?: number
+          last_attempt_at?: string
+          phone: string
+        }
+        Update: {
+          blacklisted_at?: string | null
+          duplicate_attempts?: number
+          last_attempt_at?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_name: string | null
@@ -362,6 +428,7 @@ export type Database = {
         Args: { p_complaint_id: string }
         Returns: boolean
       }
+      seller_create_parcel: { Args: { _input: Json }; Returns: Json }
       seller_set_parcel_payment: {
         Args: { _fee_status: string; _goods_paid: boolean; _parcel_id: string }
         Returns: undefined
