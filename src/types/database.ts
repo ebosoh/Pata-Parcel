@@ -64,6 +64,7 @@ export type Database = {
           pick_point?: string | null;
           package_type: string;
           num_packages: number;
+          package_description?: string | null;
           sending_fee_per_package: number;
           total_sending_fee: number;
           payment_status: PaymentStatus;
@@ -85,6 +86,7 @@ export type Database = {
           pick_point?: string | null;
           package_type: string;
           num_packages?: number;
+          package_description?: string | null;
           sending_fee_per_package: number;
           total_sending_fee?: number;
           payment_status?: PaymentStatus;
@@ -106,6 +108,7 @@ export type Database = {
           pick_point?: string | null;
           package_type?: string;
           num_packages?: number;
+          package_description?: string | null;
           sending_fee_per_package?: number;
           total_sending_fee?: number;
           payment_status?: PaymentStatus;

@@ -13,3 +13,4 @@
 - Keep the browser's Cloud URL and publishable key defaults paired in Vite config so deployments without `.env` use the current project.
 - Use native file capture for receipt scans instead of a browser camera stream, so overlays or embedded previews do not block a site-level camera permission prompt.
 - Use the scoped complaint-resolution database function on both issue pages so sellers can close their own complaints without broader edit permissions.
+- Serialize multiple package categories into the existing package_type text and store optional details separately in package_description, so existing parcel views remain compatible.

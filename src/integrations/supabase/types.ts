@@ -163,6 +163,7 @@ export type Database = {
           destination: string
           id: string
           num_packages: number
+          package_description: string | null
           package_type: string
           payment_status: string
           pick_point: string | null
@@ -184,6 +185,7 @@ export type Database = {
           destination: string
           id?: string
           num_packages?: number
+          package_description?: string | null
           package_type: string
           payment_status?: string
           pick_point?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           destination?: string
           id?: string
           num_packages?: number
+          package_description?: string | null
           package_type?: string
           payment_status?: string
           pick_point?: string | null

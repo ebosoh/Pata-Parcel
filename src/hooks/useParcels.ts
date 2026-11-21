@@ -11,6 +11,7 @@ export interface CreateParcelInput {
   psv_sacco?: string | null;
   pick_point?: string | null;
   package_type: string;
+  package_description?: string | null;
   num_packages: number;
   sending_fee_per_package: number;
   payment_status: PaymentStatus;
@@ -129,6 +130,7 @@ export function useParcels(sellerId?: string | null) {
         psv_sacco: input.sending_method === 'psv' || input.sending_method === 'psv_driver' ? (input.psv_sacco || null) : null,
         pick_point: input.sending_method === 'door_to_door' ? (input.pick_point || null) : null,
         package_type: input.package_type,
+        package_description: input.package_description?.trim() || null,
         num_packages: input.num_packages,
         sending_fee_per_package: input.sending_fee_per_package,
         payment_status: input.payment_status,

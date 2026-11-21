@@ -2,6 +2,9 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { serializePackageTypes } from '@/lib/packageDetails';
 import { 
   PACKAGE_TYPES, 
   SENDING_METHODS, 
@@ -39,7 +42,8 @@ export function DispatchForm({
   const [sendingMethod, setSendingMethod] = useState<SendingMethod>('pickup_mtaani');
   const [psvSacco, setPsvSacco] = useState('');
   const [pickPoint, setPickPoint] = useState('');
-  const [packageType, setPackageType] = useState<string>(PACKAGE_TYPES[0]);
+  const [packageTypes, setPackageTypes] = useState<string[]>([PACKAGE_TYPES[0]]);
+  const [packageDescription, setPackageDescription] = useState('');
   const [customPackageType, setCustomPackageType] = useState('');
   const [numPackages, setNumPackages] = useState<number | null>(null);
   const [sendingFeePerPackage, setSendingFeePerPackage] = useState<number | null>(null);
@@ -90,9 +94,11 @@ export function DispatchForm({
       return;
     }
 
-    const finalPackageType = packageType === 'Other' && customPackageType.trim()
-      ? customPackageType.trim()
-      : packageType;
+    const finalPackageType = serializePackageTypes(packageTypes, customPackageType);
+    if (!finalPackageType) {
+      setFormError('Please select at least one package type');
+      return;
+    }
 
     setLoading(true);
 
@@ -104,6 +110,7 @@ export function DispatchForm({
       psv_sacco: sendingMethod === 'psv' || sendingMethod === 'psv_driver' ? (psvSacco || null) : null,
       pick_point: sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
+      package_description: packageDescription.trim() || null,
       num_packages: Math.max(1, numPackages ?? DEFAULT_NUM_PACKAGES),
       sending_fee_per_package: Math.max(0, sendingFeePerPackage ?? DEFAULT_FEE_PER_PACKAGE),
       payment_status: paymentStatus,
@@ -119,6 +126,9 @@ export function DispatchForm({
       setBuyerPhone('');
       setDestination('');
       setPickPoint('');
+      setPackageTypes([PACKAGE_TYPES[0]]);
+      setPackageDescription('');
+      setCustomPackageType('');
       setNumPackages(null);
       setSendingFeePerPackage(null);
       if (onSuccess) onSuccess();
@@ -266,25 +276,24 @@ export function DispatchForm({
           3. Package & Fees
         </h3>
 
-        <div className="space-y-2">
-          <Label htmlFor="package_type" className="text-xs font-medium">
-            Type of Package *
-          </Label>
-          <select
-            id="package_type"
-            value={packageType}
-            onChange={(e) => setPackageType(e.target.value)}
-            className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            {PACKAGE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
+        <fieldset className="space-y-2">
+          <legend className="text-xs font-medium">Type of Package *</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {PACKAGE_TYPES.map(type => (
+              <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
+                <Checkbox
+                  checked={packageTypes.includes(type)}
+                  onCheckedChange={checked => setPackageTypes(current => checked === true
+                    ? [...current, type]
+                    : current.filter(value => value !== type))}
+                />
+                <span className="break-words">{type}</span>
+              </label>
             ))}
-          </select>
-        </div>
+          </div>
+        </fieldset>
 
-        {packageType === 'Other' && (
+        {packageTypes.includes('Other') && (
           <div className="space-y-2">
             <Label htmlFor="custom_type" className="text-xs font-medium">
               Describe Package Type
@@ -298,6 +307,20 @@ export function DispatchForm({
             />
           </div>
         )}
+
+        <div className="space-y-2">
+          <Label htmlFor="package_description" className="text-xs font-medium">
+            Short Description (optional)
+          </Label>
+          <Textarea
+            id="package_description"
+            placeholder="e.g. Mummy jeans, Size 42, blue in colour"
+            value={packageDescription}
+            onChange={e => setPackageDescription(e.target.value)}
+            rows={2}
+            className="min-h-20 text-sm"
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">

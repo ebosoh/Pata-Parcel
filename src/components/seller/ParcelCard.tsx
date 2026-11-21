@@ -149,12 +149,16 @@ export function ParcelCard({ parcel }: ParcelCardProps) {
           </div>
           <div>
             <span className="text-muted-foreground block text-[10px]">Package</span>
-            <span className="font-medium text-foreground flex items-center gap-1">
+            <span className="font-medium text-foreground flex items-start gap-1 break-words">
               <Package className="h-3 w-3 text-primary shrink-0" />
               {parcel.num_packages}x {parcel.package_type}
             </span>
           </div>
         </div>
+
+        {parcel.package_description && (
+          <p className="break-words whitespace-pre-wrap text-xs text-muted-foreground">{parcel.package_description}</p>
+        )}
 
         {/* Live Tracking Progress Bar */}
         <div className="pt-1">
