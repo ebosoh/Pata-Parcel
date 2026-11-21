@@ -3,7 +3,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type UserRole = 'seller' | 'pap_admin' | 'pap_staff';
 export type SendingMethod = 'pickup_mtaani' | 'pata_parcel' | 'door_to_door' | 'psv' | 'psv_driver';
 export type PaymentStatus = 'paid' | 'unpaid' | 'pay_on_delivery';
-export type TrackingStatus = 'dispatched_to_pap' | 'sorting' | 'on_transit' | 'delivered';
+export type TrackingStatus = 'awaiting_verification' | 'dispatched_to_pap' | 'sorting' | 'on_transit' | 'delivered';
 export type ComplaintStatus = 'open' | 'investigating' | 'resolved';
 
 export type Database = {
@@ -21,6 +21,7 @@ export type Database = {
           phone: string;
           location: string | null;
           profile_picture_url: string | null;
+          order_link_code?: string;
           business_type: string | null;
           created_at: string;
           updated_at: string;
@@ -71,6 +72,10 @@ export type Database = {
           tracking_status: TrackingStatus;
           platform_fee: number;
           platform_fee_paid: boolean;
+          goods_amount?: number | null;
+          payment_code?: string | null;
+          goods_paid?: boolean;
+          order_source?: string;
           created_at: string;
           updated_at: string;
         };
@@ -265,6 +270,17 @@ export type Database = {
     Functions: {
       resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };
       mark_receipt_shared_with_buyer: { Args: { p_receipt_id: string }; Returns: boolean };
+      get_order_seller: { Args: { _code: string }; Returns: { business_name: string | null; owner_name: string; location: string | null }[] };
+      submit_buyer_order: {
+        Args: {
+          _code: string; _buyer_name: string; _buyer_phone: string; _destination: string; _sending_method: string;
+          _psv_sacco: string; _pick_point: string; _package_type: string; _package_description: string;
+          _sending_fee: number; _goods_amount: number; _payment_code: string;
+        };
+        Returns: string;
+      };
+      seller_set_parcel_payment: { Args: { _parcel_id: string; _goods_paid: boolean; _fee_status: string }; Returns: undefined };
+      seller_verify_and_dispatch: { Args: { _parcel_id: string }; Returns: undefined };
     };
     Enums: {
       user_role: UserRole;

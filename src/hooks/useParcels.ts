@@ -11,10 +11,10 @@ export interface CreateParcelInput {
   pick_point?: string | null;
   package_type: string;
   package_description?: string | null;
-  num_packages: number;
-  /** Total sending fee in KES, entered directly by the seller (no multiplication). */
+  /** Total sending fee in KES; ignored (0) for PSV-Driver, which is paid on delivery. */
   sending_fee: number;
-  payment_status: PaymentStatus;
+  goods_amount?: number | null;
+  payment_code?: string | null;
 }
 
 export function useParcels(sellerId?: string | null) {
@@ -128,12 +128,17 @@ export function useParcels(sellerId?: string | null) {
         pick_point: input.sending_method === 'door_to_door' ? (input.pick_point || null) : null,
         package_type: input.package_type,
         package_description: input.package_description?.trim() || null,
-        num_packages: input.num_packages,
-        // Total fee entered by the seller; per-package column is deprecated but kept populated.
-        sending_fee_per_package: input.sending_fee,
-        total_sending_fee: input.sending_fee,
-        payment_status: input.payment_status,
-        tracking_status: 'dispatched_to_pap' as TrackingStatus,
+        num_packages: 1,
+        // Per-package column is deprecated but kept populated.
+        sending_fee_per_package: input.sending_method === 'psv_driver' ? 0 : input.sending_fee,
+        total_sending_fee: input.sending_method === 'psv_driver' ? 0 : input.sending_fee,
+        payment_status: (input.sending_method === 'psv_driver' ? 'pay_on_delivery' : 'paid') as PaymentStatus,
+        goods_amount: input.goods_amount ?? null,
+        payment_code: input.payment_code?.trim().toUpperCase() || null,
+        goods_paid: false,
+        order_source: 'seller',
+        // Stays in the seller's list until they verify payment and dispatch.
+        tracking_status: 'awaiting_verification' as TrackingStatus,
       };
 
       let { data, error: insertErr } = await supabase
@@ -159,20 +164,6 @@ export function useParcels(sellerId?: string | null) {
 
       if (insertErr) {
         return { data: null, error: insertErr };
-      }
-
-      // Add initial tracking entry
-      if (data?.id) {
-        const trackingNotes = input.sending_method === 'door_to_door' && input.pick_point
-          ? `Parcel dispatched by seller to Pata Parcel (Door-to-Door, Pick-Point: ${input.pick_point})`
-          : 'Parcel dispatched by seller to Pata Parcel';
-
-        await supabase.from('parcel_tracking').insert({
-          parcel_id: data.id,
-          status: 'dispatched_to_pap' as TrackingStatus,
-          updated_by: sellerId,
-          notes: trackingNotes,
-        } as any);
       }
 
       // Refresh list to ensure trigger values (ref number, computed fees) are present

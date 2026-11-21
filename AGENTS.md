@@ -14,3 +14,4 @@
 - Use native file capture for receipt scans instead of a browser camera stream, so overlays or embedded previews do not block a site-level camera permission prompt.
 - Use the scoped complaint-resolution database function on both issue pages so sellers can close their own complaints without broader edit permissions.
 - Serialize multiple package categories into the existing package_type text and store optional details separately in package_description, so existing parcel views remain compatible.
+- Buyer order links: public /order/$code page writes only through the scoped submit_buyer_order database function; seller payment changes and dispatch go through seller_* functions, so sellers never get broad parcel edit rights.

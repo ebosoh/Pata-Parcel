@@ -46,6 +46,8 @@ const STAGES: {
 
 function getStageStep(status: TrackingStatus): number {
   switch (status) {
+    case 'awaiting_verification':
+      return 0;
     case 'dispatched_to_pap':
       return 1;
     case 'sorting':

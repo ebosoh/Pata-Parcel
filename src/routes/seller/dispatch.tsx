@@ -79,10 +79,11 @@ function SellerDispatchPage() {
   // Quick stats
   const stats = useMemo(() => {
     const total = parcels.length;
+    const awaiting = parcels.filter(p => p.tracking_status === 'awaiting_verification').length;
     const sorting = parcels.filter(p => p.tracking_status === 'sorting').length;
     const onTransit = parcels.filter(p => p.tracking_status === 'on_transit').length;
     const delivered = parcels.filter(p => p.tracking_status === 'delivered').length;
-    return { total, sorting, onTransit, delivered };
+    return { total, awaiting, sorting, onTransit, delivered };
   }, [parcels]);
 
   // Filtered parcels
@@ -165,6 +166,17 @@ function SellerDispatchPage() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {stats.awaiting > 0 && (
+          <button
+            type="button"
+            onClick={() => setSelectedStatus('awaiting_verification')}
+            className="flex w-full items-center justify-between gap-2 rounded-xl bg-red-600 p-3 text-left text-sm font-bold text-white"
+          >
+            <span>{stats.awaiting} {stats.awaiting === 1 ? 'order' : 'orders'} awaiting payment verification</span>
+            <span className="shrink-0 rounded-md bg-white/20 px-2 py-1 text-xs">View</span>
+          </button>
+        )}
 
         {/* Quick KPI Stat Pills */}
         <div className="grid grid-cols-4 gap-2">
@@ -286,7 +298,7 @@ function SellerDispatchPage() {
         ) : (
           <div className="space-y-3">
             {filteredParcels.map((parcel) => (
-              <ParcelCard key={parcel.id} parcel={parcel} />
+              <ParcelCard key={parcel.id} parcel={parcel} onChanged={refetch} />
             ))}
           </div>
         )}
