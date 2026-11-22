@@ -93,6 +93,10 @@ export function ParcelCard({ parcel, onChanged }: ParcelCardProps) {
     minute: '2-digit',
   });
 
+  const goodsVal = Number(parcel.goods_amount ?? 0);
+  const sendingFeeVal = isPsvDriver || feeOnDelivery ? 0 : Number(parcel.total_sending_fee ?? 0);
+  const totalExpectedPayment = goodsVal + sendingFeeVal;
+
   return (
     <Card className="overflow-hidden border border-border/80 bg-card shadow-sm hover:shadow-md transition-shadow">
       {/* Top Header */}
@@ -223,19 +227,59 @@ export function ParcelCard({ parcel, onChanged }: ParcelCardProps) {
         )}
 
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-md">
             <AlertDialogHeader>
-              <AlertDialogTitle>Have you verified the payment?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Check your M-Pesa / Airtel Money messages for
-                {parcel.goods_amount != null ? ` KES ${parcel.goods_amount}` : ' the payment'}
-                {parcel.payment_code ? ` with code ${parcel.payment_code}` : ''} from {parcel.buyer_name}.
-                Dispatching marks the goods as Paid and sends the parcel to Pata Parcel.
+              <AlertDialogTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-primary" /> Have you verified the payment?
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-3 pt-2 text-xs text-muted-foreground">
+                  <p>
+                    Check your M-Pesa / Airtel Money messages from{' '}
+                    <strong className="text-foreground">{parcel.buyer_name}</strong>
+                    {parcel.payment_code ? (
+                      <>
+                        {' '}with transaction code <span className="font-mono font-bold text-foreground bg-muted px-1.5 py-0.5 rounded">{parcel.payment_code}</span>
+                      </>
+                    ) : null}.
+                  </p>
+
+                  <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span>Goods Total:</span>
+                      <span className="font-semibold text-foreground">
+                        {parcel.goods_amount != null ? `KES ${goodsVal.toLocaleString()}` : 'Not specified'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs">
+                      <span>Sending Fee:</span>
+                      <span className="font-semibold text-foreground">
+                        {isPsvDriver
+                          ? 'Pay on Delivery (KES 0 now)'
+                          : feeOnDelivery
+                          ? `Pay on Delivery (KES ${Number(parcel.total_sending_fee || 0).toLocaleString()} on delivery)`
+                          : `KES ${Number(parcel.total_sending_fee || 0).toLocaleString()}`}
+                      </span>
+                    </div>
+
+                    <div className="border-t border-border/80 pt-1.5 flex justify-between items-center text-xs font-bold text-foreground">
+                      <span>Total Payment Expected:</span>
+                      <span className="text-sm text-primary">
+                        {totalExpectedPayment > 0 ? `KES ${totalExpectedPayment.toLocaleString()}` : 'KES 0'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    Dispatching marks the goods as <strong className="text-foreground">Paid</strong> and sends the parcel to Pata Parcel for processing.
+                  </p>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={busy}>Not yet</AlertDialogCancel>
-              <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); void verifyAndDispatch(); }} className="bg-red-600 text-white hover:bg-red-700">
+              <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); void verifyAndDispatch(); }} className="bg-red-600 text-white hover:bg-red-700 font-bold">
                 Verified — Dispatch
               </AlertDialogAction>
             </AlertDialogFooter>
