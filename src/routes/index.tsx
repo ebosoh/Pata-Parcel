@@ -82,12 +82,6 @@ function LandingPage() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-
-            <Link to={'/login' as any} className="pt-1">
-              <span className="text-xs text-muted-foreground hover:text-primary underline">
-                Account Sign In / OTP
-              </span>
-            </Link>
           </div>
         </div>
       </section>
