@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useParcels } from '@/hooks/useParcels';
 import { ParcelCard } from '@/components/seller/ParcelCard';
 import { DispatchForm } from '@/components/seller/DispatchForm';
+import { DispatchPrintModal } from '@/components/seller/DispatchPrintModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -24,7 +25,8 @@ import {
   CheckCircle, 
   AlertCircle,
   Store,
-  ArrowRight
+  ArrowRight,
+  Printer
 } from 'lucide-react';
 import type { TrackingStatus } from '@/types/database';
 
@@ -61,6 +63,7 @@ function SellerDispatchPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Auth guard
@@ -142,29 +145,42 @@ function SellerDispatchPage() {
             </p>
           </div>
 
-          <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="h-10 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">New Dispatch</span>
-                <span className="sm:hidden">New</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Dispatch New Parcel
-                </DialogTitle>
-              </DialogHeader>
-              <DispatchForm
-                destinations={destinations}
-                onSubmit={createParcel}
-                onSuccess={() => setIsNewDialogOpen(false)}
-                onCancel={() => setIsNewDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPrintModalOpen(true)}
+              className="h-10 shrink-0 px-3 font-semibold text-xs flex items-center gap-1.5"
+              title="Print offline sorting manifest table"
+            >
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print / PDF</span>
+            </Button>
+
+            <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-10 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Dispatch</span>
+                  <span className="sm:hidden">New</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Dispatch New Parcel
+                  </DialogTitle>
+                </DialogHeader>
+                <DispatchForm
+                  destinations={destinations}
+                  onSubmit={createParcel}
+                  onSuccess={() => setIsNewDialogOpen(false)}
+                  onCancel={() => setIsNewDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {stats.awaiting > 0 && (
@@ -302,6 +318,14 @@ function SellerDispatchPage() {
             ))}
           </div>
         )}
+
+        {/* Offline Sorting & Print Manifest Modal */}
+        <DispatchPrintModal
+          open={isPrintModalOpen}
+          onOpenChange={setIsPrintModalOpen}
+          parcels={parcels}
+          businessName={profile?.business_name || profile?.owner_name}
+        />
       </div>
     </AppShell>
   );
