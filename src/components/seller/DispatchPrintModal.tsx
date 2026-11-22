@@ -139,7 +139,197 @@ export function DispatchPrintModal({
   }, [parcels, selectedDate, selectedSacco, selectedPayment, sortBy]);
 
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      // Fallback if popup is blocked
+      window.print();
+      return;
+    }
+
+    const rowsHtml = printableParcels.map((p, index) => {
+      const paymentCat = getPaymentLabel(p);
+      const saccoOrMethod = p.psv_sacco || p.sending_method.replace(/_/g, ' ');
+      const sendingFee = p.sending_method === 'psv_driver'
+        ? 'On Delivery'
+        : Number(p.total_sending_fee || 0).toLocaleString();
+      const goodsAmount = p.goods_amount != null ? Number(p.goods_amount).toLocaleString() : '-';
+
+      return `
+        <tr>
+          <td style="text-align: center;">${index + 1}</td>
+          <td style="font-family: monospace; font-weight: bold;">${p.reference_number || 'PENDING'}</td>
+          <td>${p.buyer_name}</td>
+          <td style="font-family: monospace;">${p.buyer_phone}</td>
+          <td>${p.destination}</td>
+          <td><strong>${saccoOrMethod}</strong></td>
+          <td>${p.package_type}</td>
+          <td><strong>${paymentCat}</strong></td>
+          <td style="text-align: right;">${sendingFee}</td>
+          <td style="text-align: right;">${goodsAmount}</td>
+          <td style="text-align: center;">[ &nbsp; ]</td>
+        </tr>
+      `;
+    }).join('');
+
+    const title = `${businessName || 'Pata Parcel Seller'} — Dispatch Manifest`;
+    const datePrinted = new Date().toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+    const filterInfo = [
+      selectedDate ? `Date: ${selectedDate}` : null,
+      selectedSacco !== 'all' ? `SACCO: ${selectedSacco}` : null,
+      selectedPayment !== 'all' ? `Payment: ${selectedPayment.replace(/_/g, ' ')}` : null,
+    ].filter(Boolean).join(' | ');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${title}</title>
+          <meta charset="utf-8" />
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 12mm 10mm;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+              color: #000;
+              background: #fff;
+              margin: 0;
+              padding: 0;
+              font-size: 11px;
+            }
+            .header-bar {
+              border-bottom: 2px solid #000;
+              padding-bottom: 8px;
+              margin-bottom: 12px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+            }
+            h1 {
+              font-size: 16px;
+              margin: 0 0 4px 0;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .subtitle {
+              font-size: 11px;
+              color: #444;
+              margin: 0;
+            }
+            .meta-box {
+              text-align: right;
+              font-size: 11px;
+            }
+            .filters-line {
+              font-size: 11px;
+              margin-top: 4px;
+              font-weight: 600;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 6px;
+            }
+            th, td {
+              border: 1px solid #000;
+              padding: 5px 6px;
+              text-align: left;
+              vertical-align: middle;
+            }
+            th {
+              background-color: #f2f2f2;
+              font-weight: bold;
+              font-size: 11px;
+            }
+            tfoot tr td {
+              font-weight: bold;
+              background-color: #f2f2f2;
+            }
+            .footer-sign {
+              margin-top: 24px;
+              padding-top: 10px;
+              border-top: 1px solid #000;
+              display: flex;
+              justify-content: space-between;
+              font-size: 11px;
+            }
+            .sign-col {
+              width: 45%;
+            }
+            .sign-line {
+              margin-top: 20px;
+              border-bottom: 1px dotted #000;
+              width: 80%;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-bar">
+            <div>
+              <h1>${title}</h1>
+              <p class="subtitle">Offline Sorting &amp; Dispatch Manifest for Pata Parcel</p>
+              ${filterInfo ? `<div class="filters-line">Filters: ${filterInfo}</div>` : ''}
+            </div>
+            <div class="meta-box">
+              <div><strong>Printed:</strong> ${datePrinted}</div>
+              <div><strong>Total Parcels:</strong> ${printableParcels.length}</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 25px; text-align: center;">#</th>
+                <th style="width: 90px;">Tracking No.</th>
+                <th>Buyer Name</th>
+                <th style="width: 95px;">Phone</th>
+                <th>Destination</th>
+                <th>SACCO / Method</th>
+                <th>Package Type</th>
+                <th style="width: 85px;">Payment Status</th>
+                <th style="text-align: right; width: 75px;">Sending Fee</th>
+                <th style="text-align: right; width: 75px;">Goods Total</th>
+                <th style="width: 45px; text-align: center;">Checked</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="8" style="text-align: right;">Total:</td>
+                <td style="text-align: right;">KES ${totalSendingFees.toLocaleString()}</td>
+                <td style="text-align: right;">KES ${totalGoodsValue.toLocaleString()}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="footer-sign">
+            <div class="sign-col">
+              <div><strong>Dispatched by (Seller):</strong> ______________________</div>
+              <div style="margin-top: 6px;"><strong>Signature &amp; Date:</strong> ______________________</div>
+            </div>
+            <div class="sign-col" style="text-align: right;">
+              <div><strong>Received at Pata Parcel:</strong> ______________________</div>
+              <div style="margin-top: 6px;"><strong>Signature &amp; Date:</strong> ______________________</div>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.focus();
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   const resetFilters = () => {
