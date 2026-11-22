@@ -41,6 +41,7 @@ export function DispatchForm({
   const isBuyer = mode === 'buyer';
   // Form State
   const [buyerName, setBuyerName] = useState('');
+  const [buyerTiktok, setBuyerTiktok] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [destination, setDestination] = useState('');
   const [sendingMethod, setSendingMethod] = useState<SendingMethod>('pickup_mtaani');
@@ -131,8 +132,11 @@ export function DispatchForm({
 
     setLoading(true);
 
+    const cleanTiktok = buyerTiktok.trim().replace(/^@+/, '');
+    const finalBuyerName = cleanTiktok ? `${buyerName.trim()} (@${cleanTiktok})` : buyerName.trim();
+
     const result = await onSubmit({
-      buyer_name: buyerName.trim(),
+      buyer_name: finalBuyerName,
       buyer_phone: cleanPhone,
       destination,
       sending_method: sendingMethod,
@@ -152,6 +156,7 @@ export function DispatchForm({
     } else {
       // Reset form
       setBuyerName('');
+      setBuyerTiktok('');
       setBuyerPhone('');
       setDestination('');
       setPickPoint('');
@@ -181,7 +186,7 @@ export function DispatchForm({
 
         <div className="space-y-2">
           <Label htmlFor="buyer_name" className="text-xs font-medium">
-            Buyer Name *
+            {isBuyer ? 'Your Name *' : 'Buyer Name *'}
           </Label>
           <Input
             id="buyer_name"
@@ -194,8 +199,29 @@ export function DispatchForm({
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="buyer_tiktok" className="text-xs font-medium">
+            {isBuyer ? 'TikTok Username / Handle' : 'Buyer TikTok Username / Handle'} <span className="text-[11px] font-normal text-muted-foreground">(Optional)</span>
+          </Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+              @
+            </span>
+            <Input
+              id="buyer_tiktok"
+              placeholder="e.g. mary_wanjiku or Mary Wanjiku"
+              value={buyerTiktok}
+              onChange={(e) => setBuyerTiktok(e.target.value)}
+              className="h-10 pl-8 text-sm"
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Helps your seller identify you if multiple buyers share the same name.
+          </p>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="buyer_phone" className="text-xs font-medium">
-            Buyer Phone Number *
+            {isBuyer ? 'Your Phone Number *' : 'Buyer Phone Number *'}
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
