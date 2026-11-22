@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, ArrowRight } from 'lucide-react';
 
 export const Route = createFileRoute('/admin/stats')({
   head: () => ({
@@ -173,7 +173,15 @@ function StatsPage() {
               <Bars title="Payment status" data={countBy(parcels, p => p.payment_status)} />
             </div>
             <Card className="p-4">
-              <h2 className="mb-3 text-sm font-semibold">Activity log (latest 100)</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold">Activity log (latest 100)</h2>
+                <Link
+                  to="/admin/activity"
+                  className="text-xs font-semibold text-secondary hover:underline inline-flex items-center gap-1"
+                >
+                  Search & Full Log <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
               {activity.length === 0 ? <p className="text-xs text-muted-foreground">No activity in this period.</p> : (
                 <ul className="divide-y divide-border">
                   {activity.map((a, i) => (

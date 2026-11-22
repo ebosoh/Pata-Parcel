@@ -11,8 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 import { Route as AdminBlacklistRouteImport } from './routes/admin/blacklist'
+import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as OrderCodeRouteImport } from './routes/order/$code'
@@ -36,14 +37,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminDashboardRoute = AdminDashboardRouteImport.update({
-  id: '/admin/dashboard',
-  path: '/admin/dashboard',
+const AdminActivityRoute = AdminActivityRouteImport.update({
+  id: '/admin/activity',
+  path: '/admin/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminBlacklistRoute = AdminBlacklistRouteImport.update({
   id: '/admin/blacklist',
   path: '/admin/blacklist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
@@ -110,6 +116,7 @@ const SellerReceiptsRoute = SellerReceiptsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/payments': typeof AdminPaymentsRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
     | '/admin/payments'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
     | '/admin/payments'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
     | '/admin/payments'
@@ -222,6 +234,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  AdminActivityRoute: typeof AdminActivityRoute
   AdminBlacklistRoute: typeof AdminBlacklistRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/activity': {
+      id: '/admin/activity'
+      path: '/admin/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AdminActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/blacklist': {
@@ -358,6 +378,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  AdminActivityRoute: AdminActivityRoute,
   AdminBlacklistRoute: AdminBlacklistRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
