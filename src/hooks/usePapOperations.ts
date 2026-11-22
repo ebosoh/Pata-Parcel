@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { saveDispatchDriver } from '@/lib/drivers';
 import type { Parcel, ParcelTracking, ParcelReceipt, TrackingStatus } from '@/types/database';
 
 export interface ParcelWithSeller extends Parcel {
@@ -182,19 +183,19 @@ export function usePapOperations(staffUserId?: string | null) {
 
       const targetStatus: TrackingStatus = isDeliveredImmediately ? 'delivered' : 'on_transit';
 
-      // If driver details are present, save driver record to dispatch_drivers table
+      // If driver details are present, save driver record
       if (options.dispatchType === 'psv_unofficial' && options.driverName && options.driverPhone && options.vehiclePlate) {
         try {
-          await supabase.from('dispatch_drivers').insert({
+          await saveDispatchDriver({
             driver_name: options.driverName.trim(),
             driver_phone: options.driverPhone.trim(),
             vehicle_plate: options.vehiclePlate.trim().toUpperCase(),
             sacco_name: options.saccoName?.trim() || null,
             parcel_id: parcelId,
             created_by: staffUserId,
-          } as any);
+          });
         } catch (driverErr) {
-          console.warn('Could not save driver to dispatch_drivers table:', driverErr);
+          console.warn('Could not save driver:', driverErr);
         }
       }
 

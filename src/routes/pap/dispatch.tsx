@@ -8,6 +8,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ReceiptScanner } from '@/components/shared/ReceiptScanner';
 import { useAuth } from '@/hooks/useAuth';
 import { usePapOperations, type PapDispatchType, type DispatchOptions } from '@/hooks/usePapOperations';
+import { getDispatchDrivers } from '@/lib/drivers';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,11 +90,7 @@ export function PapDispatchPage() {
   useEffect(() => {
     async function loadSavedDrivers() {
       try {
-        const { data } = await supabase
-          .from('dispatch_drivers')
-          .select('id, driver_name, driver_phone, vehicle_plate, sacco_name')
-          .order('created_at', { ascending: false })
-          .limit(50);
+        const data = await getDispatchDrivers();
         if (data && data.length > 0) {
           // De-duplicate by phone or plate
           const seen = new Set<string>();

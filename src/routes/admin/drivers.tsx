@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
+import { getDispatchDrivers, saveDispatchDriver, updateDispatchDriverRecord, deleteDispatchDriverRecord } from '@/lib/drivers';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,18 +91,8 @@ export function AdminDriversPage() {
   const fetchDrivers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('dispatch_drivers')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const rows: DispatchDriver[] = await getDispatchDrivers();
 
-      if (error) {
-        toast.error('Failed to load drivers: ' + error.message);
-        setDrivers([]);
-        return;
-      }
-
-      const rows: DispatchDriver[] = (data as DispatchDriver[]) || [];
       const parcelIds = rows.map(r => r.parcel_id).filter((id): id is string => !!id);
       const creatorIds = rows.map(r => r.created_by).filter((id): id is string => !!id);
 
@@ -132,7 +123,7 @@ export function AdminDriversPage() {
 
       setDrivers(enriched);
     } catch (err: any) {
-      toast.error('Error fetching drivers: ' + (err.message || 'Unknown error'));
+      console.warn('Error fetching drivers:', err);
     } finally {
       setLoading(false);
     }
@@ -174,32 +165,24 @@ export function AdminDriversPage() {
     setSaving(true);
     try {
       if (editingDriver) {
-        const { error } = await supabase
-          .from('dispatch_drivers')
-          .update({
-            driver_name: formName.trim(),
-            driver_phone: formPhone.trim(),
-            vehicle_plate: formPlate.trim().toUpperCase(),
-            sacco_name: formSacco.trim() || null,
-            destination: formDestination.trim() || null,
-          } as any)
-          .eq('id', editingDriver.id);
-
-        if (error) throw error;
+        await updateDispatchDriverRecord(editingDriver.id, {
+          driver_name: formName.trim(),
+          driver_phone: formPhone.trim(),
+          vehicle_plate: formPlate.trim().toUpperCase(),
+          sacco_name: formSacco.trim() || null,
+          destination: formDestination.trim() || null,
+        });
         toast.success(`Driver ${formName.trim()} updated successfully`);
       } else {
-        const { error } = await supabase
-          .from('dispatch_drivers')
-          .insert({
-            driver_name: formName.trim(),
-            driver_phone: formPhone.trim(),
-            vehicle_plate: formPlate.trim().toUpperCase(),
-            sacco_name: formSacco.trim() || null,
-            destination: formDestination.trim() || null,
-            created_by: user?.id,
-          } as any);
-
-        if (error) throw error;
+        await saveDispatchDriver({
+          driver_name: formName.trim(),
+          driver_phone: formPhone.trim(),
+          vehicle_plate: formPlate.trim().toUpperCase(),
+          sacco_name: formSacco.trim() || null,
+          destination: formDestination.trim() || null,
+          created_by: user?.id || null,
+          parcel_id: null,
+        });
         toast.success(`Driver ${formName.trim()} added to records`);
       }
 
@@ -216,12 +199,7 @@ export function AdminDriversPage() {
     if (!confirm(`Are you sure you want to delete driver record "${name}"?`)) return;
 
     try {
-      const { error } = await supabase
-        .from('dispatch_drivers')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await deleteDispatchDriverRecord(id);
       toast.success(`Driver record removed`);
       setDrivers(prev => prev.filter(d => d.id !== id));
     } catch (err: any) {
