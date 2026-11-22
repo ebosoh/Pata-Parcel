@@ -193,6 +193,7 @@ export function usePapOperations(staffUserId?: string | null) {
             sacco_name: options.saccoName?.trim() || null,
             parcel_id: parcelId,
             created_by: staffUserId,
+            destination: null,
           });
         } catch (driverErr) {
           console.warn('Could not save driver:', driverErr);

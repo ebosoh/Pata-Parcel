@@ -50,7 +50,7 @@ function LandingPage() {
 
           {/* Single Unified Sign In CTA */}
           <div className="mt-8 w-full">
-            <Link to="/login">
+            <Link to="/login" search={{} as never}>
               <Button size="lg" className="w-full text-base font-bold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-13 py-3.5 flex items-center justify-center gap-2">
                 <LogIn className="h-5 w-5 text-secondary" />
                 Sign In to Portal
