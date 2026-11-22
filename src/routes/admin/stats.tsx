@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Printer, ArrowRight } from 'lucide-react';
+import { Loader2, Printer } from 'lucide-react';
 
 export const Route = createFileRoute('/admin/stats')({
   head: () => ({
     meta: [
       { title: 'Platform Statistics — Pata Parcel Admin' },
-      { name: 'description', content: 'Parcel, seller, destination and activity statistics for Pata Parcel admins.' },
+      { name: 'description', content: 'Parcel, seller, and destination statistics for Pata Parcel admins.' },
       { property: 'og:title', content: 'Platform Statistics — Pata Parcel Admin' },
-      { property: 'og:description', content: 'Parcel, seller, destination and activity statistics for Pata Parcel admins.' },
+      { property: 'og:description', content: 'Parcel, seller, and destination statistics for Pata Parcel admins.' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
     ],
@@ -31,7 +31,6 @@ const PERIODS: { v: Period; label: string; days: number | null }[] = [
 ];
 
 interface P { id: string; reference_number: string; seller_id: string; destination: string; sending_method: string; num_packages: number; total_sending_fee: number; platform_fee: number; platform_fee_paid: boolean; tracking_status: string; payment_status: string; created_at: string }
-interface T { id: string; parcel_id: string; status: string; notes: string | null; created_at: string; updated_by: string }
 interface C { id: string; seller_id: string; destination: string; status: string; issue_description: string; created_at: string }
 interface Pr { id: string; owner_name: string; business_name: string | null }
 
@@ -67,7 +66,6 @@ function StatsPage() {
   const [period, setPeriod] = useState<Period>('month');
   const [loading, setLoading] = useState(true);
   const [parcels, setParcels] = useState<P[]>([]);
-  const [tracking, setTracking] = useState<T[]>([]);
   const [complaints, setComplaints] = useState<C[]>([]);
   const [profiles, setProfiles] = useState<Pr[]>([]);
   const isAdmin = profile?.role === 'pap_admin';
@@ -81,12 +79,12 @@ function StatsPage() {
     setLoading(true);
     Promise.all([
       supabase.from('parcels').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(5000),
-      supabase.from('parcel_tracking').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(200),
       supabase.from('complaints').select('*').gte('created_at', since).order('created_at', { ascending: false }).limit(1000),
       supabase.from('profiles').select('id, owner_name, business_name'),
-    ]).then(([a, b, c, d]) => {
-      setParcels((a.data as P[]) ?? []); setTracking((b.data as T[]) ?? []);
-      setComplaints((c.data as C[]) ?? []); setProfiles((d.data as Pr[]) ?? []);
+    ]).then(([a, c, d]) => {
+      setParcels((a.data as P[]) ?? []);
+      setComplaints((c.data as C[]) ?? []);
+      setProfiles((d.data as Pr[]) ?? []);
       setLoading(false);
     });
   }, [period, isAdmin]);
@@ -95,14 +93,8 @@ function StatsPage() {
     const m = new Map(profiles.map(p => [p.id, p.business_name || p.owner_name || 'Unnamed']));
     return (id: string) => m.get(id) ?? 'Unknown';
   }, [profiles]);
-  const refOf = useMemo(() => new Map(parcels.map(p => [p.id, p.reference_number])), [parcels]);
 
   const daily = useMemo(() => countBy(parcels, p => p.created_at.slice(0, 10)).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 31), [parcels]);
-  const activity = useMemo(() => [
-    ...parcels.slice(0, 100).map(p => ({ at: p.created_at, text: `${nameOf(p.seller_id)} dispatched ${p.reference_number} to ${p.destination}` })),
-    ...tracking.map(t => ({ at: t.created_at, text: `${nameOf(t.updated_by)} set ${refOf.get(t.parcel_id) ?? 'a parcel'} to ${t.status.replace(/_/g, ' ')}${t.notes ? ` — ${t.notes}` : ''}` })),
-    ...complaints.slice(0, 100).map(c => ({ at: c.created_at, text: `${nameOf(c.seller_id)} raised an issue (${c.status}): ${c.issue_description}` })),
-  ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 100), [parcels, tracking, complaints, nameOf, refOf]);
 
   if (!authLoading && !profile) {
     return <AppShell role="seller"><p className="py-10 text-center text-sm text-muted-foreground">Please sign in with an admin account to view statistics.</p></AppShell>;
@@ -172,27 +164,6 @@ function StatsPage() {
               <Bars title="Tracking status" data={countBy(parcels, p => p.tracking_status.replace(/_/g, ' '))} />
               <Bars title="Payment status" data={countBy(parcels, p => p.payment_status)} />
             </div>
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold">Activity log (latest 100)</h2>
-                <Link
-                  to="/admin/activity"
-                  className="text-xs font-semibold text-secondary hover:underline inline-flex items-center gap-1"
-                >
-                  Search & Full Log <ArrowRight className="h-3 w-3" />
-                </Link>
-              </div>
-              {activity.length === 0 ? <p className="text-xs text-muted-foreground">No activity in this period.</p> : (
-                <ul className="divide-y divide-border">
-                  {activity.map((a, i) => (
-                    <li key={i} className="flex flex-col gap-0.5 py-1.5 text-xs sm:flex-row sm:gap-3">
-                      <span className="shrink-0 text-muted-foreground sm:w-36">{new Date(a.at).toLocaleString()}</span>
-                      <span className="min-w-0">{a.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
           </>
         )}
       </div>
