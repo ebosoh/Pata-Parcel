@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { Package, Truck, Shield, Zap, ArrowRight, Store, Inbox } from 'lucide-react';
+import { Truck, Shield, Zap, ArrowRight, LogIn } from 'lucide-react';
 import { InstallPrompt } from '@/components/shared/InstallPrompt';
 
 export const Route = createFileRoute('/')({
@@ -48,40 +48,18 @@ function LandingPage() {
             The simplest mobile platform for online sellers (TikTok, IG, FB) to dispatch packages across Kenya via PSV, Pick-up Mtaani, and Door-to-Door.
           </p>
 
-          {/* Primary Account Creation CTA */}
-          <div className="mt-6 w-full">
-            <Link to="/login" search={{ mode: 'signup' }}>
-              <Button size="lg" className="w-full text-base font-bold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-13 py-3.5">
-                Create Free Account
-                <ArrowRight className="ml-2 h-5 w-5" />
+          {/* Single Unified Sign In CTA */}
+          <div className="mt-8 w-full">
+            <Link to="/login">
+              <Button size="lg" className="w-full text-base font-bold bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 h-13 py-3.5 flex items-center justify-center gap-2">
+                <LogIn className="h-5 w-5 text-secondary" />
+                Sign In to Portal
+                <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
-              Free to join — start dispatching parcels in minutes
+            <p className="mt-2 text-xs text-muted-foreground">
+              Single sign-in for Online Sellers and PAP Operations Hub
             </p>
-          </div>
-
-          {/* Direct Portal Entry Buttons */}
-          <div className="mt-4 flex flex-col gap-2.5 w-full">
-            <Link to={'/seller/dispatch' as any}>
-              <Button size="lg" className="w-full text-sm font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center justify-between px-5 h-12">
-                <span className="flex items-center gap-2">
-                  <Store className="h-4 w-4 text-secondary" />
-                  Online Seller Portal
-                </span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-
-            <Link to={'/pap/queue' as any}>
-              <Button size="lg" variant="outline" className="w-full text-sm font-bold border-primary text-primary hover:bg-primary/5 flex items-center justify-between px-5 h-12">
-                <span className="flex items-center gap-2">
-                  <Inbox className="h-4 w-4 text-primary" />
-                  PAP Operations Hub
-                </span>
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
