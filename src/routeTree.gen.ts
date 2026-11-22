@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 import { Route as AdminBlacklistRouteImport } from './routes/admin/blacklist'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminDriversRouteImport } from './routes/admin/drivers'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as OrderCodeRouteImport } from './routes/order/$code'
@@ -50,6 +51,11 @@ const AdminBlacklistRoute = AdminBlacklistRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDriversRoute = AdminDriversRouteImport.update({
+  id: '/admin/drivers',
+  path: '/admin/drivers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/drivers': typeof AdminDriversRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/order/$code': typeof OrderCodeRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/drivers': typeof AdminDriversRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/order/$code': typeof OrderCodeRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/drivers': typeof AdminDriversRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/stats': typeof AdminStatsRoute
   '/order/$code': typeof OrderCodeRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
+    | '/admin/drivers'
     | '/admin/payments'
     | '/admin/stats'
     | '/order/$code'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
+    | '/admin/drivers'
     | '/admin/payments'
     | '/admin/stats'
     | '/order/$code'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
+    | '/admin/drivers'
     | '/admin/payments'
     | '/admin/stats'
     | '/order/$code'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   AdminActivityRoute: typeof AdminActivityRoute
   AdminBlacklistRoute: typeof AdminBlacklistRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminDriversRoute: typeof AdminDriversRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminStatsRoute: typeof AdminStatsRoute
   OrderCodeRoute: typeof OrderCodeRoute
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/dashboard'
       fullPath: '/admin/dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/drivers': {
+      id: '/admin/drivers'
+      path: '/admin/drivers'
+      fullPath: '/admin/drivers'
+      preLoaderRoute: typeof AdminDriversRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/payments': {
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminActivityRoute: AdminActivityRoute,
   AdminBlacklistRoute: AdminBlacklistRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminDriversRoute: AdminDriversRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminStatsRoute: AdminStatsRoute,
   OrderCodeRoute: OrderCodeRoute,
