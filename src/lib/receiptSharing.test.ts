@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { buildReceiptShareMessage, waRecipientFor, waShareUrl } from './receiptSharing';
+import { buildReceiptShareMessage, waRecipientFor, waShareUrl, shortenReceiptUrl } from './receiptSharing';
 
 test('a 07 or 01 buyer number becomes a 254 WhatsApp number', () => {
   assert.equal(waRecipientFor('0712345678'), '254712345678');
@@ -46,4 +46,10 @@ test('the wa.me link carries the buyer number and an encoded message', () => {
   const url = waShareUrl('254712345678', 'Receipt: https://example.test/r.jpg');
   assert.ok(url.startsWith('https://wa.me/254712345678?text='));
   assert.ok(url.includes('https%3A%2F%2Fexample.test%2Fr.jpg'));
+});
+
+test('shortenReceiptUrl shortens a long URL or falls back safely', async () => {
+  const short = await shortenReceiptUrl('https://example.com/very/long/path/with/a/lot/of/query/parameters/and/tokens/so/it/exceeds/fifty/characters?token=abcdef1234567890');
+  assert.ok(typeof short === 'string');
+  assert.ok(short.startsWith('http'));
 });

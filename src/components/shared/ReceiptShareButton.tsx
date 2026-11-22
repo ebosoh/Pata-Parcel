@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { toStoragePath } from '@/components/shared/StorageImage';
-import { buildReceiptShareMessage, waRecipientFor, waShareUrl } from '@/lib/receiptSharing';
+import { buildReceiptShareMessage, waRecipientFor, waShareUrl, shortenReceiptUrl } from '@/lib/receiptSharing';
 
 const BUCKET = 'receipts';
 /** The buyer gets a week to open the receipt copy. */
@@ -77,12 +77,14 @@ export function ReceiptShareButton({
         return;
       }
 
+      const shortUrl = await shortenReceiptUrl(signed.signedUrl);
+
       const message = buildReceiptShareMessage({
         referenceNumber,
         buyerName,
         destination,
         saco,
-        receiptLink: signed.signedUrl,
+        receiptLink: shortUrl,
       });
 
       // An anchor click is a user-gesture navigation: popup blockers allow it, and unlike

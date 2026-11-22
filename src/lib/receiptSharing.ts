@@ -18,6 +18,54 @@ export interface ReceiptShareDetails {
   receiptLink: string;
 }
 
+/**
+ * Shortens a long receipt link via TinyURL (with is.gd fallback)
+ * so it remains neat and legible in WhatsApp.
+ * Falls back to the original link if shortener is unavailable.
+ */
+export async function shortenReceiptUrl(longUrl: string): Promise<string> {
+  if (!longUrl || longUrl.length < 50) return longUrl;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const short = (await res.text()).trim();
+      if (short.startsWith('http://') || short.startsWith('https://')) {
+        return short;
+      }
+    }
+  } catch {
+    // Fall back to is.gd if TinyURL fails or times out
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(longUrl)}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+
+      if (res.ok) {
+        const short = (await res.text()).trim();
+        if (short.startsWith('http://') || short.startsWith('https://')) {
+          return short;
+        }
+      }
+    } catch {
+      // Ignore fallback failure
+    }
+  }
+
+  return longUrl;
+}
+
 /** The message body that goes to the buyer together with the receipt copy. */
 export function buildReceiptShareMessage({
   referenceNumber,
