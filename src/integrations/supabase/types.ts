@@ -120,6 +120,50 @@ export type Database = {
           },
         ]
       }
+      dispatch_drivers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          destination: string | null
+          driver_name: string
+          driver_phone: string
+          id: string
+          parcel_id: string | null
+          sacco_name: string | null
+          vehicle_plate: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          destination?: string | null
+          driver_name: string
+          driver_phone: string
+          id?: string
+          parcel_id?: string | null
+          sacco_name?: string | null
+          vehicle_plate: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          destination?: string | null
+          driver_name?: string
+          driver_phone?: string
+          id?: string
+          parcel_id?: string | null
+          sacco_name?: string | null
+          vehicle_plate?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_drivers_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parcel_tracking: {
         Row: {
           created_at: string

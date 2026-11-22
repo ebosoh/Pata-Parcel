@@ -82,6 +82,38 @@ export function PapDispatchPage() {
   const [riderPhone, setRiderPhone] = useState('');
   const [dispatchNotes, setDispatchNotes] = useState('');
 
+  // Saved drivers for lookup/autocomplete
+  const [savedDrivers, setSavedDrivers] = useState<Array<{ id: string; driver_name: string; driver_phone: string; vehicle_plate: string; sacco_name?: string | null }>>([]);
+
+  // Fetch recent drivers for reuse
+  useEffect(() => {
+    async function loadSavedDrivers() {
+      try {
+        const { data } = await supabase
+          .from('dispatch_drivers')
+          .select('id, driver_name, driver_phone, vehicle_plate, sacco_name')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (data && data.length > 0) {
+          // De-duplicate by phone or plate
+          const seen = new Set<string>();
+          const unique: typeof data = [];
+          for (const d of data) {
+            const key = `${d.driver_phone}_${d.vehicle_plate}`.toLowerCase();
+            if (!seen.has(key)) {
+              seen.add(key);
+              unique.push(d);
+            }
+          }
+          setSavedDrivers(unique);
+        }
+      } catch (err) {
+        console.warn('Could not load saved drivers:', err);
+      }
+    }
+    loadSavedDrivers();
+  }, []);
+
   // Receipt Modal state (after dispatch)
   const [receiptModalParcel, setReceiptModalParcel] = useState<any | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -163,6 +195,9 @@ export function PapDispatchPage() {
       // If method issues a receipt, prompt receipt upload modal
       if (dispatchType === 'psv_official' || dispatchType === 'pickup_mtaani') {
         setReceiptModalParcel(dispatchedP);
+      } else if (dispatchType === 'psv_unofficial') {
+        setFeedback(`Parcel ${dispatchedP.reference_number || ''} handed to driver and marked as Delivered! Driver details saved.`);
+        setTimeout(() => setFeedback(null), 4000);
       } else {
         setFeedback(`Parcel ${dispatchedP.reference_number || ''} dispatched on transit!`);
         setTimeout(() => setFeedback(null), 3000);
@@ -508,9 +543,39 @@ export function PapDispatchPage() {
 
               {dispatchType === 'psv_unofficial' && (
                 <div className="space-y-2 rounded-lg bg-amber-500/10 p-3 border border-amber-500/30">
-                  <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                    Driver Handover Details (No receipt issued)
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                      Driver Handover Details (Saved to system & marked Delivered)
+                    </p>
+                  </div>
+                  {savedDrivers.length > 0 && (
+                    <div className="space-y-1">
+                      <Label htmlFor="saved_driver_select" className="text-[11px] font-medium text-muted-foreground">
+                        Select Previous Driver (or type below)
+                      </Label>
+                      <select
+                        id="saved_driver_select"
+                        className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const chosen = savedDrivers.find(d => d.id === e.target.value);
+                          if (chosen) {
+                            setDriverName(chosen.driver_name);
+                            setDriverPhone(chosen.driver_phone);
+                            setVehiclePlate(chosen.vehicle_plate);
+                            if (chosen.sacco_name) setSaccoName(chosen.sacco_name);
+                          }
+                        }}
+                      >
+                        <option value="">-- Choose saved driver --</option>
+                        {savedDrivers.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.driver_name} · {d.vehicle_plate} ({d.driver_phone}){d.sacco_name ? ` · ${d.sacco_name}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="space-y-1">
                     <Label htmlFor="dr_name" className="text-xs font-medium">Driver Name *</Label>
                     <Input

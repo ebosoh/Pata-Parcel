@@ -263,6 +263,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      dispatch_drivers: {
+        Row: {
+          id: string;
+          driver_name: string;
+          driver_phone: string;
+          vehicle_plate: string;
+          sacco_name: string | null;
+          destination: string | null;
+          parcel_id: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          driver_name: string;
+          driver_phone: string;
+          vehicle_plate: string;
+          sacco_name?: string | null;
+          destination?: string | null;
+          parcel_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          driver_name?: string;
+          driver_phone?: string;
+          vehicle_plate?: string;
+          sacco_name?: string | null;
+          destination?: string | null;
+          parcel_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -304,3 +340,4 @@ export type ParcelReceipt = Database['public']['Tables']['parcel_receipts']['Row
 export type Complaint = Database['public']['Tables']['complaints']['Row'];
 export type Sacco = Database['public']['Tables']['saccos']['Row'];
 export type Destination = Database['public']['Tables']['destinations']['Row'];
+export type DispatchDriver = Database['public']['Tables']['dispatch_drivers']['Row'];

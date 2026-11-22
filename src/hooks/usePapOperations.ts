@@ -162,10 +162,12 @@ export function usePapOperations(staffUserId?: string | null) {
     try {
       // Construct descriptive tracking notes based on dispatch method
       let notes = '';
+      const isDeliveredImmediately = options.dispatchType === 'psv_unofficial';
+
       if (options.dispatchType === 'psv_official') {
         notes = `Dispatched via PSV (${options.saccoName || 'SACCO'}) official office. Receipt issued.`;
       } else if (options.dispatchType === 'psv_unofficial') {
-        notes = `Dispatched via PSV driver: ${options.driverName || 'Driver'} (${options.driverPhone || 'No phone'}), Vehicle: ${options.vehiclePlate || 'N/A'}. Unofficial dispatch.`;
+        notes = `Dispatched to driver ${options.driverName || 'Driver'} (${options.driverPhone || 'No phone'}), Vehicle: ${options.vehiclePlate || 'N/A'}. Handover complete — marked as delivered.`;
       } else if (options.dispatchType === 'pickup_mtaani') {
         notes = `Delivered to Pick-up Mtaani agent (${options.pickupStation || 'Station'}). Receipt issued.`;
       } else if (options.dispatchType === 'door_to_door') {
@@ -178,11 +180,29 @@ export function usePapOperations(staffUserId?: string | null) {
         notes += ` Details: ${options.notes}`;
       }
 
+      const targetStatus: TrackingStatus = isDeliveredImmediately ? 'delivered' : 'on_transit';
+
+      // If driver details are present, save driver record to dispatch_drivers table
+      if (options.dispatchType === 'psv_unofficial' && options.driverName && options.driverPhone && options.vehiclePlate) {
+        try {
+          await supabase.from('dispatch_drivers').insert({
+            driver_name: options.driverName.trim(),
+            driver_phone: options.driverPhone.trim(),
+            vehicle_plate: options.vehiclePlate.trim().toUpperCase(),
+            sacco_name: options.saccoName?.trim() || null,
+            parcel_id: parcelId,
+            created_by: staffUserId,
+          } as any);
+        } catch (driverErr) {
+          console.warn('Could not save driver to dispatch_drivers table:', driverErr);
+        }
+      }
+
       // Update parcel status
       const { error: updateErr } = await supabase
         .from('parcels')
         .update({
-          tracking_status: 'on_transit' as TrackingStatus,
+          tracking_status: targetStatus,
           updated_at: new Date().toISOString(),
         } as any)
         .eq('id', parcelId);
@@ -192,7 +212,7 @@ export function usePapOperations(staffUserId?: string | null) {
       // Insert tracking history
       await supabase.from('parcel_tracking').insert({
         parcel_id: parcelId,
-        status: 'on_transit' as TrackingStatus,
+        status: targetStatus,
         updated_by: staffUserId,
         notes,
       } as any);
@@ -268,7 +288,28 @@ export function usePapOperations(staffUserId?: string | null) {
 
       if (insertErr) throw insertErr;
 
+      // When a receipt is uploaded and shared for a SACCO parcel, mark parcel as delivered
+      try {
+        await supabase
+          .from('parcels')
+          .update({
+            tracking_status: 'delivered' as TrackingStatus,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('id', parcelId);
+
+        await supabase.from('parcel_tracking').insert({
+          parcel_id: parcelId,
+          status: 'delivered' as TrackingStatus,
+          updated_by: staffUserId,
+          notes: 'Receipt uploaded and shared with seller / customer. Parcel marked as delivered.',
+        } as any);
+      } catch (markErr) {
+        console.warn('Could not mark parcel delivered upon receipt upload:', markErr);
+      }
+
       await fetchReceipts();
+      await fetchParcels();
       return { data: receiptRecord as ParcelReceipt, error: null };
     } catch (err: any) {
       return { data: null, error: err };

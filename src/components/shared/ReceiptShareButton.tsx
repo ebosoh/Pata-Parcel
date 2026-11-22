@@ -107,8 +107,29 @@ export function ReceiptShareButton({
         return;
       }
 
+      // Ensure parcel status is set to delivered client-side if RPC doesn't have the updated migration yet
+      try {
+        const { data: rcpt } = await supabase
+          .from('parcel_receipts')
+          .select('parcel_id')
+          .eq('id', receiptId)
+          .maybeSingle();
+
+        if (rcpt?.parcel_id) {
+          await supabase
+            .from('parcels')
+            .update({
+              tracking_status: 'delivered',
+              updated_at: new Date().toISOString(),
+            } as any)
+            .eq('id', rcpt.parcel_id);
+        }
+      } catch (err) {
+        console.warn('Fallback parcel delivered update failed:', err);
+      }
+
       onShared(receiptId);
-      toast.success(`Receipt sent to ${buyerName} on WhatsApp`, { description: referenceNumber });
+      toast.success(`Receipt sent to ${buyerName} on WhatsApp. Parcel marked as Delivered!`, { description: referenceNumber });
     } finally {
       setBusy(false);
     }

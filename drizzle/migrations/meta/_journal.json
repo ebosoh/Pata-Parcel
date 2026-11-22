@@ -134,6 +134,13 @@
       "when": 1795266082641,
       "tag": "0018_prevent_payment_code_reuse",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795389600000,
+      "tag": "0019_dispatch_drivers_and_delivered_on_share",
+      "breakpoints": true
     }
   ]
 }
