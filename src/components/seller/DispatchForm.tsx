@@ -85,7 +85,13 @@ export function DispatchForm({
 
     // Validations
     if (!buyerName.trim()) {
-      setFormError('Please enter the buyer name');
+      setFormError(isBuyer ? 'Please enter your name' : 'Please enter the buyer name');
+      return;
+    }
+
+    const cleanTiktok = buyerTiktok.trim().replace(/^@+/, '');
+    if (isBuyer && !cleanTiktok) {
+      setFormError('Please enter your TikTok username / handle');
       return;
     }
 
@@ -133,7 +139,6 @@ export function DispatchForm({
 
     setLoading(true);
 
-    const cleanTiktok = buyerTiktok.trim().replace(/^@+/, '');
     const finalBuyerName = cleanTiktok ? `${buyerName.trim()} (@${cleanTiktok})` : buyerName.trim();
 
     const result = await onSubmit({
@@ -201,7 +206,7 @@ export function DispatchForm({
 
         <div className="space-y-2">
           <Label htmlFor="buyer_tiktok" className="text-xs font-medium">
-            {isBuyer ? 'TikTok Username / Handle' : 'Buyer TikTok Username / Handle'} <span className="text-[11px] font-normal text-muted-foreground">(Optional)</span>
+            {isBuyer ? 'TikTok Username / Handle *' : 'Buyer TikTok Username / Handle'} {!isBuyer && <span className="text-[11px] font-normal text-muted-foreground">(Optional)</span>}
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -212,11 +217,14 @@ export function DispatchForm({
               placeholder="e.g. mary_wanjiku or Mary Wanjiku"
               value={buyerTiktok}
               onChange={(e) => setBuyerTiktok(e.target.value)}
+              required={isBuyer}
               className="h-10 pl-8 text-sm"
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Helps your seller identify you if multiple buyers share the same name.
+            {isBuyer
+              ? 'Required so your seller can confirm and match your order to your TikTok account.'
+              : 'Helps your seller identify you if multiple buyers share the same name.'}
           </p>
         </div>
 
