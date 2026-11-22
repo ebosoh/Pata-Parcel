@@ -16,7 +16,7 @@ import {
 } from '@/lib/constants';
 import type { SendingMethod, Destination } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
-import { Send, Loader2, Calculator, AlertCircle } from 'lucide-react';
+import { Send, Loader2, Calculator, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
@@ -53,6 +53,7 @@ export function DispatchForm({
   const [sendingFee, setSendingFee] = useState<number | null>(null);
   const [goodsAmount, setGoodsAmount] = useState('');
   const [paymentCode, setPaymentCode] = useState('');
+  const [showAllPackageTypes, setShowAllPackageTypes] = useState(false);
 
   // Prefill the sending fee whenever the method (or SACCO for PSV) changes
   const suggestedFee = suggestedSendingFee(sendingMethod, psvSacco);
@@ -334,7 +335,10 @@ export function DispatchForm({
         <fieldset className="space-y-2">
           <legend className="text-xs font-medium">Type of Package *</legend>
           <div className="grid grid-cols-2 gap-2">
-            {PACKAGE_TYPES.map(type => (
+            {(isBuyer && !showAllPackageTypes
+              ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
+              : PACKAGE_TYPES
+            ).map(type => (
               <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
                 <Checkbox
                   checked={packageTypes.includes(type)}
@@ -346,6 +350,20 @@ export function DispatchForm({
               </label>
             ))}
           </div>
+          {isBuyer && (
+            <button
+              type="button"
+              onClick={() => setShowAllPackageTypes(prev => !prev)}
+              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
+            >
+              <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
+              {showAllPackageTypes ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+          )}
         </fieldset>
 
         {packageTypes.includes('Other') && (
