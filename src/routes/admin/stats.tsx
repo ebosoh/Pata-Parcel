@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, Store } from 'lucide-react';
 
 export const Route = createFileRoute('/admin/stats')({
   head: () => ({
@@ -137,6 +137,11 @@ function StatsPage() {
               <Button key={p.v} size="sm" variant={period === p.v ? 'default' : 'outline'} onClick={() => setPeriod(p.v)}>{p.label}</Button>
             ))}
             <Button size="sm" variant="secondary" onClick={() => window.print()}><Printer className="mr-1 h-4 w-4" />Save as PDF</Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/admin/sellers">
+                <Store className="mr-1 h-4 w-4 text-primary" /> Sellers Directory
+              </Link>
+            </Button>
           </div>
         </div>
         {loading ? <Loader2 className="mx-auto h-6 w-6 animate-spin" /> : (

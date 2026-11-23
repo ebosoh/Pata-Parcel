@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from '@tanstack/react-router';
-import { BarChart3, Package, FileText, AlertCircle, LayoutDashboard, User, Inbox, Menu, X, Banknote, ShieldAlert, Activity, Truck } from 'lucide-react';
+import { BarChart3, Package, FileText, AlertCircle, LayoutDashboard, User, Inbox, Menu, X, Banknote, ShieldAlert, Activity, Truck, Store } from 'lucide-react';
 import type { UserRole } from '@/types/database';
 
 interface NavItem {
@@ -36,13 +36,14 @@ const PAP_ADMIN_MAIN: NavItem[] = [
   { to: '/pap/receipts', label: 'Receipts', icon: FileText   },
 ];
 const PAP_ADMIN_OVERFLOW: NavItem[] = [
-  { to: '/admin/stats',      label: 'Stats',        icon: BarChart3      },
-  { to: '/admin/activity',   label: 'Activity Log', icon: Activity       },
-  { to: '/admin/drivers',    label: 'Drivers',      icon: Truck          },
-  { to: '/admin/dashboard',  label: 'Staff',        icon: LayoutDashboard},
-  { to: '/admin/payments',   label: 'Payments',     icon: Banknote       },
-  { to: '/pap/issues',       label: 'Issues',       icon: AlertCircle    },
-  { to: '/admin/blacklist',  label: 'Blacklist',    icon: ShieldAlert    },
+  { to: '/admin/sellers',    label: 'Sellers Directory', icon: Store      },
+  { to: '/admin/stats',      label: 'Stats',             icon: BarChart3  },
+  { to: '/admin/activity',   label: 'Activity Log',      icon: Activity   },
+  { to: '/admin/drivers',    label: 'Drivers',           icon: Truck      },
+  { to: '/admin/dashboard',  label: 'Staff',             icon: LayoutDashboard},
+  { to: '/admin/payments',   label: 'Payments',          icon: Banknote   },
+  { to: '/pap/issues',       label: 'Issues',            icon: AlertCircle},
+  { to: '/admin/blacklist',  label: 'Blacklist',         icon: ShieldAlert},
 ];
 
 function getNav(role: UserRole | null): { main: NavItem[]; overflow: NavItem[] } {

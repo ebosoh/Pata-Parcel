@@ -16,6 +16,7 @@ import { Route as AdminBlacklistRouteImport } from './routes/admin/blacklist'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminDriversRouteImport } from './routes/admin/drivers'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminSellersRouteImport } from './routes/admin/sellers'
 import { Route as AdminStatsRouteImport } from './routes/admin/stats'
 import { Route as OrderCodeRouteImport } from './routes/order/$code'
 import { Route as PapDispatchRouteImport } from './routes/pap/dispatch'
@@ -61,6 +62,11 @@ const AdminDriversRoute = AdminDriversRouteImport.update({
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   id: '/admin/payments',
   path: '/admin/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSellersRoute = AdminSellersRouteImport.update({
+  id: '/admin/sellers',
+  path: '/admin/sellers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminStatsRoute = AdminStatsRouteImport.update({
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/sellers': typeof AdminSellersRoute
   '/admin/stats': typeof AdminStatsRoute
   '/order/$code': typeof OrderCodeRoute
   '/pap/dispatch': typeof PapDispatchRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/sellers': typeof AdminSellersRoute
   '/admin/stats': typeof AdminStatsRoute
   '/order/$code': typeof OrderCodeRoute
   '/pap/dispatch': typeof PapDispatchRoute
@@ -168,6 +176,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/drivers': typeof AdminDriversRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/sellers': typeof AdminSellersRoute
   '/admin/stats': typeof AdminStatsRoute
   '/order/$code': typeof OrderCodeRoute
   '/pap/dispatch': typeof PapDispatchRoute
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/drivers'
     | '/admin/payments'
+    | '/admin/sellers'
     | '/admin/stats'
     | '/order/$code'
     | '/pap/dispatch'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/drivers'
     | '/admin/payments'
+    | '/admin/sellers'
     | '/admin/stats'
     | '/order/$code'
     | '/pap/dispatch'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/drivers'
     | '/admin/payments'
+    | '/admin/sellers'
     | '/admin/stats'
     | '/order/$code'
     | '/pap/dispatch'
@@ -251,6 +263,7 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDriversRoute: typeof AdminDriversRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminSellersRoute: typeof AdminSellersRoute
   AdminStatsRoute: typeof AdminStatsRoute
   OrderCodeRoute: typeof OrderCodeRoute
   PapDispatchRoute: typeof PapDispatchRoute
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/payments'
       fullPath: '/admin/payments'
       preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/sellers': {
+      id: '/admin/sellers'
+      path: '/admin/sellers'
+      fullPath: '/admin/sellers'
+      preLoaderRoute: typeof AdminSellersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/stats': {
@@ -403,6 +423,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDriversRoute: AdminDriversRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminSellersRoute: AdminSellersRoute,
   AdminStatsRoute: AdminStatsRoute,
   OrderCodeRoute: OrderCodeRoute,
   PapDispatchRoute: PapDispatchRoute,
