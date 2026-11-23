@@ -6,7 +6,6 @@ import {
   Zap,
   ArrowRight,
   LogIn,
-  CheckCircle2,
   Sparkles,
   ShoppingBag,
   Building2,
@@ -132,22 +131,6 @@ function LandingPage() {
                     Explore How It Works
                   </Button>
                 </a>
-              </div>
-
-              {/* Value Micro-Points */}
-              <div className="pt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Photographed Courier Slips
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 100+ SACCOs &amp; Drivers
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> M-PESA Code Fraud Shield
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 1-Click Bulk PDF Prints
-                </span>
               </div>
             </div>
           </div>

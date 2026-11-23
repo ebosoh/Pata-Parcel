@@ -27,22 +27,6 @@ export function HomeNavbar() {
           </div>
         </Link>
 
-        {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-muted-foreground">
-          <a href="#workflow" className="hover:text-primary transition-colors">
-            How It Works
-          </a>
-          <a href="#services" className="hover:text-primary transition-colors">
-            For Online Sellers
-          </a>
-          <a href="#network" className="hover:text-primary transition-colors">
-            100+ Partner SACCOs
-          </a>
-          <a href="#faq" className="hover:text-primary transition-colors">
-            FAQ
-          </a>
-        </nav>
-
         {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-2.5">
           {/* Mobile hamburger */}
