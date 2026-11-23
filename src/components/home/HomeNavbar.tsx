@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
-import { LogIn, ArrowRight, Menu, X, Package, ShieldCheck, Sparkles } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 export function HomeNavbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,19 +43,8 @@ export function HomeNavbar() {
           </a>
         </nav>
 
-        {/* Action Button & Mobile Menu Toggle */}
+        {/* Mobile Menu Toggle */}
         <div className="flex items-center gap-2.5">
-          <Link to="/login" search={{} as never}>
-            <Button
-              size="sm"
-              className="h-9 px-4 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm gap-1.5 rounded-lg"
-            >
-              <LogIn className="h-3.5 w-3.5 text-secondary" />
-              Sign In to Portal
-              <ArrowRight className="h-3.5 w-3.5 hidden sm:inline" />
-            </Button>
-          </Link>
-
           {/* Mobile hamburger */}
           <button
             type="button"
