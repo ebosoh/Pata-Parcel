@@ -324,7 +324,7 @@ function SellerDispatchPage() {
           open={isPrintModalOpen}
           onOpenChange={setIsPrintModalOpen}
           parcels={parcels}
-          businessName={profile?.business_name || profile?.owner_name}
+          businessName={profile?.business_name || profile?.owner_name || null}
         />
       </div>
     </AppShell>

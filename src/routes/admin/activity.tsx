@@ -45,11 +45,11 @@ interface ActivityItem {
   at: string;
   actorName: string;
   actorId?: string;
-  referenceNumber?: string;
+  referenceNumber?: string | undefined;
   parcelId?: string;
   destination?: string;
   status?: string;
-  notes?: string;
+  notes?: string | undefined;
   details: string;
   rawText: string;
 }

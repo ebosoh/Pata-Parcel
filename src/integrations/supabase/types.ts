@@ -85,41 +85,6 @@ export type Database = {
         }
         Relationships: []
       }
-      parcel_receipts: {
-        Row: {
-          created_at: string
-          id: string
-          parcel_id: string
-          receipt_image_url: string
-          shared_with_buyer_at: string | null
-          uploaded_by: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          parcel_id: string
-          receipt_image_url: string
-          shared_with_buyer_at?: string | null
-          uploaded_by: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          parcel_id?: string
-          receipt_image_url?: string
-          shared_with_buyer_at?: string | null
-          uploaded_by?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "parcel_receipts_parcel_id_fkey"
-            columns: ["parcel_id"]
-            isOneToOne: false
-            referencedRelation: "parcels"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       dispatch_drivers: {
         Row: {
           created_at: string
@@ -156,7 +121,49 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "dispatch_drivers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "dispatch_drivers_parcel_id_fkey"
+            columns: ["parcel_id"]
+            isOneToOne: false
+            referencedRelation: "parcels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parcel_receipts: {
+        Row: {
+          created_at: string
+          id: string
+          parcel_id: string
+          receipt_image_url: string
+          shared_with_buyer_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parcel_id: string
+          receipt_image_url: string
+          shared_with_buyer_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parcel_id?: string
+          receipt_image_url?: string
+          shared_with_buyer_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parcel_receipts_parcel_id_fkey"
             columns: ["parcel_id"]
             isOneToOne: false
             referencedRelation: "parcels"

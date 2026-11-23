@@ -13,8 +13,8 @@ export async function getDispatchDrivers(): Promise<DispatchDriver[]> {
 
     if (!error && Array.isArray(data)) {
       // Sync to local fallback cache
-      saveDriversLocally(data as DispatchDriver[]);
-      return data as DispatchDriver[];
+      saveDriversLocally(data as unknown as DispatchDriver[]);
+      return data as unknown as DispatchDriver[];
     }
   } catch (err) {
     // Supabase table not created yet or network failure
@@ -33,7 +33,7 @@ export async function saveDispatchDriver(driver: Omit<DispatchDriver, 'id' | 'cr
     sacco_name: driver.sacco_name || null,
     destination: driver.destination || null,
     parcel_id: driver.parcel_id || null,
-    created_by: driver.created_by || null,
+    created_by: driver.created_by || (await supabase.auth.getUser()).data.user?.id || null,
     created_at: new Date().toISOString(),
   };
 
@@ -46,7 +46,7 @@ export async function saveDispatchDriver(driver: Omit<DispatchDriver, 'id' | 'cr
       .maybeSingle();
 
     if (!error && data) {
-      const saved = data as DispatchDriver;
+      const saved = data as unknown as DispatchDriver;
       updateLocalDriver(saved);
       return saved;
     }
