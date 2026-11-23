@@ -39,7 +39,7 @@ export function WorkflowAnimation() {
       badge: 'Step 1 · Order Capture',
       title: 'Buyer Submits Order via /order/shop',
       shortDesc: 'Buyer inputs details on seller bio link',
-      fullDesc: 'The buyer taps the seller’s custom bio link (e.g. /order/chic-boutique), chooses destination town, selects preferred carrier (PSV SACCO, Pick-Up Mtaani, or Door-to-Door), and submits their order with zero DM friction.',
+      fullDesc: 'The buyer taps the seller’s custom bio link, chooses destination town, selects preferred carrier (PSV SACCO, Pick-Up Mtaani, or Door-to-Door), and submits their order with zero DM friction.',
       icon: ShoppingBag,
       accentColor: 'text-amber-500',
       renderVisual: () => (
