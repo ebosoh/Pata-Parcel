@@ -707,7 +707,7 @@ export function PapDispatchPage() {
 
             <form onSubmit={handleUploadReceiptSubmit} className="space-y-3.5 pt-2">
               <p className="text-xs text-muted-foreground">
-                Scan the official courier or SACCO receipt so the online seller can verify proof of dispatch.
+                Scan the official courier or SACCO receipt to share proof of dispatch with the buyer.
               </p>
 
               {receiptModalExisting && (

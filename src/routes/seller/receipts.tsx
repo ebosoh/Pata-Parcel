@@ -1,6 +1,7 @@
 import { StorageImage } from '@/components/shared/StorageImage';
 import { ReceiptShareButton } from '@/components/shared/ReceiptShareButton';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
+import { ReceiptBulkPrintModal } from '@/components/shared/ReceiptBulkPrintModal';
 import { useState, useEffect, useMemo } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -9,10 +10,21 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Calendar, ExternalLink, RefreshCw, Truck, Building2 } from 'lucide-react';
+import { 
+  FileText, 
+  Calendar, 
+  ExternalLink, 
+  RefreshCw, 
+  Truck, 
+  Building2, 
+  Printer, 
+  ArrowUpDown, 
+  CheckSquare, 
+  Square 
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { SENDING_METHODS, SACCO_NAMES } from '@/lib/constants';
-import { matchesSaccoName } from '@/lib/receiptFilters';
+import { matchesSaccoName, sortReceipts } from '@/lib/receiptFilters';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/seller/receipts')({
@@ -43,11 +55,15 @@ interface ReceiptWithParcel {
     destination: string;
     sending_method: string;
     psv_sacco: string | null;
+    seller?: {
+      business_name?: string | null;
+      owner_name?: string | null;
+    } | null;
   } | null;
 }
 
 function SellerReceiptsPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [receipts, setReceipts] = useState<ReceiptWithParcel[]>([]);
@@ -55,6 +71,9 @@ function SellerReceiptsPage() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string>('all');
   const [selectedSacco, setSelectedSacco] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc'>('date_desc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkPrintOpen, setIsBulkPrintOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Auth guard
@@ -84,7 +103,12 @@ function SellerReceiptsPage() {
         return;
       }
 
-      const parcelMap = new Map(typedParcels.map(p => [p.id, p]));
+      const sellerObj = {
+        business_name: profile?.business_name || null,
+        owner_name: profile?.owner_name || null,
+      };
+
+      const parcelMap = new Map(typedParcels.map(p => [p.id, { ...p, seller: sellerObj }]));
       const parcelIds = typedParcels.map(p => p.id);
 
       let query = supabase
@@ -120,9 +144,9 @@ function SellerReceiptsPage() {
 
   useEffect(() => {
     fetchReceipts();
-  }, [user, selectedDate]);
+  }, [user, selectedDate, profile]);
 
-  // Filter by sending method, then by SACCO (only when PSV (SACCO) is chosen)
+  // Filter by sending method, SACCO, then sort by date
   const visibleReceipts = useMemo(() => {
     let list = receipts;
     if (selectedMethod !== 'all') {
@@ -131,8 +155,8 @@ function SellerReceiptsPage() {
     if (selectedMethod === 'psv' && selectedSacco.trim()) {
       list = list.filter(r => matchesSaccoName(r.parcel?.psv_sacco, selectedSacco));
     }
-    return list;
-  }, [receipts, selectedMethod, selectedSacco]);
+    return sortReceipts(list, sortBy);
+  }, [receipts, selectedMethod, selectedSacco, sortBy]);
 
   const selectedMethodLabel = selectedMethod === 'all'
     ? null
@@ -147,6 +171,31 @@ function SellerReceiptsPage() {
     setSelectedSacco('');
   };
 
+  // Selection for bulk print
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = () => {
+    setSelectedIds(new Set(visibleReceipts.map(r => r.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  const printableReceipts = useMemo(() => {
+    if (selectedIds.size > 0) {
+      return visibleReceipts.filter(r => selectedIds.has(r.id));
+    }
+    return visibleReceipts;
+  }, [visibleReceipts, selectedIds]);
+
   // Keep the card in step with a receipt the buyer has just been sent
   const markShared = (receiptId: string) => {
     setReceipts(prev =>
@@ -156,29 +205,66 @@ function SellerReceiptsPage() {
 
   return (
     <AppShell role="seller">
-      <div className="space-y-4 max-w-3xl mx-auto">
+      <div className="space-y-4 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-foreground">Dispatch Receipts</h1>
             <p className="text-xs text-muted-foreground">
               Official courier and SACCO receipts uploaded by Pata Parcel staff
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Refresh list"
-            onClick={fetchReceipts}
-            disabled={loading}
-            title="Refresh receipts"
-            className="h-9 w-9"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-primary' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {visibleReceipts.length > 0 && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectedIds.size === visibleReceipts.length ? clearSelection : selectAllVisible}
+                  className="h-9 text-xs gap-1.5"
+                >
+                  {selectedIds.size === visibleReceipts.length ? (
+                    <>
+                      <CheckSquare className="h-3.5 w-3.5 text-primary" /> Deselect All
+                    </>
+                  ) : (
+                    <>
+                      <Square className="h-3.5 w-3.5" /> Select All ({visibleReceipts.length})
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() => setIsBulkPrintOpen(true)}
+                  disabled={printableReceipts.length === 0}
+                  className="h-9 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground"
+                >
+                  <Printer className="h-4 w-4" />
+                  {selectedIds.size > 0
+                    ? `Print Selected (${selectedIds.size}) to PDF`
+                    : `Bulk Print to PDF (${printableReceipts.length})`}
+                </Button>
+              </>
+            )}
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Refresh list"
+              onClick={fetchReceipts}
+              disabled={loading}
+              title="Refresh receipts"
+              className="h-9 w-9"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-primary' : ''}`} />
+            </Button>
+          </div>
         </div>
 
-        {/* Filters: Date + Sending Method */}
+        {/* Filters: Date + Sending Method + Sort */}
         <div className="flex flex-wrap items-center gap-2 bg-card p-3 rounded-xl border border-border/80">
           <Calendar className="h-4 w-4 text-primary shrink-0" />
           <Label htmlFor="receipt_date" className="text-xs font-medium shrink-0">
@@ -203,13 +289,30 @@ function SellerReceiptsPage() {
               setSelectedMethod(next);
               if (next !== 'psv') setSelectedSacco('');
             }}
-            className="h-8 min-w-0 flex-1 sm:max-w-[180px] rounded-md border border-input bg-background px-2 text-xs text-foreground"
+            className="h-8 min-w-0 flex-1 sm:max-w-[160px] rounded-md border border-input bg-background px-2 text-xs text-foreground"
           >
             <option value="all">All Methods</option>
             {SENDING_METHODS.map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
+
+          {/* Sort By Date */}
+          <ArrowUpDown className="h-4 w-4 text-primary shrink-0 ml-1" />
+          <Label htmlFor="receipt_sort" className="text-xs font-medium shrink-0">
+            Sort:
+          </Label>
+          <select
+            id="receipt_sort"
+            aria-label="Sort receipts by date"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'date_desc' | 'date_asc')}
+            className="h-8 min-w-0 flex-1 sm:max-w-[170px] rounded-md border border-input bg-background px-2 text-xs text-foreground"
+          >
+            <option value="date_desc">Date: Newest First</option>
+            <option value="date_asc">Date: Oldest First</option>
+          </select>
+
           {selectedMethod === 'psv' && (
             <div className="w-full flex flex-wrap items-center gap-2 sm:w-auto">
               <Building2 className="h-4 w-4 text-primary shrink-0" />
@@ -235,7 +338,7 @@ function SellerReceiptsPage() {
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="h-8 text-xs text-muted-foreground"
+              className="h-8 text-xs text-muted-foreground ml-auto"
             >
               Clear
             </Button>
@@ -263,58 +366,93 @@ function SellerReceiptsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {visibleReceipts.map((r) => (
-              <Card key={r.id} className="overflow-hidden border border-border/80 bg-card group hover:shadow-md transition-shadow">
-                <div
-                  className="relative aspect-video w-full bg-muted cursor-pointer overflow-hidden"
-                  onClick={() => setPreviewImage(r.receipt_image_url)}
-                >
-                  <StorageImage
-                    src={r.receipt_image_url}
-                    alt="Receipt"
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1">
-                    <ExternalLink className="h-4 w-4" /> View Full
-                  </div>
-                </div>
+            {visibleReceipts.map((r) => {
+              const isSelected = selectedIds.has(r.id);
 
-                <div className="p-3 text-xs space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono font-bold text-primary">
-                      {r.parcel?.reference_number || 'PAP-PARCEL'}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                  <p className="font-semibold text-foreground truncate">
-                    Buyer: {r.parcel?.buyer_name || 'Customer'}
-                  </p>
-                  <p className="text-muted-foreground truncate">
-                    To: {r.parcel?.destination || 'Destination'}
-                  </p>
-                  {r.parcel && (
-                    <div className="pt-1.5">
-                      <ReceiptShareButton
-                        receiptId={r.id}
-                        receiptImageUrl={r.receipt_image_url}
-                        sharedAt={r.shared_with_buyer_at}
-                        referenceNumber={r.parcel.reference_number}
-                        buyerName={r.parcel.buyer_name}
-                        buyerPhone={r.parcel.buyer_phone}
-                        destination={r.parcel.destination}
-                        saco={r.parcel.psv_sacco}
-                        onShared={markShared}
+              return (
+                <Card
+                  key={r.id}
+                  className={`overflow-hidden border bg-card group hover:shadow-md transition-all ${
+                    isSelected ? 'border-primary ring-1 ring-primary' : 'border-border/80'
+                  }`}
+                >
+                  <div className="relative aspect-video w-full bg-muted overflow-hidden">
+                    {/* Checkbox Overlay for bulk selection */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(r.id);
+                      }}
+                      aria-label={`Select receipt for ${r.parcel?.reference_number || 'parcel'}`}
+                      className={`absolute top-2 left-2 z-10 rounded p-1 transition-all ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground shadow'
+                          : 'bg-black/40 text-white hover:bg-black/70'
+                      }`}
+                    >
+                      {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                    </button>
+
+                    <div
+                      className="cursor-pointer h-full w-full"
+                      onClick={() => setPreviewImage(r.receipt_image_url)}
+                    >
+                      <StorageImage
+                        src={r.receipt_image_url}
+                        alt="Receipt"
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                       />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1">
+                        <ExternalLink className="h-4 w-4" /> View Full
+                      </div>
                     </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+                  </div>
+
+                  <div className="p-3 text-xs space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono font-bold text-primary">
+                        {r.parcel?.reference_number || 'PAP-PARCEL'}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(r.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-foreground truncate">
+                      Buyer: {r.parcel?.buyer_name || 'Customer'}
+                    </p>
+                    <p className="text-muted-foreground truncate">
+                      To: {r.parcel?.destination || 'Destination'}
+                    </p>
+                    {r.parcel && (
+                      <div className="pt-1.5">
+                        <ReceiptShareButton
+                          receiptId={r.id}
+                          receiptImageUrl={r.receipt_image_url}
+                          sharedAt={r.shared_with_buyer_at}
+                          referenceNumber={r.parcel.reference_number}
+                          buyerName={r.parcel.buyer_name}
+                          buyerPhone={r.parcel.buyer_phone}
+                          destination={r.parcel.destination}
+                          saco={r.parcel.psv_sacco}
+                          onShared={markShared}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )}
+
+        {/* Bulk Print to PDF Modal */}
+        <ReceiptBulkPrintModal
+          open={isBulkPrintOpen}
+          onOpenChange={setIsBulkPrintOpen}
+          receipts={printableReceipts}
+        />
 
         {/* Full Image Modal */}
         {previewImage && (

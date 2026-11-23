@@ -75,12 +75,14 @@ export function buildReceiptShareMessage({
   receiptLink,
 }: ReceiptShareDetails): string {
   const lines = [
-    `Pata Parcel receipt - ${referenceNumber}`,
+    `Hello ${buyerName || 'Customer'}, here is your Pata Parcel dispatch receipt!`,
+    `Tracking Code: ${referenceNumber}`,
     `Buyer: ${buyerName}`,
     `To: ${destination}`,
   ];
   if (saco && saco.trim()) lines.push(`SACCO: ${saco.trim()}`);
   lines.push(`Receipt: ${receiptLink}`);
+  lines.push(`Thank you for using Pata Parcel!`);
   return lines.join('\n');
 }
 

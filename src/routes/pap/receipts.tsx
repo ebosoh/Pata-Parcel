@@ -1,6 +1,7 @@
 import { StorageImage } from '@/components/shared/StorageImage';
 import { ReceiptShareButton } from '@/components/shared/ReceiptShareButton';
 import { ReceiptScanner } from '@/components/shared/ReceiptScanner';
+import { ReceiptBulkPrintModal } from '@/components/shared/ReceiptBulkPrintModal';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -20,10 +21,16 @@ import {
   RefreshCw, 
   Loader2,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Building2,
+  ArrowUpDown,
+  Printer,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { sortReceipts, getReceiptSellerName, type ReceiptSortOption } from '@/lib/receiptFilters';
 import type { ParcelReceipt } from '@/types/database';
 
 export const Route = createFileRoute('/pap/receipts')({
@@ -33,9 +40,9 @@ export const Route = createFileRoute('/pap/receipts')({
   head: () => ({
     meta: [
       { title: 'Courier Receipts — Pata Parcel Operations Hub' },
-      { name: 'description', content: 'Upload courier slip photos so sellers get instant proof of dispatch.' },
+      { name: 'description', content: 'Upload courier slip photos and share proof of dispatch with buyers.' },
       { property: 'og:title', content: 'Courier Receipts — Pata Parcel Operations Hub' },
-      { property: 'og:description', content: 'Upload courier slip photos so sellers get instant proof of dispatch.' },
+      { property: 'og:description', content: 'Upload courier slip photos and share proof of dispatch with buyers.' },
       { property: 'og:type', content: 'website' },
       { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/receipts' },
       { name: 'twitter:card', content: 'summary' },
@@ -47,11 +54,19 @@ export const Route = createFileRoute('/pap/receipts')({
 
 interface StaffReceiptWithParcel extends ParcelReceipt {
   parcel?: {
+    id?: string;
     reference_number: string;
     buyer_name: string;
     buyer_phone: string;
     destination: string;
     sending_method: string;
+    psv_sacco?: string | null;
+    seller_id?: string;
+    seller?: {
+      id?: string;
+      business_name?: string | null;
+      owner_name?: string | null;
+    } | null;
   } | null;
 }
 
@@ -76,6 +91,13 @@ function PapReceiptsPage() {
   const [recentReceipts, setRecentReceipts] = useState<StaffReceiptWithParcel[]>([]);
   const [loadingReceipts, setLoadingReceipts] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Sorting, Filtering & Bulk Print State
+  const [sortBy, setSortBy] = useState<ReceiptSortOption>('date_desc');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkPrintOpen, setIsBulkPrintOpen] = useState(false);
 
   // Auth guard
   useEffect(() => {
@@ -102,16 +124,6 @@ function PapReceiptsPage() {
     [parcels, selectedParcelId],
   );
 
-  // Handle local image preview
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setReceiptFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewLocalUrl(url);
-    }
-  };
-
   // Filter parcels for dropdown selector
   const selectableParcels = useMemo(() => {
     const psv = parcels.filter(p => p.sending_method === 'psv');
@@ -126,7 +138,7 @@ function PapReceiptsPage() {
     ).slice(0, 30);
   }, [parcels, parcelSearch]);
 
-  // Fetch all recent uploaded receipts
+  // Fetch all recent uploaded receipts with parcel and seller details
   const fetchRecentReceipts = async () => {
     setLoadingReceipts(true);
     try {
@@ -134,7 +146,7 @@ function PapReceiptsPage() {
         .from('parcel_receipts')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(40);
+        .limit(100);
 
       if (!error && data) {
         const parcelIds = Array.from(new Set(data.map(r => r.parcel_id)));
@@ -143,15 +155,32 @@ function PapReceiptsPage() {
         if (parcelIds.length > 0) {
           const { data: pData } = await supabase
             .from('parcels')
-            .select('id, reference_number, buyer_name, buyer_phone, destination, sending_method')
+            .select('id, reference_number, buyer_name, buyer_phone, destination, sending_method, psv_sacco, seller_id')
             .in('id', parcelIds);
 
           if (pData) {
-            pData.forEach(p => parcelMap.set(p.id, p));
+            const sellerIds = Array.from(new Set(pData.map(p => p.seller_id).filter(Boolean)));
+            let sellerMap = new Map();
+
+            if (sellerIds.length > 0) {
+              const { data: profData } = await supabase
+                .from('profiles')
+                .select('id, business_name, owner_name')
+                .in('id', sellerIds);
+
+              if (profData) {
+                profData.forEach(p => sellerMap.set(p.id, p));
+              }
+            }
+
+            pData.forEach(p => {
+              const seller = p.seller_id ? sellerMap.get(p.seller_id) || null : null;
+              parcelMap.set(p.id, { ...p, seller });
+            });
           }
         }
 
-        const combined = data.map(r => ({
+        const combined: StaffReceiptWithParcel[] = data.map(r => ({
           ...r,
           parcel: parcelMap.get(r.parcel_id) || null,
         }));
@@ -168,6 +197,57 @@ function PapReceiptsPage() {
   useEffect(() => {
     fetchRecentReceipts();
   }, []);
+
+  // Filtered and Sorted Receipts
+  const processedReceipts = useMemo(() => {
+    let list = recentReceipts;
+
+    if (filterDate) {
+      list = list.filter(r => {
+        const d = new Date(r.created_at).toISOString().split('T')[0];
+        return d === filterDate;
+      });
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(r => {
+        const ref = r.parcel?.reference_number?.toLowerCase() || '';
+        const seller = getReceiptSellerName(r).toLowerCase();
+        const buyer = r.parcel?.buyer_name?.toLowerCase() || '';
+        const dest = r.parcel?.destination?.toLowerCase() || '';
+        return ref.includes(q) || seller.includes(q) || buyer.includes(q) || dest.includes(q);
+      });
+    }
+
+    return sortReceipts(list, sortBy);
+  }, [recentReceipts, filterDate, searchQuery, sortBy]);
+
+  // Bulk Selection Handlers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllVisible = () => {
+    setSelectedIds(new Set(processedReceipts.map(r => r.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // Receipts to be printed
+  const printableReceipts = useMemo(() => {
+    if (selectedIds.size > 0) {
+      return processedReceipts.filter(r => selectedIds.has(r.id));
+    }
+    return processedReceipts;
+  }, [processedReceipts, selectedIds]);
 
   // Keep the card in step with a receipt the buyer has just been sent
   const markShared = (receiptId: string) => {
@@ -206,12 +286,7 @@ function PapReceiptsPage() {
     if (uErr) {
       setErrorMsg(uErr.message || 'Failed to upload receipt');
     } else {
-      let sellerName = 'the seller';
-      if (target?.seller_id) {
-        const { data: prof } = await supabase.from('profiles').select('owner_name, business_name').eq('id', target.seller_id).maybeSingle();
-        sellerName = prof?.owner_name || prof?.business_name || sellerName;
-      }
-      const msg = `Receipt shared successfully with ${sellerName}`;
+      const msg = `Receipt uploaded successfully for ${target?.reference_number || 'parcel'}. Ready to share with buyer!`;
       toast.success(msg, { description: target?.reference_number });
       setSuccessMsg(msg);
       setParcelSearch('');
@@ -227,7 +302,7 @@ function PapReceiptsPage() {
 
   return (
     <AppShell role="pap_staff">
-      <div className="space-y-5 max-w-3xl mx-auto">
+      <div className="space-y-5 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -236,7 +311,7 @@ function PapReceiptsPage() {
               Upload & Manage Receipts
             </h1>
             <p className="text-xs text-muted-foreground">
-              Photographs of courier and SACCO receipts sent directly to online sellers
+              Photographs of courier and SACCO receipts to share directly with buyers as proof of dispatch
             </p>
           </div>
           <Button
@@ -306,7 +381,7 @@ function PapReceiptsPage() {
               </select>
               {selectedParcel && (
                 <p className="text-[11px] text-muted-foreground">
-                  Receipt goes to <span className="font-semibold text-foreground">{selectedParcel.buyer_name}</span>
+                  Receipt will be sent to <span className="font-semibold text-foreground">{selectedParcel.buyer_name}</span> ({selectedParcel.buyer_phone})
                   {' '}· {selectedParcel.destination} · Seller{' '}
                   <span className="font-semibold text-foreground">
                     {selectedParcel.seller?.business_name || selectedParcel.seller?.owner_name || 'Online Seller'}
@@ -334,78 +409,221 @@ function PapReceiptsPage() {
               {uploading ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
               ) : (
-                <><CheckCircle2 className="mr-2 h-4 w-4" /> Upload & Share with Seller</>
+                <><CheckCircle2 className="mr-2 h-4 w-4" /> Upload Receipt</>
               )}
             </Button>
           </form>
         </Card>
 
-        {/* 2. Recent Uploads Feed */}
+        {/* 2. Recent Uploads Feed with Sorting, Search and Bulk Print */}
         <div className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <FileText className="h-4 w-4 text-primary" />
-            Recent Uploaded Receipts ({recentReceipts.length})
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-primary" />
+                Recent Uploaded Receipts ({processedReceipts.length})
+              </h2>
+            </div>
+
+            {/* Bulk Action Controls */}
+            <div className="flex items-center gap-2">
+              {processedReceipts.length > 0 && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={selectedIds.size === processedReceipts.length ? clearSelection : selectAllVisible}
+                    className="h-8 text-xs gap-1.5"
+                  >
+                    {selectedIds.size === processedReceipts.length ? (
+                      <>
+                        <CheckSquare className="h-3.5 w-3.5 text-primary" /> Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <Square className="h-3.5 w-3.5" /> Select All ({processedReceipts.length})
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={() => setIsBulkPrintOpen(true)}
+                    disabled={printableReceipts.length === 0}
+                    className="h-8 text-xs font-semibold gap-1.5 bg-primary text-primary-foreground"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    {selectedIds.size > 0
+                      ? `Print Selected (${selectedIds.size}) to PDF`
+                      : `Bulk Print to PDF (${printableReceipts.length})`}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Filter & Sort Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-card p-3 rounded-xl border border-border/80">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Search seller, code, buyer..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="h-8 pl-8 text-xs"
+              />
+            </div>
+
+            {/* Date filter */}
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
+              <Input
+                type="date"
+                value={filterDate}
+                onChange={e => setFilterDate(e.target.value)}
+                className="h-8 text-xs flex-1"
+              />
+              {filterDate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFilterDate('')}
+                  className="h-8 px-2 text-xs text-muted-foreground"
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-1.5">
+              <ArrowUpDown className="h-3.5 w-3.5 text-primary shrink-0" />
+              <select
+                aria-label="Sort receipts by"
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as ReceiptSortOption)}
+                className="w-full h-8 rounded-md border border-input bg-background px-2.5 text-xs ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="date_desc">Sort by Date: Newest First</option>
+                <option value="date_asc">Sort by Date: Oldest First</option>
+                <option value="seller_asc">Sort by Seller: A → Z</option>
+                <option value="seller_desc">Sort by Seller: Z → A</option>
+              </select>
+            </div>
+          </div>
 
           {loadingReceipts ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-40 rounded-xl bg-muted/40 animate-pulse" />
+                <div key={i} className="h-44 rounded-xl bg-muted/40 animate-pulse" />
               ))}
             </div>
-          ) : recentReceipts.length === 0 ? (
+          ) : processedReceipts.length === 0 ? (
             <div className="text-center py-8 px-4 rounded-xl border border-dashed border-border bg-card/40 text-xs text-muted-foreground">
-              No receipts uploaded yet today.
+              {recentReceipts.length === 0
+                ? 'No receipts uploaded yet today.'
+                : 'No receipts match your search or filter criteria.'}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {recentReceipts.map((r) => (
-                <Card key={r.id} className="overflow-hidden border border-border/80 bg-card group hover:shadow-md transition-shadow">
-                  <div
-                    className="relative aspect-video w-full bg-muted cursor-pointer overflow-hidden"
-                    onClick={() => setPreviewImage(r.receipt_image_url)}
-                  >
-                    <StorageImage
-                      src={r.receipt_image_url}
-                      alt="Receipt"
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1">
-                      <ExternalLink className="h-3.5 w-3.5" /> View
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {processedReceipts.map((r) => {
+                const sellerName = getReceiptSellerName(r);
+                const isSelected = selectedIds.has(r.id);
 
-                  <div className="p-2.5 text-xs space-y-0.5">
-                    <p className="font-mono font-bold text-primary truncate">
-                      {r.parcel?.reference_number || 'PAP-PARCEL'}
-                    </p>
-                    <p className="text-[11px] text-foreground truncate">
-                      To: {r.parcel?.destination} ({r.parcel?.buyer_name})
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                    {r.parcel && (
-                      <div className="pt-1.5">
-                        <ReceiptShareButton
-                          receiptId={r.id}
-                          receiptImageUrl={r.receipt_image_url}
-                          sharedAt={r.shared_with_buyer_at}
-                          referenceNumber={r.parcel.reference_number}
-                          buyerName={r.parcel.buyer_name}
-                          buyerPhone={r.parcel.buyer_phone}
-                          destination={r.parcel.destination}
-                          onShared={markShared}
+                return (
+                  <Card
+                    key={r.id}
+                    className={`overflow-hidden border bg-card group hover:shadow-md transition-all ${
+                      isSelected ? 'border-primary ring-1 ring-primary' : 'border-border/80'
+                    }`}
+                  >
+                    <div className="relative aspect-video w-full bg-muted overflow-hidden">
+                      {/* Checkbox Overlay for bulk selection */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(r.id);
+                        }}
+                        aria-label={`Select receipt for ${r.parcel?.reference_number || 'parcel'}`}
+                        className={`absolute top-2 left-2 z-10 rounded p-1 transition-all ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground shadow'
+                            : 'bg-black/40 text-white hover:bg-black/70'
+                        }`}
+                      >
+                        {isSelected ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                      </button>
+
+                      <div
+                        className="cursor-pointer h-full w-full"
+                        onClick={() => setPreviewImage(r.receipt_image_url)}
+                      >
+                        <StorageImage
+                          src={r.receipt_image_url}
+                          alt="Receipt"
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
                         />
+                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1">
+                          <ExternalLink className="h-3.5 w-3.5" /> View Full
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </Card>
-              ))}
+                    </div>
+
+                    <div className="p-2.5 text-xs space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono font-bold text-primary truncate">
+                          {r.parcel?.reference_number || 'PAP-PARCEL'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {new Date(r.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+
+                      {/* Seller Tag */}
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground truncate" title={`Seller: ${sellerName}`}>
+                        <Building2 className="h-3 w-3 shrink-0 text-primary/70" />
+                        <span className="font-medium text-foreground truncate">{sellerName}</span>
+                      </div>
+
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        Buyer: <span className="text-foreground font-medium">{r.parcel?.buyer_name || 'Customer'}</span> ({r.parcel?.destination || 'N/A'})
+                      </p>
+
+                      {r.parcel && (
+                        <div className="pt-1.5">
+                          <ReceiptShareButton
+                            receiptId={r.id}
+                            receiptImageUrl={r.receipt_image_url}
+                            sharedAt={r.shared_with_buyer_at}
+                            referenceNumber={r.parcel.reference_number}
+                            buyerName={r.parcel.buyer_name}
+                            buyerPhone={r.parcel.buyer_phone}
+                            destination={r.parcel.destination}
+                            saco={r.parcel.psv_sacco}
+                            onShared={markShared}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
+
+        {/* Bulk Print to PDF Modal */}
+        <ReceiptBulkPrintModal
+          open={isBulkPrintOpen}
+          onOpenChange={setIsBulkPrintOpen}
+          receipts={printableReceipts}
+        />
 
         {/* Full Image Preview Modal */}
         {previewImage && (

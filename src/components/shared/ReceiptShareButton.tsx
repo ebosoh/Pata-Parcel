@@ -45,9 +45,10 @@ export function ReceiptShareButton({
         size="sm"
         variant="secondary"
         disabled
+        title="Receipt has already been shared with the buyer"
         className="w-full h-8 text-xs bg-muted text-muted-foreground disabled:opacity-100"
       >
-        <Check className="h-3.5 w-3.5" /> Receipt Shared
+        <Check className="h-3.5 w-3.5 text-emerald-600" /> Sent to Buyer
       </Button>
     );
   }
@@ -55,7 +56,7 @@ export function ReceiptShareButton({
   async function share() {
     const recipient = waRecipientFor(buyerPhone);
     if (!recipient) {
-      toast.error('This buyer has no valid Kenyan phone number to send the receipt to.');
+      toast.error(`The buyer (${buyerName || 'buyer'}) has no valid Kenyan phone number to receive the receipt.`);
       return;
     }
 
@@ -136,14 +137,21 @@ export function ReceiptShareButton({
   }
 
   return (
-    <Button size="sm" onClick={share} disabled={busy} className="w-full h-8 text-xs">
+    <Button
+      size="sm"
+      onClick={share}
+      disabled={busy}
+      title={`Send receipt copy to buyer (${buyerName}) on WhatsApp`}
+      aria-label={`Send receipt copy to buyer ${buyerName} on WhatsApp`}
+      className="w-full h-8 text-xs font-medium"
+    >
       {busy ? (
         <>
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Sending…
         </>
       ) : (
         <>
-          <Send className="h-3.5 w-3.5" /> Share Receipt
+          <Send className="h-3.5 w-3.5" /> Share to Buyer
         </>
       )}
     </Button>
