@@ -111,13 +111,6 @@ function LandingPage() {
                 </span>
               </h1>
 
-              {/* Comprehensive Description */}
-              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl leading-relaxed">
-                The smart logistics engine for Kenyan online sellers. Share your customized{' '}
-                <strong className="text-foreground font-mono font-bold">/order/shop</strong> bio link, drop your packages at our central hub, and let us dispatch to over{' '}
-                <strong className="text-foreground font-bold">100+ partner SACCOs</strong> while sending stamped photo receipts straight to your buyers' WhatsApp.
-              </p>
-
               {/* Primary Dual Action CTAs */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto pt-2">
                 <Link to="/login" search={{} as never} className="w-full sm:w-auto">
