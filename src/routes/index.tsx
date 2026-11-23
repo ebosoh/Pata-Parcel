@@ -117,7 +117,7 @@ function LandingPage() {
                     className="w-full sm:w-auto h-13 px-8 text-sm sm:text-base font-extrabold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 gap-2 rounded-xl group"
                   >
                     <LogIn className="h-5 w-5 text-secondary" />
-                    Sign In to Seller Portal
+                    Sign In
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -128,7 +128,7 @@ function LandingPage() {
                     variant="outline"
                     className="w-full sm:w-auto h-13 px-6 text-sm font-bold border-2 border-border/80 hover:bg-card hover:border-primary/50 transition-all rounded-xl"
                   >
-                    Explore How It Works
+                    How It Works
                   </Button>
                 </a>
               </div>
