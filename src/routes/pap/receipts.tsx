@@ -605,7 +605,7 @@ function PapReceiptsPage() {
                             buyerName={r.parcel.buyer_name}
                             buyerPhone={r.parcel.buyer_phone}
                             destination={r.parcel.destination}
-                            saco={r.parcel.psv_sacco}
+                            saco={r.parcel.psv_sacco ?? null}
                             onShared={markShared}
                           />
                         </div>

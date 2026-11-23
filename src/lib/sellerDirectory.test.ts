@@ -45,26 +45,26 @@ const SAMPLE_SELLERS: SellerProfileItem[] = [
 ];
 
 test('getSellerDisplayName combines business name and owner name appropriately', () => {
-  assert.equal(getSellerDisplayName(SAMPLE_SELLERS[0]), 'Nairobi Kicks (Alice Wambui)');
-  assert.equal(getSellerDisplayName(SAMPLE_SELLERS[2]), 'Catherine Mutua');
+  assert.equal(getSellerDisplayName(SAMPLE_SELLERS[0]!), 'Nairobi Kicks (Alice Wambui)');
+  assert.equal(getSellerDisplayName(SAMPLE_SELLERS[2]!), 'Catherine Mutua');
   assert.equal(getSellerDisplayName({ business_name: 'Solo Shop', owner_name: '' }), 'Solo Shop');
   assert.equal(getSellerDisplayName({ business_name: null, owner_name: null }), 'Unnamed Seller');
 });
 
 test('matchesSellerDirectoryQuery searches across name, business, phone, location, and code', () => {
-  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0], 'nairobi'), true);
-  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0], 'alice'), true);
-  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0], '0712'), true);
-  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[1], 'westlands'), true);
-  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[1], 'tech-haven'), true);
-  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0], 'nonexistent'), false);
+  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0]!, 'nairobi'), true);
+  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0]!, 'alice'), true);
+  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0]!, '0712'), true);
+  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[1]!, 'westlands'), true);
+  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[1]!, 'tech-haven'), true);
+  assert.equal(matchesSellerDirectoryQuery(SAMPLE_SELLERS[0]!, 'nonexistent'), false);
 });
 
 test('filterSellers filters by search, business type, and activity', () => {
   // Filter by business type
   const shoes = filterSellers(SAMPLE_SELLERS, { businessType: 'Shoes & Footwear' });
   assert.equal(shoes.length, 1);
-  assert.equal(shoes[0].id, 's1');
+  assert.equal(shoes[0]!.id, 's1');
 
   // Filter by active
   const active = filterSellers(SAMPLE_SELLERS, { activity: 'active' });
@@ -73,7 +73,7 @@ test('filterSellers filters by search, business type, and activity', () => {
   // Filter by inactive
   const inactive = filterSellers(SAMPLE_SELLERS, { activity: 'inactive' });
   assert.equal(inactive.length, 1);
-  assert.equal(inactive[0].id, 's3');
+  assert.equal(inactive[0]!.id, 's3');
 });
 
 test('sortSellers sorts by name, business, parcel volume, and date', () => {

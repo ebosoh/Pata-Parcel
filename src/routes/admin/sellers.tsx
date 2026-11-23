@@ -51,8 +51,8 @@ import {
 import { waRecipientFor } from '@/lib/receiptSharing';
 
 export const Route = createFileRoute('/admin/sellers')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    sellerId: typeof search['sellerId'] === 'string' && search['sellerId'].trim() ? search['sellerId'].trim() : undefined,
+  validateSearch: (search: Record<string, unknown>): { sellerId?: string | undefined } => ({
+    sellerId: (typeof search['sellerId'] === 'string' && search['sellerId'].trim() ? search['sellerId'].trim() : undefined) as string | undefined,
   }),
   head: () => ({
     meta: [
