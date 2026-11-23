@@ -148,6 +148,20 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Infinite Marquee Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}
+
 /* PWA standalone mode adjustments */
 @media (display-mode: standalone) {
   .safe-bottom {
