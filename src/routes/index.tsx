@@ -25,7 +25,6 @@ import { AnimatedStatsBar } from '@/components/home/AnimatedStatsBar';
 import { WorkflowAnimation } from '@/components/home/WorkflowAnimation';
 import { SaccoNetworkMarquee } from '@/components/home/SaccoNetworkMarquee';
 import { ServicesDeepDive } from '@/components/home/ServicesDeepDive';
-import { LiveParcelSearch } from '@/components/home/LiveParcelSearch';
 import { HomeFaq } from '@/components/home/HomeFaq';
 
 export const Route = createFileRoute('/')({
@@ -133,11 +132,6 @@ function LandingPage() {
                     Explore How It Works
                   </Button>
                 </a>
-              </div>
-
-              {/* Interactive Live Parcel Tracking Search */}
-              <div id="tracking" className="w-full pt-6">
-                <LiveParcelSearch />
               </div>
 
               {/* Value Micro-Points */}

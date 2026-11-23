@@ -39,9 +39,6 @@ export function HomeNavbar() {
           <a href="#network" className="hover:text-primary transition-colors">
             100+ Partner SACCOs
           </a>
-          <a href="#tracking" className="hover:text-primary transition-colors">
-            Live Tracking
-          </a>
           <a href="#faq" className="hover:text-primary transition-colors">
             FAQ
           </a>
@@ -95,13 +92,6 @@ export function HomeNavbar() {
             className="block py-2 text-foreground hover:text-primary"
           >
             100+ Partner SACCOs
-          </a>
-          <a
-            href="#tracking"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-foreground hover:text-primary"
-          >
-            Live Tracking
           </a>
           <a
             href="#faq"
