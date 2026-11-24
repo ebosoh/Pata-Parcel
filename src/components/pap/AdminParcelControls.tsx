@@ -16,7 +16,15 @@ import type { Parcel } from '@/types/database';
 
 const selectCls = 'h-10 w-full rounded-md border border-input bg-background px-3 text-sm';
 
-export function AdminParcelControls({ parcel, onChanged }: { parcel: Parcel; onChanged: () => void }) {
+export function AdminParcelControls({
+  parcel,
+  onChanged,
+  compact = false,
+}: {
+  parcel: Parcel;
+  onChanged: () => void;
+  compact?: boolean;
+}) {
   const { user, isAdmin } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -41,6 +49,8 @@ export function AdminParcelControls({ parcel, onChanged }: { parcel: Parcel; onC
         package_type: form.package_type,
         num_packages: Math.max(1, Number(form.num_packages) || 1),
         total_sending_fee: Math.max(0, Number(form.total_sending_fee) || 0),
+        goods_amount: form.goods_amount !== '' ? Math.max(0, Number(form.goods_amount) || 0) : null,
+        goods_paid: form.goods_paid === 'true',
         payment_status: form.payment_status,
         tracking_status: form.tracking_status,
         updated_at: new Date().toISOString(),
@@ -71,13 +81,27 @@ export function AdminParcelControls({ parcel, onChanged }: { parcel: Parcel; onC
 
   return (
     <>
-      <Button size="sm" variant="outline" className="h-8 text-xs gap-1"
-        onClick={() => { setForm(toForm(parcel)); setEditOpen(true); }}>
-        <Pencil className="h-3.5 w-3.5" /> Edit
+      <Button
+        size="sm"
+        variant="outline"
+        className={compact ? 'h-7 px-2 text-[11px] gap-1 font-medium' : 'h-8 text-xs gap-1'}
+        onClick={() => { setForm(toForm(parcel)); setEditOpen(true); }}
+        title="Edit parcel"
+      >
+        <Pencil className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} /> Edit
       </Button>
-      <Button size="sm" variant="outline" className="h-8 text-xs gap-1 text-destructive border-destructive/40"
-        onClick={() => setDeleteOpen(true)}>
-        <Trash2 className="h-3.5 w-3.5" /> Delete
+      <Button
+        size="sm"
+        variant="outline"
+        className={
+          compact
+            ? 'h-7 px-2 text-[11px] gap-1 text-destructive border-destructive/40 hover:bg-destructive/10 font-medium'
+            : 'h-8 text-xs gap-1 text-destructive border-destructive/40 hover:bg-destructive/10'
+        }
+        onClick={() => setDeleteOpen(true)}
+        title="Delete parcel"
+      >
+        <Trash2 className={compact ? 'h-3 w-3' : 'h-3.5 w-3.5'} /> Delete
       </Button>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -94,6 +118,13 @@ export function AdminParcelControls({ parcel, onChanged }: { parcel: Parcel; onC
                 <option value="paid">Paid</option>
                 <option value="unpaid">Unpaid</option>
                 <option value="pay_on_delivery">Pay on delivery</option>
+              </select>
+            </Field>
+            <Field label="Goods Amount (KES)"><Input type="number" min={0} placeholder="e.g. 2500" value={form.goods_amount} onChange={(e) => set('goods_amount', e.target.value)} /></Field>
+            <Field label="Goods Paid?">
+              <select className={selectCls} value={form.goods_paid} onChange={(e) => set('goods_paid', e.target.value)}>
+                <option value="true">Paid (Collected)</option>
+                <option value="false">Unpaid (COD)</option>
               </select>
             </Field>
             <Field label="Buyer name"><Input value={form.buyer_name} onChange={(e) => set('buyer_name', e.target.value)} /></Field>
@@ -148,10 +179,18 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function toForm(p: Parcel) {
   return {
-    buyer_name: p.buyer_name ?? '', buyer_phone: p.buyer_phone ?? '', destination: p.destination ?? '',
-    pick_point: p.pick_point ?? '', sending_method: (p.sending_method ?? 'psv') as string, psv_sacco: p.psv_sacco ?? '',
-    package_type: (p.package_type ?? 'Other') as string, num_packages: String(p.num_packages ?? 1),
+    buyer_name: p.buyer_name ?? '',
+    buyer_phone: p.buyer_phone ?? '',
+    destination: p.destination ?? '',
+    pick_point: p.pick_point ?? '',
+    sending_method: (p.sending_method ?? 'psv') as string,
+    psv_sacco: p.psv_sacco ?? '',
+    package_type: (p.package_type ?? 'Other') as string,
+    num_packages: String(p.num_packages ?? 1),
     total_sending_fee: String(p.total_sending_fee ?? 0),
-    payment_status: (p.payment_status ?? 'unpaid') as string, tracking_status: (p.tracking_status ?? 'dispatched_to_pap') as string,
+    goods_amount: String((p as any).goods_amount ?? ''),
+    goods_paid: String((p as any).goods_paid ?? 'false'),
+    payment_status: (p.payment_status ?? 'unpaid') as string,
+    tracking_status: (p.tracking_status ?? 'dispatched_to_pap') as string,
   };
 }

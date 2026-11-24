@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import type { Parcel, SendingMethod } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/constants';
+import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 
 interface SellerDispatchesTableProps {
   parcels: Parcel[];
@@ -294,6 +295,7 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
                             Dispatch
                           </Button>
                         )}
+                        <AdminParcelControls parcel={parcel} onChanged={onChanged ?? (() => {})} compact />
                       </div>
                     </TableCell>
                   </TableRow>

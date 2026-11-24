@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { SellerDispatchesTable } from '@/components/seller/SellerDispatchesTable';
 import {
   Store,
   Search,
@@ -41,6 +42,7 @@ import {
   FileText
 } from 'lucide-react';
 import { BUSINESS_TYPES, formatPhoneDisplay } from '@/lib/constants';
+import type { Parcel } from '@/types/database';
 import {
   filterSellers,
   sortSellers,
@@ -104,7 +106,7 @@ export function AdminSellersPage() {
 
   // Selected Seller Profile View
   const [selectedSeller, setSelectedSeller] = useState<SellerProfileItem | null>(null);
-  const [sellerParcels, setSellerParcels] = useState<SellerParcelDetail[]>([]);
+  const [sellerParcels, setSellerParcels] = useState<Parcel[]>([]);
   const [sellerReceipts, setSellerReceipts] = useState<SellerReceiptSummary[]>([]);
   const [loadingProfileDetails, setLoadingProfileDetails] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -193,15 +195,15 @@ export function AdminSellersPage() {
     setLoadingProfileDetails(true);
 
     try {
-      // 1. Fetch recent parcels
+      // 1. Fetch recent parcels (full fields for SellerDispatchesTable + AdminParcelControls)
       const { data: parcels } = await supabase
         .from('parcels')
-        .select('id, reference_number, buyer_name, buyer_phone, destination, sending_method, psv_sacco, tracking_status, payment_status, total_sending_fee, created_at')
+        .select('*')
         .eq('seller_id', seller.id)
         .order('created_at', { ascending: false })
-        .limit(30);
+        .limit(50);
 
-      const fetchedParcels = (parcels as SellerParcelDetail[]) || [];
+      const fetchedParcels = (parcels as Parcel[]) || [];
       setSellerParcels(fetchedParcels);
 
       // 2. Fetch receipts if any parcels exist
@@ -224,6 +226,18 @@ export function AdminSellersPage() {
       setLoadingProfileDetails(false);
     }
   }, []);
+
+  // Re-fetch parcels for the currently selected seller (called by AdminParcelControls after edit/delete)
+  const reloadSellerParcels = useCallback(async () => {
+    if (!selectedSeller) return;
+    const { data } = await supabase
+      .from('parcels')
+      .select('*')
+      .eq('seller_id', selectedSeller.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    setSellerParcels((data as Parcel[]) || []);
+  }, [selectedSeller]);
 
   // Sync with URL query parameter
   useEffect(() => {
@@ -805,49 +819,11 @@ export function AdminSellersPage() {
                       No parcels dispatched by this seller yet.
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-border overflow-hidden">
-                      <div className="max-h-60 overflow-y-auto">
-                        <table className="w-full text-left border-collapse text-xs">
-                          <thead className="bg-muted text-muted-foreground sticky top-0">
-                            <tr>
-                              <th className="p-2 font-semibold">Reference</th>
-                              <th className="p-2 font-semibold">Buyer</th>
-                              <th className="p-2 font-semibold">Destination</th>
-                              <th className="p-2 font-semibold">Method</th>
-                              <th className="p-2 font-semibold">Status</th>
-                              <th className="p-2 font-semibold text-right">Date</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border/50">
-                            {sellerParcels.map((p) => (
-                              <tr key={p.id} className="hover:bg-muted/30">
-                                <td className="p-2 font-mono font-bold text-primary">{p.reference_number}</td>
-                                <td className="p-2 text-foreground font-medium truncate max-w-[120px]">{p.buyer_name}</td>
-                                <td className="p-2 text-muted-foreground truncate max-w-[100px]">{p.destination}</td>
-                                <td className="p-2 text-muted-foreground">
-                                  {p.psv_sacco || p.sending_method?.replace(/_/g, ' ')}
-                                </td>
-                                <td className="p-2">
-                                  <span
-                                    className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                                      p.tracking_status === 'delivered'
-                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                                        : p.tracking_status === 'on_transit'
-                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                                    }`}
-                                  >
-                                    {p.tracking_status?.replace(/_/g, ' ')}
-                                  </span>
-                                </td>
-                                <td className="p-2 text-muted-foreground text-right">
-                                  {new Date(p.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                    <div className="overflow-hidden -mx-1">
+                      <SellerDispatchesTable
+                        parcels={sellerParcels}
+                        onChanged={reloadSellerParcels}
+                      />
                     </div>
                   )}
                 </div>
