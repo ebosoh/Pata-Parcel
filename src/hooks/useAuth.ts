@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, UserRole } from '@/types/database';
+import { deferredAuthUpdate } from '@/lib/authFlow';
 
 interface AuthState {
   user: User | null;
@@ -41,33 +42,42 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const profile = session?.user ? await fetchProfile(session.user.id) : null;
-      setState({
-        user: session?.user ?? null,
-        profile,
-        session,
-        loading: false,
-        error: null,
-      });
+    const updates = deferredAuthUpdate<Session | null>(async (session, isCurrent) => {
+      try {
+        // Revalidate confirmation with Auth, rather than trusting cached user data.
+        const { data, error } = session
+          ? await supabase.auth.getUser()
+          : { data: { user: null }, error: null };
+        if (!isCurrent()) return;
+        const user = error ? null : data.user;
+        const profile = user ? await fetchProfile(user.id) : null;
+        if (!isCurrent()) return;
+        setState({
+          user,
+          profile,
+          session: user ? session : null,
+          loading: false,
+          error: error ? 'Unable to check your account. Please sign in again.' : null,
+        });
+      } catch {
+        if (isCurrent()) {
+          setState(prev => ({ ...prev, loading: false, error: 'Unable to check your account. Please try again.' }));
+        }
+      }
     });
 
-    // Listen for auth changes
+    // INITIAL_SESSION also processes email-link callbacks. Never await Auth or
+    // profile queries inside this subscriber: doing so can block confirmation.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const profile = session?.user ? await fetchProfile(session.user.id) : null;
-        setState({
-          user: session?.user ?? null,
-          profile,
-          session,
-          loading: false,
-          error: null,
-        });
+      (_event, session) => {
+        updates.schedule(session);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      updates.dispose();
+    };
   }, [fetchProfile]);
 
   // Send OTP to phone number

@@ -5,7 +5,7 @@ export interface SellerProfileItem {
   phone: string;
   business_type?: string | null;
   location?: string | null;
-  order_link_code?: string;
+  order_link_code?: string | undefined;
   profile_picture_url?: string | null;
   role?: string;
   created_at: string;

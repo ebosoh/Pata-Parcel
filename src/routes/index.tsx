@@ -6,7 +6,6 @@ import {
   Zap,
   ArrowRight,
   LogIn,
-  CheckCircle2,
   Sparkles,
   ShoppingBag,
   Building2,
@@ -25,7 +24,6 @@ import { AnimatedStatsBar } from '@/components/home/AnimatedStatsBar';
 import { WorkflowAnimation } from '@/components/home/WorkflowAnimation';
 import { SaccoNetworkMarquee } from '@/components/home/SaccoNetworkMarquee';
 import { ServicesDeepDive } from '@/components/home/ServicesDeepDive';
-import { LiveParcelSearch } from '@/components/home/LiveParcelSearch';
 import { HomeFaq } from '@/components/home/HomeFaq';
 
 export const Route = createFileRoute('/')({
@@ -111,13 +109,6 @@ function LandingPage() {
                 </span>
               </h1>
 
-              {/* Comprehensive Description */}
-              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl leading-relaxed">
-                The smart logistics engine for Kenyan online sellers. Share your customized{' '}
-                <strong className="text-foreground font-mono font-bold">/order/shop</strong> bio link, drop your packages at our central hub, and let us dispatch to over{' '}
-                <strong className="text-foreground font-bold">100+ partner SACCOs</strong> while sending stamped photo receipts straight to your buyers' WhatsApp.
-              </p>
-
               {/* Primary Dual Action CTAs */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto pt-2">
                 <Link to="/login" search={{} as never} className="w-full sm:w-auto">
@@ -126,7 +117,7 @@ function LandingPage() {
                     className="w-full sm:w-auto h-13 px-8 text-sm sm:text-base font-extrabold bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl hover:shadow-2xl transition-all duration-200 gap-2 rounded-xl group"
                   >
                     <LogIn className="h-5 w-5 text-secondary" />
-                    Sign In to Seller Portal
+                    Sign In
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -137,30 +128,9 @@ function LandingPage() {
                     variant="outline"
                     className="w-full sm:w-auto h-13 px-6 text-sm font-bold border-2 border-border/80 hover:bg-card hover:border-primary/50 transition-all rounded-xl"
                   >
-                    Explore How It Works
+                    How It Works
                   </Button>
                 </a>
-              </div>
-
-              {/* Interactive Live Parcel Tracking Search */}
-              <div id="tracking" className="w-full pt-6">
-                <LiveParcelSearch />
-              </div>
-
-              {/* Value Micro-Points */}
-              <div className="pt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Photographed Courier Slips
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 100+ SACCOs &amp; Drivers
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> M-PESA Code Fraud Shield
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 1-Click Bulk PDF Prints
-                </span>
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@
 - (none)
 
 ## Done
+- Email confirmation: verified real confirmed-account return and reload on phone and desktop; signup-response tests retain first-time verification without repeat prompts for confirmed accounts.
 - Unique payment codes: first reuse warns, second reuse blacklists the normalized phone; buyer and seller flows verified on phones and desktop, temporary test data removed.
 - Dispatch form: multiple package types and optional description; verified saved details after reload at phone width.
 - Receipts: green "Share Receipt" button sends the receipt to the buyer on WhatsApp; it then reads grey "Receipt Shared".

@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Package, ArrowRight, Loader2, Phone, Mail, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { isValidKenyanPhone } from '@/lib/constants';
+import { signupOutcome, type SignupResultData } from '@/lib/authFlow';
 
 interface LoginFormProps {
   onSendOTP: (phone: string) => Promise<{ error: { message: string } | null }>;
   onVerifyOTP: (phone: string, token: string) => Promise<{ error: { message: string } | null; data: unknown }>;
   onSignInWithEmail?: (email: string, pass: string) => Promise<{ error: { message: string } | null; data: unknown }>;
-  onSignUpWithEmail?: (email: string, pass: string, profile: any) => Promise<{ error: { message: string } | null; data: unknown }>;
+  onSignUpWithEmail?: (email: string, pass: string, profile: any) => Promise<{ error: { message: string } | null; data: SignupResultData }>;
   loading: boolean;
   error: string | null;
   initialMode?: 'signin' | 'signup';
@@ -42,6 +43,14 @@ export function LoginForm({
 
   const [localError, setLocalError] = useState<string | null>(null);
   const [signupDone, setSignupDone] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    setEmailMode(initialMode);
+    setSignupDone(false);
+    setLocalError(null);
+    setNotice(null);
+  }, [initialMode]);
 
   // Phone submit
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -77,6 +86,7 @@ export function LoginForm({
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
+    setNotice(null);
 
     if (!email || !password) {
       setLocalError('Please enter both email and password');
@@ -93,13 +103,21 @@ export function LoginForm({
         return;
       }
       if (onSignUpWithEmail) {
-        const { error: signUpError } = await onSignUpWithEmail(email, password, {
+        const { data, error: signUpError } = await onSignUpWithEmail(email, password, {
           owner_name: ownerName.trim(),
           phone: sellerPhone.trim(),
           business_name: businessName.trim() || undefined,
         });
         if (!signUpError) {
-          setSignupDone(true);
+          const outcome = signupOutcome(data);
+          setSignupDone(outcome === 'confirmation-required');
+          if (outcome === 'existing-account') {
+            setEmailMode('signin');
+            setPassword('');
+            setNotice('If you already confirmed this email, sign in with your password. You do not need to confirm it again.');
+          } else if (outcome === 'incomplete') {
+            setLocalError('Unable to create your account. Please try again.');
+          }
         }
       }
     } else {
@@ -126,6 +144,11 @@ export function LoginForm({
 
       {/* Login Card */}
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-sm">
+        {notice && (
+          <p role="status" className="mb-4 rounded-lg border border-border bg-muted p-3 text-xs text-foreground">
+            {notice}
+          </p>
+        )}
         {displayError && (
           <div className="mb-4 text-xs text-destructive bg-destructive/10 p-2.5 rounded-lg border border-destructive/20">
             {displayError}
@@ -232,7 +255,7 @@ export function LoginForm({
             <h2 className="text-sm font-bold text-foreground">Check your email</h2>
             <p className="text-xs text-muted-foreground">
               We sent a confirmation link to <span className="font-semibold text-foreground">{email}</span>.
-              Click it to activate your account, then come back and sign in.
+                Click it once to activate your account. The link will open Pata Parcel and sign you in.
             </p>
             <Button
               type="button"
@@ -343,15 +366,20 @@ export function LoginForm({
             </Button>
 
             <div className="text-center pt-1">
-              <button
+              <Button
                 type="button"
-                onClick={() => setEmailMode(emailMode === 'signin' ? 'signup' : 'signin')}
-                className="text-xs text-primary font-semibold hover:underline"
+                variant="link"
+                onClick={() => {
+                  setEmailMode(emailMode === 'signin' ? 'signup' : 'signin');
+                  setLocalError(null);
+                  setNotice(null);
+                }}
+                className="h-auto whitespace-normal text-xs text-primary font-semibold"
               >
                 {emailMode === 'signin'
                   ? "Don't have an account? Sign up"
                   : 'Already registered? Sign in'}
-              </button>
+              </Button>
             </div>
           </form>
         )}
