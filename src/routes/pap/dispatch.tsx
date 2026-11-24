@@ -1,4 +1,5 @@
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { PapDispatchTable } from '@/components/pap/PapDispatchTable';
 import { StorageImage } from '@/components/shared/StorageImage';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -36,7 +37,9 @@ import {
   Camera, 
   FileText,
   AlertCircle,
-  MessageCircle
+  MessageCircle,
+  LayoutGrid,
+  Table2
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
@@ -70,6 +73,19 @@ export function PapDispatchPage() {
   const { tab: tabParam } = Route.useSearch();
   useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('pap_dispatch_view_mode') as 'card' | 'table') || 'card';
+    }
+    return 'card';
+  });
+
+  const handleSetViewMode = (mode: 'card' | 'table') => {
+    setViewMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pap_dispatch_view_mode', mode);
+    }
+  };
 
   // Dispatch Modal state
   const [selectedParcel, setSelectedParcel] = useState<any | null>(null);
@@ -223,7 +239,7 @@ export function PapDispatchPage() {
   };
 
   // Handle Mark as Delivered
-  const handleMarkDelivered = async (parcelId: string, refNum: string) => {
+  const handleMarkDelivered = async (parcelId: string, refNum?: string) => {
     setSubmitting(true);
     setDeliveryError(null);
     // Hide the button the moment it is pressed, before the list refreshes
@@ -239,12 +255,12 @@ export function PapDispatchPage() {
         delete next[parcelId];
         return next;
       });
-      setDeliveryError(`Could not mark ${refNum} as delivered. Please try again.`);
+      setDeliveryError(`Could not mark ${refNum || 'parcel'} as delivered. Please try again.`);
       setTimeout(() => setDeliveryError(null), 5000);
       return;
     }
 
-    setFeedback(`Parcel ${refNum} marked as Delivered!`);
+    setFeedback(`Parcel ${refNum || ''} marked as Delivered!`);
     setTimeout(() => setFeedback(null), 3000);
   };
 
@@ -314,15 +330,52 @@ export function PapDispatchPage() {
           </button>
         </div>
 
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by Buyer, Town, Ref #..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 text-sm"
-          />
+        {/* Search Input & View Toggle */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by Buyer, Town, Ref #..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-10 text-sm"
+            />
+          </div>
+
+          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 shrink-0 h-10">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSetViewMode('card')}
+              className={`h-8 px-2.5 text-xs rounded-md flex items-center gap-1.5 transition-colors ${
+                viewMode === 'card'
+                  ? 'bg-background text-foreground shadow-xs font-bold'
+                  : 'text-muted-foreground hover:text-foreground font-medium'
+              }`}
+              title="Card view"
+              aria-label="Card view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden sm:inline">Cards</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSetViewMode('table')}
+              className={`h-8 px-2.5 text-xs rounded-md flex items-center gap-1.5 transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-background text-foreground shadow-xs font-bold'
+                  : 'text-muted-foreground hover:text-foreground font-medium'
+              }`}
+              title="Table view"
+              aria-label="Table view"
+            >
+              <Table2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Table</span>
+            </Button>
+          </div>
         </div>
 
         {/* List of Parcels */}
@@ -352,6 +405,25 @@ export function PapDispatchPage() {
               </>
             )}
           </div>
+        ) : viewMode === 'table' ? (
+          <PapDispatchTable
+            parcels={displayList}
+            activeTab={activeTab}
+            receiptsByParcel={receiptsByParcel}
+            deliveredIds={deliveredIds}
+            submitting={submitting}
+            onDispatchClick={(parcel) => {
+              setSelectedParcel(parcel);
+              if (parcel.sending_method === 'psv') setDispatchType('psv_official');
+              else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
+              else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
+              else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
+              else setDispatchType('pata_parcel');
+            }}
+            onMarkDelivered={handleMarkDelivered}
+            onNavigateReceipts={(ref) => navigate({ to: '/pap/receipts', search: { code: ref } })}
+            onRefetch={refetch}
+          />
         ) : (
           <div className="space-y-3">
             {displayList.map((parcel) => (

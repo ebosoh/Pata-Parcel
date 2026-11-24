@@ -80,6 +80,7 @@ export const SACCO_NAMES = [
   'Likana',
   'Double M',
   'Ganaki',
+  'Guardian',
 ] as const;
 
 // Sending fee (KES) per method; PSV (SACCO) depends on the SACCO; PSV-Driver is paid on delivery.
@@ -96,7 +97,7 @@ export const SACCO_SENDING_FEES: Record<(typeof SACCO_NAMES)[number], number> = 
   'South Rift': 300, 'North Rift': 300, 'Great Rift': 300, Kam: 200, Makos: 200, 'Rembo Classic': 100,
   Naekena: 300, NNUS: 200, GTC: 150, MTN: 200, 'Super Premior': 200, 'Narok Line': 200, 'Molo Line': 300,
   'Kagumo Travellers': 200, 'Quick Shuttle': 300, 'Maralal Safaris': 300, 'Chania Genesis': 350,
-  'Chania cool': 350, Likana: 100, 'Double M': 100, Ganaki: 100,
+  'Chania cool': 350, Likana: 100, 'Double M': 100, Ganaki: 100, Guardian: 350,
 };
 
 /**
@@ -106,7 +107,11 @@ export const SACCO_SENDING_FEES: Record<(typeof SACCO_NAMES)[number], number> = 
 export function suggestedSendingFee(method: string, sacco?: string | null): number | 'on_delivery' | null {
   if (method === 'psv_driver') return 'on_delivery';
   if (method === 'psv') {
-    const match = SACCO_NAMES.find((n) => n.toLowerCase() === (sacco ?? '').trim().toLowerCase());
+    const raw = (sacco ?? '').trim().toLowerCase();
+    const match = SACCO_NAMES.find((n) => {
+      const lower = n.toLowerCase();
+      return lower === raw || lower === raw.replace(/^the\s+/, '') || raw === `the ${lower}`;
+    });
     return match ? SACCO_SENDING_FEES[match] : null;
   }
   return (METHOD_SENDING_FEES as Record<string, number>)[method] ?? null;

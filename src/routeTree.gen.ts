@@ -28,6 +28,7 @@ import { Route as SellerComplaintsRouteImport } from './routes/seller/complaints
 import { Route as SellerDispatchRouteImport } from './routes/seller/dispatch'
 import { Route as SellerProfileRouteImport } from './routes/seller/profile'
 import { Route as SellerReceiptsRouteImport } from './routes/seller/receipts'
+import { Route as TrackCodeRouteImport } from './routes/track/$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -124,6 +125,11 @@ const SellerReceiptsRoute = SellerReceiptsRouteImport.update({
   path: '/seller/receipts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackCodeRoute = TrackCodeRouteImport.update({
+  id: '/track/$code',
+  path: '/track/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/seller/dispatch': typeof SellerDispatchRoute
   '/seller/profile': typeof SellerProfileRoute
   '/seller/receipts': typeof SellerReceiptsRoute
+  '/track/$code': typeof TrackCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/seller/dispatch': typeof SellerDispatchRoute
   '/seller/profile': typeof SellerProfileRoute
   '/seller/receipts': typeof SellerReceiptsRoute
+  '/track/$code': typeof TrackCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/seller/dispatch': typeof SellerDispatchRoute
   '/seller/profile': typeof SellerProfileRoute
   '/seller/receipts': typeof SellerReceiptsRoute
+  '/track/$code': typeof TrackCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/seller/dispatch'
     | '/seller/profile'
     | '/seller/receipts'
+    | '/track/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/seller/dispatch'
     | '/seller/profile'
     | '/seller/receipts'
+    | '/track/$code'
   id:
     | '__root__'
     | '/'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/seller/dispatch'
     | '/seller/profile'
     | '/seller/receipts'
+    | '/track/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   SellerDispatchRoute: typeof SellerDispatchRoute
   SellerProfileRoute: typeof SellerProfileRoute
   SellerReceiptsRoute: typeof SellerReceiptsRoute
+  TrackCodeRoute: typeof TrackCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -412,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SellerReceiptsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track/$code': {
+      id: '/track/$code'
+      path: '/track/$code'
+      fullPath: '/track/$code'
+      preLoaderRoute: typeof TrackCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -435,6 +455,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellerDispatchRoute: SellerDispatchRoute,
   SellerProfileRoute: SellerProfileRoute,
   SellerReceiptsRoute: SellerReceiptsRoute,
+  TrackCodeRoute: TrackCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,4 +1,5 @@
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { PapQueueTable } from '@/components/pap/PapQueueTable';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -31,7 +32,9 @@ import {
   Shield,
   CreditCard,
   Building2,
-  CheckCircle2
+  CheckCircle2,
+  LayoutGrid,
+  Table2
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
@@ -128,6 +131,19 @@ function PapQueuePage() {
   const [sellerFilter, setSellerFilter] = useState<string>('all');
   const [timeSort, setTimeSort] = useState<SortOrder>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('by_seller');
+  const [displayFormat, setDisplayFormat] = useState<'card' | 'table'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('pap_queue_display_format') as 'card' | 'table') || 'card';
+    }
+    return 'card';
+  });
+
+  const handleSetDisplayFormat = (format: 'card' | 'table') => {
+    setDisplayFormat(format);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pap_queue_display_format', format);
+    }
+  };
   const [collapsedSellers, setCollapsedSellers] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
@@ -444,33 +460,63 @@ function PapQueuePage() {
               </div>
             </div>
 
-            {/* View Mode Switcher */}
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-medium text-muted-foreground hidden sm:inline">View:</span>
+            {/* View Format Switcher (Cards vs Table) */}
+            <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex rounded-lg border border-border bg-muted/60 p-0.5">
                 <button
                   type="button"
-                  onClick={() => setViewMode('by_seller')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
-                    viewMode === 'by_seller'
-                      ? 'bg-primary text-primary-foreground shadow-xs'
+                  onClick={() => handleSetDisplayFormat('card')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                    displayFormat === 'card'
+                      ? 'bg-primary text-primary-foreground shadow-xs font-bold'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
+                  title="Card view"
+                  aria-label="Card view"
                 >
-                  <Layers className="h-3 w-3" /> By Seller Account
+                  <LayoutGrid className="h-3 w-3" /> Cards
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode('list')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
-                    viewMode === 'list'
-                      ? 'bg-primary text-primary-foreground shadow-xs'
+                  onClick={() => handleSetDisplayFormat('table')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                    displayFormat === 'table'
+                      ? 'bg-primary text-primary-foreground shadow-xs font-bold'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
+                  title="Table view"
+                  aria-label="Table view"
                 >
-                  <List className="h-3 w-3" /> Flat List
+                  <Table2 className="h-3 w-3" /> Table
                 </button>
               </div>
+
+              {displayFormat === 'card' && (
+                <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('by_seller')}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors cursor-pointer ${
+                      viewMode === 'by_seller'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Layers className="h-2.5 w-2.5" /> By Seller
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors cursor-pointer ${
+                      viewMode === 'list'
+                        ? 'bg-background text-foreground shadow-xs'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <List className="h-2.5 w-2.5" /> Flat List
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -544,6 +590,16 @@ function PapQueuePage() {
               </Button>
             )}
           </div>
+        ) : displayFormat === 'table' ? (
+          <PapQueueTable
+            parcels={filteredParcels}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleSelectAll}
+            onReceiveSingle={handleReceiveSingle}
+            actionLoading={actionLoading}
+            onRefetch={refetch}
+          />
         ) : viewMode === 'by_seller' ? (
           /* ========================================================================= */
           /* GROUPED BY SELLER ACCOUNT VIEW                                            */

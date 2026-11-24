@@ -9,10 +9,10 @@ test('the platform fee is 15% of the total sending fee, rounded to whole shillin
   assert.equal(computePlatformFee(1000), 150);
 });
 
-test('the SACCO picker offers the 43 SACCOs the platform serves', () => {
-  assert.equal(SACCO_NAMES.length, 43);
-  assert.equal(new Set(SACCO_NAMES).size, 43);
-  for (const name of ['Tulaga', 'Ena Coach', 'Kagumo Travellers', 'Chania cool', 'Double M', 'Ganaki']) {
+test('the SACCO picker offers the 44 SACCOs the platform serves', () => {
+  assert.equal(SACCO_NAMES.length, 44);
+  assert.equal(new Set(SACCO_NAMES).size, 44);
+  for (const name of ['Tulaga', 'Ena Coach', 'Kagumo Travellers', 'Chania cool', 'Double M', 'Ganaki', 'Guardian']) {
     assert.ok(SACCO_NAMES.includes(name as (typeof SACCO_NAMES)[number]), `missing ${name}`);
   }
 });
@@ -35,6 +35,8 @@ test('sending fees prefill from the method, or the SACCO for PSV', () => {
   assert.equal(suggestedSendingFee('psv', 'Ena Coach'), 300);
   assert.equal(suggestedSendingFee('psv', 'Chania Genesis'), 350);
   assert.equal(suggestedSendingFee('psv', 'Ganaki'), 100);
+  assert.equal(suggestedSendingFee('psv', 'Guardian'), 350);
+  assert.equal(suggestedSendingFee('psv', 'The Guardian'), 350);
   assert.equal(suggestedSendingFee('psv', ''), null);
 });
 

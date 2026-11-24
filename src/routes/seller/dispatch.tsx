@@ -4,6 +4,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useParcels } from '@/hooks/useParcels';
 import { ParcelCard } from '@/components/seller/ParcelCard';
+import { SellerDispatchesTable } from '@/components/seller/SellerDispatchesTable';
 import { DispatchForm } from '@/components/seller/DispatchForm';
 import { DispatchPrintModal } from '@/components/seller/DispatchPrintModal';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,9 @@ import {
   AlertCircle,
   Store,
   ArrowRight,
-  Printer
+  Printer,
+  LayoutGrid,
+  Table2
 } from 'lucide-react';
 import type { TrackingStatus } from '@/types/database';
 
@@ -65,6 +68,19 @@ function SellerDispatchPage() {
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('seller_dispatch_view_mode') as 'card' | 'table') || 'card';
+    }
+    return 'card';
+  });
+
+  const handleSetViewMode = (mode: 'card' | 'table') => {
+    setViewMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('seller_dispatch_view_mode', mode);
+    }
+  };
 
   // Auth guard
   useEffect(() => {
@@ -251,7 +267,7 @@ function SellerDispatchPage() {
           </button>
         </div>
 
-        {/* Search Bar & Refresh */}
+        {/* Search Bar, View Toggle & Refresh */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -262,6 +278,42 @@ function SellerDispatchPage() {
               className="pl-9 h-10 text-sm"
             />
           </div>
+
+          <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 shrink-0 h-10">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSetViewMode('card')}
+              className={`h-8 px-2.5 text-xs rounded-md flex items-center gap-1.5 transition-colors ${
+                viewMode === 'card'
+                  ? 'bg-background text-foreground shadow-xs font-bold'
+                  : 'text-muted-foreground hover:text-foreground font-medium'
+              }`}
+              title="Card view"
+              aria-label="Card view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden sm:inline">Cards</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSetViewMode('table')}
+              className={`h-8 px-2.5 text-xs rounded-md flex items-center gap-1.5 transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-background text-foreground shadow-xs font-bold'
+                  : 'text-muted-foreground hover:text-foreground font-medium'
+              }`}
+              title="Table view"
+              aria-label="Table view"
+            >
+              <Table2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Table</span>
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             size="icon"
@@ -311,6 +363,8 @@ function SellerDispatchPage() {
               </Button>
             )}
           </div>
+        ) : viewMode === 'table' ? (
+          <SellerDispatchesTable parcels={filteredParcels} onChanged={refetch} />
         ) : (
           <div className="space-y-3">
             {filteredParcels.map((parcel) => (
