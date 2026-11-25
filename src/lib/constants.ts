@@ -83,6 +83,16 @@ export const SACCO_NAMES = [
   'Guardian',
 ] as const;
 
+// Combined options for simplified buyer order form: sending methods moved into the SACCO list
+export const BUYER_SACCO_OPTIONS = [
+  'Pick-up Mtaani',
+  'Pata Parcel (PAP Pick-up Points)',
+  'Door to Door (Within Nairobi)',
+  'PSV (SACCO)',
+  'PSV-Driver',
+  ...SACCO_NAMES,
+] as const;
+
 // Sending fee (KES) per method; PSV (SACCO) depends on the SACCO; PSV-Driver is paid on delivery.
 export const METHOD_SENDING_FEES: Record<'pickup_mtaani' | 'pata_parcel' | 'door_to_door', number> = {
   pickup_mtaani: 140,

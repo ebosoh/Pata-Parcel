@@ -1,6 +1,6 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
-import { suggestedSendingFee, SENDING_METHODS, SACCO_NAMES, PLATFORM_FEE_RATE, computePlatformFee } from './constants';
+import { suggestedSendingFee, SENDING_METHODS, SACCO_NAMES, BUYER_SACCO_OPTIONS, PLATFORM_FEE_RATE, computePlatformFee } from './constants';
 
 test('the platform fee is 15% of the total sending fee, rounded to whole shillings', () => {
   assert.equal(PLATFORM_FEE_RATE, 0.15);
@@ -42,4 +42,16 @@ test('sending fees prefill from the method, or the SACCO for PSV', () => {
 
 test('PSV-Driver sending fee is paid on delivery', () => {
   assert.equal(suggestedSendingFee('psv_driver', 'Tulaga'), 'on_delivery');
+});
+
+test('BUYER_SACCO_OPTIONS includes the 5 moved sending methods and all SACCOs', () => {
+  assert.ok(BUYER_SACCO_OPTIONS.includes('Pick-up Mtaani'));
+  assert.ok(BUYER_SACCO_OPTIONS.includes('Pata Parcel (PAP Pick-up Points)'));
+  assert.ok(BUYER_SACCO_OPTIONS.includes('Door to Door (Within Nairobi)'));
+  assert.ok(BUYER_SACCO_OPTIONS.includes('PSV (SACCO)'));
+  assert.ok(BUYER_SACCO_OPTIONS.includes('PSV-Driver'));
+  for (const sacco of SACCO_NAMES) {
+    assert.ok(BUYER_SACCO_OPTIONS.includes(sacco));
+  }
+  assert.equal(BUYER_SACCO_OPTIONS.length, 5 + SACCO_NAMES.length);
 });
