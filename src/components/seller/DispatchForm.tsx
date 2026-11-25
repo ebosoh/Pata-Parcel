@@ -7,9 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { serializePackageTypes } from '@/lib/packageDetails';
 import { 
   PACKAGE_TYPES, 
-  SENDING_METHODS, 
-  SACCO_NAMES,
-  BUYER_SACCO_OPTIONS,
+  DELIVERY_SACCO_OPTIONS,
   isValidKenyanPhone, 
   computePlatformFee,
   suggestedSendingFee,
@@ -47,7 +45,7 @@ export function DispatchForm({
   const [destination, setDestination] = useState('');
   const [sendingMethod, setSendingMethod] = useState<SendingMethod>('pickup_mtaani');
   const [psvSacco, setPsvSacco] = useState('');
-  const [buyerSacco, setBuyerSacco] = useState('');
+  const [deliverySacco, setDeliverySacco] = useState('');
   const [pickPoint, setPickPoint] = useState('');
   const [packageTypes, setPackageTypes] = useState<string[]>([PACKAGE_TYPES[0]]);
   const [packageDescription, setPackageDescription] = useState('');
@@ -57,8 +55,8 @@ export function DispatchForm({
   const [paymentCode, setPaymentCode] = useState('');
   const [showAllPackageTypes, setShowAllPackageTypes] = useState(false);
 
-  const handleBuyerSaccoChange = (val: string) => {
-    setBuyerSacco(val);
+  const handleDeliverySaccoChange = (val: string) => {
+    setDeliverySacco(val);
     const trimmed = val.trim();
     if (trimmed === 'Pick-up Mtaani') {
       setSendingMethod('pickup_mtaani');
@@ -90,7 +88,7 @@ export function DispatchForm({
   };
 
   // Prefill the sending fee whenever the method (or SACCO for PSV) changes
-  const effectiveMethod = isBuyer && !buyerSacco.trim() ? '' : sendingMethod;
+  const effectiveMethod = !deliverySacco.trim() ? '' : sendingMethod;
   const suggestedFee = effectiveMethod ? suggestedSendingFee(effectiveMethod, psvSacco) : null;
   const payOnDelivery = suggestedFee === 'on_delivery';
   useEffect(() => {
@@ -141,13 +139,8 @@ export function DispatchForm({
       return;
     }
 
-    if (isBuyer && !buyerSacco.trim()) {
+    if (!deliverySacco.trim()) {
       setFormError('Please select a SACCO or delivery method');
-      return;
-    }
-
-    if (!isBuyer && sendingMethod === 'psv' && !psvSacco) {
-      setFormError('Please select a SACCO for PSV dispatch');
       return;
     }
 
@@ -205,7 +198,7 @@ export function DispatchForm({
       setBuyerTiktok('');
       setBuyerPhone('');
       setDestination('');
-      setBuyerSacco('');
+      setDeliverySacco('');
       setPickPoint('');
       setPackageTypes([PACKAGE_TYPES[0]]);
       setPackageDescription('');
@@ -296,7 +289,7 @@ export function DispatchForm({
       {/* 2. Destination & Sending Method */}
       <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          {isBuyer ? '2. Destination & Delivery' : '2. Destination & Delivery Method'}
+          2. Destination & Delivery
         </h3>
 
         <div className="space-y-2">
@@ -312,78 +305,31 @@ export function DispatchForm({
           />
         </div>
 
-        {/* Seller only: separate Sending Method dropdown */}
-        {!isBuyer && (
-          <div className="space-y-2">
-            <Label htmlFor="sending_method" className="text-xs font-medium">
-              Sending Method *
-            </Label>
-            <select
-              id="sending_method"
-              value={sendingMethod}
-              onChange={(e) => setSendingMethod(e.target.value as SendingMethod)}
-              className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {SENDING_METHODS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Single "Select SACCO" field with moved sending methods in the options list */}
+        <div className="space-y-2">
+          <Label htmlFor="delivery_sacco" className="text-xs font-medium">
+            Select SACCO *
+          </Label>
+          <DestinationCombobox
+            id="delivery_sacco"
+            value={deliverySacco}
+            onChange={handleDeliverySaccoChange}
+            options={DELIVERY_SACCO_OPTIONS}
+            listHeader="All SACCOs & Delivery Methods"
+            noun="SACCO / Method"
+            placeholder="Select or type SACCO / Delivery Method..."
+            required
+          />
+        </div>
 
-        {/* Buyer only: single "Select SACCO" field with moved sending methods in the options list */}
-        {isBuyer && (
-          <div className="space-y-2">
-            <Label htmlFor="buyer_sacco" className="text-xs font-medium">
-              Select SACCO *
-            </Label>
-            <DestinationCombobox
-              id="buyer_sacco"
-              value={buyerSacco}
-              onChange={handleBuyerSaccoChange}
-              options={BUYER_SACCO_OPTIONS}
-              listHeader="All SACCOs & Delivery Methods"
-              noun="SACCO / Method"
-              placeholder="Select or type SACCO / Delivery Method..."
-              required
-            />
-          </div>
-        )}
-
-        {/* Seller only: PSV SACCO sub-picker */}
-        {!isBuyer && (sendingMethod === 'psv' || sendingMethod === 'psv_driver') && (
+        {/* Helper if they chose generic "PSV (SACCO)" */}
+        {deliverySacco === 'PSV (SACCO)' && (
           <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
-            <Label htmlFor="psv_sacco" className="text-xs font-medium text-primary">
-              {sendingMethod === 'psv' ? 'Select SACCO *' : 'Select SACCO (optional)'}
-            </Label>
-            <DestinationCombobox
-              id="psv_sacco"
-              value={psvSacco}
-              onChange={setPsvSacco}
-              options={SACCO_NAMES}
-              listHeader="All SACCOs"
-              noun="SACCO"
-              placeholder="Type SACCO (e.g. Ena Coach)..."
-              required={sendingMethod === 'psv'}
-            />
-            {sendingMethod === 'psv_driver' && (
-              <p className="text-[11px] text-muted-foreground">
-                Handing the parcel straight to a driver? Leave SACCO blank if you don't know it.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Buyer helper if they chose generic "PSV (SACCO)" */}
-        {isBuyer && buyerSacco === 'PSV (SACCO)' && (
-          <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
-            <Label htmlFor="buyer_custom_sacco" className="text-xs font-medium text-primary">
+            <Label htmlFor="custom_sacco" className="text-xs font-medium text-primary">
               Specific SACCO Name (optional)
             </Label>
             <Input
-              id="buyer_custom_sacco"
+              id="custom_sacco"
               placeholder="e.g. Ena Coach, 2NK, Guardian"
               value={psvSacco === 'PSV (SACCO)' ? '' : psvSacco}
               onChange={(e) => setPsvSacco(e.target.value.trim() ? e.target.value : 'PSV (SACCO)')}
@@ -425,7 +371,7 @@ export function DispatchForm({
         <fieldset className="space-y-2">
           <legend className="text-xs font-medium">Type of Package *</legend>
           <div className="grid grid-cols-2 gap-2">
-            {(isBuyer && !showAllPackageTypes
+            {(!showAllPackageTypes
               ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
               : PACKAGE_TYPES
             ).map(type => (
@@ -440,20 +386,18 @@ export function DispatchForm({
               </label>
             ))}
           </div>
-          {isBuyer && (
-            <button
-              type="button"
-              onClick={() => setShowAllPackageTypes(prev => !prev)}
-              className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
-            >
-              <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
-              {showAllPackageTypes ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowAllPackageTypes(prev => !prev)}
+            className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
+          >
+            <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
+            {showAllPackageTypes ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
         </fieldset>
 
         {packageTypes.includes('Other') && (
