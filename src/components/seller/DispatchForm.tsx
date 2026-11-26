@@ -16,6 +16,7 @@ import {
 import type { SendingMethod, Destination } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
 import { Send, Loader2, Calculator, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { STAFF_SENDING_FEE } from '@/lib/internalPickup';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
@@ -97,8 +98,8 @@ export function DispatchForm({
   const suggestedFee = effectiveMethod ? suggestedSendingFee(effectiveMethod, psvSacco) : null;
   const payOnDelivery = suggestedFee === 'on_delivery';
   useEffect(() => {
-    setSendingFee(typeof suggestedFee === 'number' ? suggestedFee : null);
-  }, [suggestedFee]);
+    setSendingFee(isStaff ? STAFF_SENDING_FEE : typeof suggestedFee === 'number' ? suggestedFee : null);
+  }, [suggestedFee, isStaff]);
 
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -109,8 +110,8 @@ export function DispatchForm({
 
   // Total sending fee as entered by the seller (no multiplication)
   const totalSendingFee = useMemo(
-    () => (payOnDelivery ? 0 : Math.max(0, sendingFee ?? DEFAULT_SENDING_FEE)),
-    [sendingFee, payOnDelivery],
+    () => (payOnDelivery ? 0 : Math.max(0, sendingFee ?? (isStaff ? STAFF_SENDING_FEE : DEFAULT_SENDING_FEE))),
+    [sendingFee, payOnDelivery, isStaff],
   );
 
   // Platform fee: 15% of the total sending fee
@@ -127,7 +128,7 @@ export function DispatchForm({
       return;
     }
 
-    const cleanTiktok = buyerTiktok.trim().replace(/^@+/, '');
+    const cleanTiktok = !isBuyer ? '' : buyerTiktok.trim().replace(/^@+/, '');
     if (isBuyer && !cleanTiktok) {
       setFormError('Please enter your TikTok username / handle');
       return;
@@ -245,9 +246,10 @@ export function DispatchForm({
           />
         </div>
 
+        {isBuyer && (
         <div className="space-y-2">
           <Label htmlFor="buyer_tiktok" className="text-xs font-medium">
-            {isBuyer ? 'TikTok Username / Handle *' : 'Buyer TikTok Username / Handle'} {!isBuyer && <span className="text-[11px] font-normal text-muted-foreground">(Optional)</span>}
+            TikTok Username / Handle *
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -258,16 +260,15 @@ export function DispatchForm({
               placeholder="e.g. mary_wanjiku or Mary Wanjiku"
               value={buyerTiktok}
               onChange={(e) => setBuyerTiktok(e.target.value)}
-              required={isBuyer}
+              required
               className="h-10 pl-8 text-sm"
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            {isBuyer
-              ? 'Required so your seller can confirm and match your order to your TikTok account.'
-              : 'Helps your seller identify you if multiple buyers share the same name.'}
+            Required so your seller can confirm and match your order to your TikTok account.
           </p>
         </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="buyer_phone" className="text-xs font-medium">
@@ -457,7 +458,7 @@ export function DispatchForm({
               min="0"
               step="10"
               inputMode="numeric"
-              placeholder={isStaff ? String(DEFAULT_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
+              placeholder={isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
               value={sendingFee ?? ''}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -468,7 +469,7 @@ export function DispatchForm({
           )}
           <p className="text-[11px] text-muted-foreground">
             {isStaff
-              ? 'Default sending fee is KES 150. You can adjust if different.'
+              ? `Staff dispatch sending fee is KES ${STAFF_SENDING_FEE}. You can adjust if different.`
               : (payOnDelivery
                 ? 'PSV-Driver sending fee is paid to the driver on delivery.'
                 : 'Filled in from the sending method you chose.')}

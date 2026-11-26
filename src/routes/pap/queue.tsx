@@ -1,4 +1,6 @@
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { InternalPickupTable } from '@/components/pap/InternalPickupTable';
+import { isInternalPickup } from '@/lib/internalPickup';
 import { PapQueueTable } from '@/components/pap/PapQueueTable';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
@@ -174,8 +176,24 @@ function PapQueuePage() {
 
   // Incoming parcels are those in 'dispatched_to_pap' stage
   const incomingParcels = useMemo(() => {
-    return parcels.filter(p => p.tracking_status === 'dispatched_to_pap');
+    return parcels.filter(p => p.tracking_status === 'dispatched_to_pap' && !isInternalPickup(p));
   }, [parcels]);
+
+  // Internal pick-up: every staff-created dispatch still waiting to be collected
+  const internalParcels = useMemo(() => {
+    return parcels
+      .filter(p => isInternalPickup(p) && p.tracking_status !== 'delivered')
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [parcels]);
+
+  const [queueTab, setQueueTab] = useState<'internal' | 'external'>('external');
+  // Clock for Stay / Total Due, set after mount so server and browser render the same
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Unique list of sellers with incoming dispatches
   const sellerList = useMemo(() => {
@@ -406,7 +424,8 @@ function PapQueuePage() {
                   onSubmit={createParcel}
                   onSuccess={() => {
                     setIsNewDialogOpen(false);
-                    toast.success('New dispatch created and moved to Sorting Hub');
+                    setQueueTab('internal');
+                    toast.success('New dispatch created — see Internal pick-up');
                   }}
                   onCancel={() => setIsNewDialogOpen(false)}
                 />
@@ -442,6 +461,34 @@ function PapQueuePage() {
           </div>
         )}
 
+        {/* Internal / External pick-up tabs */}
+        <div role="tablist" aria-label="Pick-up type" className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-muted/60 p-1">
+          {([
+            ['internal', 'Internal pick-up', internalParcels.length],
+            ['external', 'External pick-up', incomingParcels.length],
+          ] as const).map(([key, label, count]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={queueTab === key}
+              onClick={() => setQueueTab(key)}
+              className={`min-h-11 rounded-lg px-2 text-xs font-bold transition-colors cursor-pointer ${
+                queueTab === key
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {label} ({count})
+            </button>
+          ))}
+        </div>
+
+        {queueTab === 'internal' && now && (
+          <InternalPickupTable parcels={internalParcels} now={now} onRefetch={refetch} />
+        )}
+
+        {queueTab === 'external' && (<>
         {/* Filters & Sorting Controls */}
         <div className="bg-card p-3 rounded-xl border border-border/80 shadow-xs space-y-3">
           {/* Row 1: Search & Seller Filter */}
@@ -908,6 +955,7 @@ function PapQueuePage() {
             })}
           </div>
         )}
+        </>)}
 
         {/* Offline Sorting & Print Manifest Modal */}
         <DispatchPrintModal

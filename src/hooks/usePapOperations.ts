@@ -343,7 +343,7 @@ export function usePapOperations(staffUserId?: string | null) {
 
     try {
       const { data, error: insertErr } = await supabase.rpc('seller_create_parcel', {
-        _input: { ...input },
+        _input: { ...input, order_source: 'staff' },
       });
       if (insertErr) {
         return { data: null, error: insertErr };
