@@ -41,10 +41,10 @@ export const Route = createFileRoute('/seller/dispatch')({
       { property: 'og:title', content: 'Dispatch Parcels — Pata Parcel Seller Portal' },
       { property: 'og:description', content: 'Book parcel dispatches via PSV, Pick-up Mtaani or door-to-door and track every order across Kenya.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/dispatch' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/seller/dispatch' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/dispatch' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/seller/dispatch' }],
   }),
   component: SellerDispatchPage,
 });

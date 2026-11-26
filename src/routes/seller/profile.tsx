@@ -32,10 +32,10 @@ export const Route = createFileRoute('/seller/profile')({
       { property: 'og:title', content: 'Seller Profile — Pata Parcel' },
       { property: 'og:description', content: 'Manage your online shop details, contact phone and pickup location on Pata Parcel.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/profile' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/seller/profile' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/profile' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/seller/profile' }],
   }),
   component: SellerProfilePage,
 });

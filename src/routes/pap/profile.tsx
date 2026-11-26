@@ -19,10 +19,10 @@ export const Route = createFileRoute('/pap/profile')({
       { property: 'og:title', content: 'Staff Profile — Pata Parcel Operations Hub' },
       { property: 'og:description', content: 'Pata Parcel operations staff account, station and standard operating procedures.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/profile' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/pap/profile' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/profile' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/pap/profile' }],
   }),
   component: PapProfilePage,
 });

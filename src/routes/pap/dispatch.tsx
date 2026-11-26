@@ -60,10 +60,10 @@ export const Route = createFileRoute('/pap/dispatch')({
       { property: 'og:title', content: 'Sorting & Dispatch — Pata Parcel Operations Hub' },
       { property: 'og:description', content: 'Sort parcels and hand them to PSV, Pick-up Mtaani and door-to-door couriers.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/dispatch' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/pap/dispatch' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/dispatch' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/pap/dispatch' }],
   }),
   component: PapDispatchPage,
 });

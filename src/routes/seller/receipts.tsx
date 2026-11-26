@@ -35,10 +35,10 @@ export const Route = createFileRoute('/seller/receipts')({
       { property: 'og:title', content: 'Dispatch Receipts — Pata Parcel Seller Portal' },
       { property: 'og:description', content: 'View photographed courier receipts for every parcel you have sent with Pata Parcel.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/receipts' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/seller/receipts' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/receipts' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/seller/receipts' }],
   }),
   component: SellerReceiptsPage,
 });

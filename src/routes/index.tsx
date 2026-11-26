@@ -34,10 +34,10 @@ export const Route = createFileRoute('/')({
       { property: 'og:title', content: 'Pata Parcel — Parcel Dispatch & Tracking for Kenyan Online Sellers' },
       { property: 'og:description', content: 'Send parcels across Kenya via PSV SACCOs, Pick-up Mtaani or door-to-door, with automated photo receipts sent directly to buyers on WhatsApp.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/' },
       { name: 'twitter:card', content: 'summary_large_image' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/' }],
   }),
   component: LandingPage,
 });

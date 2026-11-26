@@ -44,10 +44,10 @@ export const Route = createFileRoute('/pap/receipts')({
       { property: 'og:title', content: 'Courier Receipts — Pata Parcel Operations Hub' },
       { property: 'og:description', content: 'Upload courier slip photos and share proof of dispatch with buyers.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/receipts' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/pap/receipts' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/receipts' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/pap/receipts' }],
   }),
   component: PapReceiptsPage,
 });

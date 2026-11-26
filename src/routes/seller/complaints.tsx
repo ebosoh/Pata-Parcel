@@ -39,10 +39,10 @@ export const Route = createFileRoute('/seller/complaints')({
       { property: 'og:title', content: 'Buyer Complaints — Pata Parcel Seller Portal' },
       { property: 'og:description', content: 'Log and follow up on buyer delivery complaints for your Pata Parcel shipments.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/seller/complaints' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/seller/complaints' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/seller/complaints' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/seller/complaints' }],
   }),
   component: SellerComplaintsPage,
 });

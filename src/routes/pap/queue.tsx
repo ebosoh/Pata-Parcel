@@ -59,10 +59,10 @@ export const Route = createFileRoute('/pap/queue')({
       { property: 'og:title', content: 'Incoming Queue — Pata Parcel Operations Hub' },
       { property: 'og:description', content: 'Receive and check incoming seller parcels at the Pata Parcel sorting hub.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/pap/queue' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/pap/queue' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/pap/queue' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/pap/queue' }],
   }),
   component: PapQueuePage,
 });

@@ -15,10 +15,10 @@ export const Route = createFileRoute('/login')({
       { property: 'og:title', content: 'Sign In — Pata Parcel' },
       { property: 'og:description', content: 'Create an account or sign in to Pata Parcel with your email to manage parcels and receipts.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: 'https://baseline-project.lovable.app/login' },
+      { property: 'og:url', content: 'https://www.pata-parcel.com/login' },
       { name: 'twitter:card', content: 'summary' },
     ],
-    links: [{ rel: 'canonical', href: 'https://baseline-project.lovable.app/login' }],
+    links: [{ rel: 'canonical', href: 'https://www.pata-parcel.com/login' }],
   }),
   component: LoginPage,
 });
