@@ -5,12 +5,22 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
 import { usePapOperations, type ParcelWithSeller } from '@/hooks/usePapOperations';
+import { DispatchForm } from '@/components/seller/DispatchForm';
+import { DispatchPrintModal } from '@/components/seller/DispatchPrintModal';
+import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from '@/components/ui/dialog';
 import { TrackingProgressBar } from '@/components/seller/TrackingProgressBar';
 import { 
   Inbox, 
@@ -34,7 +44,9 @@ import {
   Building2,
   CheckCircle2,
   LayoutGrid,
-  Table2
+  Table2,
+  Plus,
+  Printer
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
@@ -124,7 +136,11 @@ function PapQueuePage() {
   const { user, profile, isAuthenticated, loading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const { parcels, loading, error, receiveParcels, refetch } = usePapOperations(user?.id);
+  const { parcels, destinations, loading, error, receiveParcels, refetch, createParcel } = usePapOperations(user?.id);
+
+  // Modal states for New Dispatch and Offline Sorting/Print Manifest
+  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Filter & Selection state
   const [searchQuery, setSearchQuery] = useState('');
@@ -358,6 +374,44 @@ function PapQueuePage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPrintModalOpen(true)}
+              className="h-9 shrink-0 px-3 font-semibold text-xs flex items-center gap-1.5"
+              title="Print offline sorting manifest table"
+            >
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print / PDF</span>
+            </Button>
+
+            <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-9 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Dispatch</span>
+                  <span className="sm:hidden">New</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Dispatch New Parcel
+                  </DialogTitle>
+                </DialogHeader>
+                <DispatchForm
+                  destinations={destinations}
+                  onSubmit={createParcel}
+                  onSuccess={() => {
+                    setIsNewDialogOpen(false);
+                    toast.success('New dispatch created and moved to Sorting Hub');
+                  }}
+                  onCancel={() => setIsNewDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+
             <Button
               variant="outline"
               size="icon"
@@ -853,6 +907,14 @@ function PapQueuePage() {
             })}
           </div>
         )}
+
+        {/* Offline Sorting & Print Manifest Modal */}
+        <DispatchPrintModal
+          open={isPrintModalOpen}
+          onOpenChange={setIsPrintModalOpen}
+          parcels={parcels}
+          businessName={profile?.business_name || profile?.owner_name || 'Pata Parcel'}
+        />
       </div>
     </AppShell>
   );

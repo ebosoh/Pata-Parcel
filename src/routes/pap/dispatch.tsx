@@ -20,9 +20,12 @@ import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogTrigger 
 } from '@/components/ui/dialog';
 import { TrackingProgressBar } from '@/components/seller/TrackingProgressBar';
+import { DispatchForm } from '@/components/seller/DispatchForm';
+import { DispatchPrintModal } from '@/components/seller/DispatchPrintModal';
 import { 
   Truck, 
   Search, 
@@ -39,7 +42,9 @@ import {
   AlertCircle,
   MessageCircle,
   LayoutGrid,
-  Table2
+  Table2,
+  Plus,
+  Printer
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
@@ -66,7 +71,22 @@ export function PapDispatchPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  const { parcels, loading, error, dispatchParcel, deliverParcel, uploadReceipt, receiptsByParcel, refetch } = usePapOperations(user?.id);
+  const {
+    parcels,
+    destinations,
+    loading,
+    error,
+    dispatchParcel,
+    deliverParcel,
+    uploadReceipt,
+    receiptsByParcel,
+    refetch,
+    createParcel,
+  } = usePapOperations(user?.id);
+
+  // Modal states for New Dispatch and Offline Sorting/Print Manifest
+  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
   // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit)
   const [activeTab, setActiveTab] = useState<'sorting' | 'transit'>('sorting');
@@ -268,26 +288,68 @@ export function PapDispatchPage() {
     <AppShell role="pap_staff">
       <div className="space-y-4 max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <Truck className="h-5 w-5 text-primary" />
-              PAP Dispatch & Sorting Hub
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-bold text-foreground flex items-center gap-2">
+              <Truck className="h-5 w-5 text-primary shrink-0" />
+              <span>PAP Dispatch & Sorting Hub</span>
             </h1>
             <p className="text-xs text-muted-foreground">
               Dispatch parcels to PSV, Pick-up Mtaani, Door-to-Door, or PAP points
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            aria-label="Refresh list"
-            onClick={refetch}
-            disabled={loading}
-            className="h-9 w-9"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-primary' : ''}`} />
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsPrintModalOpen(true)}
+              className="h-10 shrink-0 px-3 font-semibold text-xs flex items-center gap-1.5"
+              title="Print offline sorting manifest table"
+            >
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print / PDF</span>
+            </Button>
+
+            <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="h-10 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Dispatch</span>
+                  <span className="sm:hidden">New</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Dispatch New Parcel
+                  </DialogTitle>
+                </DialogHeader>
+                <DispatchForm
+                  destinations={destinations}
+                  onSubmit={createParcel}
+                  onSuccess={() => {
+                    setIsNewDialogOpen(false);
+                    toast.success('New dispatch created successfully');
+                  }}
+                  onCancel={() => setIsNewDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Refresh list"
+              onClick={refetch}
+              disabled={loading}
+              className="h-10 w-10 shrink-0"
+              title="Refresh list"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin text-primary' : ''}`} />
+            </Button>
+          </div>
         </div>
 
         {/* Feedback Alert */}
@@ -828,6 +890,14 @@ export function PapDispatchPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Offline Sorting & Print Manifest Modal */}
+        <DispatchPrintModal
+          open={isPrintModalOpen}
+          onOpenChange={setIsPrintModalOpen}
+          parcels={parcels}
+          businessName={profile?.business_name || profile?.owner_name || 'Pata Parcel Sorting Hub'}
+        />
       </div>
     </AppShell>
   );

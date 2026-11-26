@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { saveDispatchDriver } from '@/lib/drivers';
-import type { Parcel, ParcelTracking, ParcelReceipt, TrackingStatus } from '@/types/database';
+import type { Parcel, ParcelTracking, ParcelReceipt, TrackingStatus, Destination } from '@/types/database';
+import type { CreateParcelInput } from '@/hooks/useParcels';
 
 export interface ParcelWithSeller extends Parcel {
   seller?: {
@@ -32,10 +33,25 @@ export interface DispatchOptions {
 
 export function usePapOperations(staffUserId?: string | null) {
   const [parcels, setParcels] = useState<ParcelWithSeller[]>([]);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Latest shared receipt per parcel (parcel_id -> receipt)
   const [receiptsByParcel, setReceiptsByParcel] = useState<Record<string, ParcelReceipt>>({});
+
+  // Fetch active destinations for parcel creation
+  const fetchDestinations = useCallback(async () => {
+    try {
+      const { data } = await supabase
+        .from('destinations')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      if (data) setDestinations(data as Destination[]);
+    } catch (err) {
+      console.warn('Could not fetch destinations from db:', err);
+    }
+  }, []);
 
   // Fetch every receipt shared so far, keeping the newest one per parcel
   const fetchReceipts = useCallback(async () => {
@@ -97,6 +113,7 @@ export function usePapOperations(staffUserId?: string | null) {
 
   // Realtime subscription
   useEffect(() => {
+    fetchDestinations();
     fetchParcels();
     fetchReceipts();
 
@@ -121,7 +138,7 @@ export function usePapOperations(staffUserId?: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchParcels, fetchReceipts]);
+  }, [fetchDestinations, fetchParcels, fetchReceipts]);
 
   // Batch or single receive parcels into "sorting"
   const receiveParcels = useCallback(async (parcelIds: string[]) => {
@@ -318,8 +335,66 @@ export function usePapOperations(staffUserId?: string | null) {
     }
   }, [staffUserId, fetchReceipts]);
 
+  // Create a new parcel directly from staff account
+  const createParcel = useCallback(async (input: CreateParcelInput) => {
+    if (!staffUserId) {
+      return { data: null, error: new Error('You must be logged in to dispatch parcels') };
+    }
+
+    try {
+      const { data, error: insertErr } = await supabase.rpc('seller_create_parcel', {
+        _input: { ...input },
+      });
+      if (insertErr) {
+        return { data: null, error: insertErr };
+      }
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return { data: null, error: new Error('Order could not be created') };
+      }
+      if (typeof data['error'] === 'string') {
+        return { data: null, error: new Error(data['error']) };
+      }
+      const parcel = data['parcel'] as Parcel;
+      if (!parcel || typeof parcel !== 'object' || Array.isArray(parcel)) {
+        return { data: null, error: new Error('Order could not be created') };
+      }
+
+      // Immediately verify & transition to sorting hub so it is ready for dispatch
+      try {
+        await supabase.rpc('seller_verify_and_dispatch', { _parcel_id: parcel.id });
+      } catch (verifyErr) {
+        console.warn('Could not auto-verify dispatch:', verifyErr);
+      }
+
+      try {
+        await supabase
+          .from('parcels')
+          .update({
+            tracking_status: 'sorting' as TrackingStatus,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('id', parcel.id);
+
+        await supabase.from('parcel_tracking').insert({
+          parcel_id: parcel.id,
+          status: 'sorting' as TrackingStatus,
+          updated_by: staffUserId,
+          notes: 'Dispatch created directly by PAP staff and received into sorting hub',
+        } as any);
+      } catch (sortErr) {
+        console.warn('Could not update status to sorting:', sortErr);
+      }
+
+      await fetchParcels();
+      return { data: parcel, error: null };
+    } catch (err: any) {
+      return { data: null, error: err };
+    }
+  }, [staffUserId, fetchParcels]);
+
   return {
     parcels,
+    destinations,
     loading,
     error,
     receiptsByParcel,
@@ -327,6 +402,7 @@ export function usePapOperations(staffUserId?: string | null) {
     dispatchParcel,
     deliverParcel,
     uploadReceipt,
+    createParcel,
     refetch: fetchParcels,
   };
 }
