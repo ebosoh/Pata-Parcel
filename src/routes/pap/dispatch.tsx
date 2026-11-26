@@ -1,4 +1,5 @@
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { isInternalPickup } from '@/lib/internalPickup';
 import { PapDispatchTable } from '@/components/pap/PapDispatchTable';
 import { StorageImage } from '@/components/shared/StorageImage';
 import { supabase } from '@/lib/supabase';
@@ -178,21 +179,21 @@ export function PapDispatchPage() {
   // Internal Pick-up parcels (staff-created dispatches or hub pick-ups not yet delivered)
   const internalParcels = useMemo(() => {
     return parcels.filter(
-      p => ((p as any).order_source === 'pap_staff' || p.sending_method === 'pata_parcel') && p.tracking_status !== 'delivered'
+      p => (isInternalPickup(p) || p.sending_method === 'pata_parcel') && p.tracking_status !== 'delivered'
     );
   }, [parcels]);
 
   // Sorting parcels (Ready to Dispatch - external sellers)
   const sortingParcels = useMemo(() => {
     return parcels.filter(
-      p => p.tracking_status === 'sorting' && (p as any).order_source !== 'pap_staff' && p.sending_method !== 'pata_parcel'
+      p => p.tracking_status === 'sorting' && !isInternalPickup(p) && p.sending_method !== 'pata_parcel'
     );
   }, [parcels]);
 
   // On Transit parcels
   const transitParcels = useMemo(() => {
     return parcels.filter(
-      p => p.tracking_status === 'on_transit' && (p as any).order_source !== 'pap_staff' && p.sending_method !== 'pata_parcel'
+      p => p.tracking_status === 'on_transit' && !isInternalPickup(p) && p.sending_method !== 'pata_parcel'
     );
   }, [parcels]);
 

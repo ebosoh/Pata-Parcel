@@ -1,4 +1,5 @@
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { isInternalPickup } from '@/lib/internalPickup';
 import { PapQueueTable } from '@/components/pap/PapQueueTable';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
@@ -174,7 +175,7 @@ function PapQueuePage() {
 
   // Incoming parcels are those in 'dispatched_to_pap' stage from external sellers
   const incomingParcels = useMemo(() => {
-    return parcels.filter(p => p.tracking_status === 'dispatched_to_pap' && (p as any).order_source !== 'pap_staff');
+    return parcels.filter(p => p.tracking_status === 'dispatched_to_pap' && !isInternalPickup(p));
   }, [parcels]);
 
   // Unique list of sellers with incoming dispatches
@@ -406,7 +407,7 @@ function PapQueuePage() {
                   onSubmit={createParcel}
                   onSuccess={() => {
                     setIsNewDialogOpen(false);
-                    toast.success('New dispatch created and moved to Sorting Hub');
+                    toast.success('New dispatch created — view in Dispatch Hub under Internal Pick-up');
                   }}
                   onCancel={() => setIsNewDialogOpen(false)}
                 />

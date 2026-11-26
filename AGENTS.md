@@ -17,3 +17,4 @@
 - Buyer order links: public /order/$code page writes only through the scoped submit_buyer_order database function; seller payment changes and dispatch go through seller_* functions, so sellers never get broad parcel edit rights.
 - Enforce payment-code reservations and phone reuse counters in a parcel trigger; scoped order functions return committed rejection results instead of raising errors, so fraud records survive rejected submissions and concurrent requests cannot reuse a code.
 - Defer Auth subscriber work outside its session lock and revalidate users before loading profiles; derive signup confirmation prompts from the returned session and identities to avoid repeat-confirmation loops.
+- Mark staff-created dispatches with the parcel's order source, set only inside the scoped create function after a staff check, so Internal pick-up lists never depend on client-supplied flags or status guesses.
