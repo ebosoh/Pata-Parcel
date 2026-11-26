@@ -41,7 +41,8 @@ export function DispatchForm({
   hideGoodsPayment = false,
 }: DispatchFormProps) {
   const isBuyer = mode === 'buyer';
-  const showGoodsPayment = !hideGoodsPayment && mode !== 'staff';
+  const isStaff = mode === 'staff';
+  const showGoodsPayment = !hideGoodsPayment && !isStaff;
   // Form State
   const [buyerName, setBuyerName] = useState('');
   const [buyerTiktok, setBuyerTiktok] = useState('');
@@ -138,23 +139,25 @@ export function DispatchForm({
       return;
     }
 
-    if (!destination) {
-      setFormError('Please select a destination town');
-      return;
+    if (!isStaff) {
+      if (!destination) {
+        setFormError('Please select a destination town');
+        return;
+      }
+
+      if (!deliverySacco.trim()) {
+        setFormError('Please select a SACCO or delivery method');
+        return;
+      }
+
+      if (sendingMethod === 'door_to_door' && !pickPoint.trim()) {
+        setFormError('Please select or type a Pick-Point for Door to Door delivery');
+        return;
+      }
     }
 
-    if (!deliverySacco.trim()) {
-      setFormError('Please select a SACCO or delivery method');
-      return;
-    }
-
-    if (sendingMethod === 'door_to_door' && !pickPoint.trim()) {
-      setFormError('Please select or type a Pick-Point for Door to Door delivery');
-      return;
-    }
-
-    const finalPackageType = serializePackageTypes(packageTypes, customPackageType);
-    if (!finalPackageType) {
+    const finalPackageType = isStaff ? 'Parcel' : serializePackageTypes(packageTypes, customPackageType);
+    if (!isStaff && !finalPackageType) {
       setFormError('Please select at least one package type');
       return;
     }
@@ -181,12 +184,12 @@ export function DispatchForm({
     const result = await onSubmit({
       buyer_name: finalBuyerName,
       buyer_phone: cleanPhone,
-      destination,
-      sending_method: sendingMethod,
-      psv_sacco: sendingMethod === 'psv' || sendingMethod === 'psv_driver' ? (psvSacco || null) : null,
-      pick_point: sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
+      destination: isStaff ? (destination.trim() || 'Nairobi') : destination,
+      sending_method: isStaff ? 'pata_parcel' : sendingMethod,
+      psv_sacco: !isStaff && (sendingMethod === 'psv' || sendingMethod === 'psv_driver') ? (psvSacco || null) : null,
+      pick_point: !isStaff && sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
-      package_description: packageDescription.trim() || null,
+      package_description: !isStaff ? (packageDescription.trim() || null) : null,
       sending_fee: totalSendingFee,
       goods_amount: amount,
       payment_code: code || null,
@@ -291,147 +294,153 @@ export function DispatchForm({
       </div>
 
       {/* 2. Destination & Sending Method */}
-      <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          2. Destination & Delivery
-        </h3>
+      {!isStaff && (
+        <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+            2. Destination & Delivery
+          </h3>
 
-        <div className="space-y-2">
-          <Label htmlFor="destination" className="text-xs font-medium">
-            Destination Town *
-          </Label>
-          <DestinationCombobox
-            id="destination"
-            value={destination}
-            onChange={setDestination}
-            destinations={destinations}
-            required
-          />
-        </div>
-
-        {/* Single "Select SACCO" field with moved sending methods in the options list */}
-        <div className="space-y-2">
-          <Label htmlFor="delivery_sacco" className="text-xs font-medium">
-            Select SACCO *
-          </Label>
-          <DestinationCombobox
-            id="delivery_sacco"
-            value={deliverySacco}
-            onChange={handleDeliverySaccoChange}
-            options={DELIVERY_SACCO_OPTIONS}
-            listHeader="All SACCOs & Delivery Methods"
-            noun="SACCO / Method"
-            placeholder="Select or type SACCO / Delivery Method..."
-            required
-          />
-        </div>
-
-        {/* Helper if they chose generic "PSV (SACCO)" */}
-        {deliverySacco === 'PSV (SACCO)' && (
-          <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
-            <Label htmlFor="custom_sacco" className="text-xs font-medium text-primary">
-              Specific SACCO Name (optional)
-            </Label>
-            <Input
-              id="custom_sacco"
-              placeholder="e.g. Ena Coach, 2NK, Guardian"
-              value={psvSacco === 'PSV (SACCO)' ? '' : psvSacco}
-              onChange={(e) => setPsvSacco(e.target.value.trim() ? e.target.value : 'PSV (SACCO)')}
-              className="h-10 text-sm"
-            />
-            <p className="text-[11px] text-muted-foreground">
-              If you know your specific SACCO stage, enter it here or leave blank.
-            </p>
-          </div>
-        )}
-
-        {/* Pick-Point selector for Door to Door */}
-        {sendingMethod === 'door_to_door' && (
-          <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
-            <Label htmlFor="pick_point" className="text-xs font-medium text-primary">
-              Pick-Point (Within Nairobi) *
+          <div className="space-y-2">
+            <Label htmlFor="destination" className="text-xs font-medium">
+              Destination Town *
             </Label>
             <DestinationCombobox
-              id="pick_point"
-              value={pickPoint}
-              onChange={setPickPoint}
-              options={NAIROBI_PICK_POINTS}
-              placeholder="Type pick-point (e.g. Westlands, Kasarani)..."
+              id="destination"
+              value={destination}
+              onChange={setDestination}
+              destinations={destinations}
               required
             />
-            <p className="text-[11px] text-muted-foreground">
-              The Nairobi location where the rider will collect or deliver the parcel.
-            </p>
           </div>
-        )}
-      </div>
+
+          {/* Single "Select SACCO" field with moved sending methods in the options list */}
+          <div className="space-y-2">
+            <Label htmlFor="delivery_sacco" className="text-xs font-medium">
+              Select SACCO *
+            </Label>
+            <DestinationCombobox
+              id="delivery_sacco"
+              value={deliverySacco}
+              onChange={handleDeliverySaccoChange}
+              options={DELIVERY_SACCO_OPTIONS}
+              listHeader="All SACCOs & Delivery Methods"
+              noun="SACCO / Method"
+              placeholder="Select or type SACCO / Delivery Method..."
+              required
+            />
+          </div>
+
+          {/* Helper if they chose generic "PSV (SACCO)" */}
+          {deliverySacco === 'PSV (SACCO)' && (
+            <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
+              <Label htmlFor="custom_sacco" className="text-xs font-medium text-primary">
+                Specific SACCO Name (optional)
+              </Label>
+              <Input
+                id="custom_sacco"
+                placeholder="e.g. Ena Coach, 2NK, Guardian"
+                value={psvSacco === 'PSV (SACCO)' ? '' : psvSacco}
+                onChange={(e) => setPsvSacco(e.target.value.trim() ? e.target.value : 'PSV (SACCO)')}
+                className="h-10 text-sm"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                If you know your specific SACCO stage, enter it here or leave blank.
+              </p>
+            </div>
+          )}
+
+          {/* Pick-Point selector for Door to Door */}
+          {sendingMethod === 'door_to_door' && (
+            <div className="space-y-2 pt-1 border-t border-dashed border-border/60">
+              <Label htmlFor="pick_point" className="text-xs font-medium text-primary">
+                Pick-Point (Within Nairobi) *
+              </Label>
+              <DestinationCombobox
+                id="pick_point"
+                value={pickPoint}
+                onChange={setPickPoint}
+                options={NAIROBI_PICK_POINTS}
+                placeholder="Type pick-point (e.g. Westlands, Kasarani)..."
+                required
+              />
+              <p className="text-[11px] text-muted-foreground">
+                The Nairobi location where the rider will collect or deliver the parcel.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 3. Package & Pricing */}
       <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          3. Package & Fees
+          {isStaff ? '2. Sending Fee' : '3. Package & Fees'}
         </h3>
 
-        <fieldset className="space-y-2">
-          <legend className="text-xs font-medium">Type of Package *</legend>
-          <div className="grid grid-cols-2 gap-2">
-            {(!showAllPackageTypes
-              ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
-              : PACKAGE_TYPES
-            ).map(type => (
-              <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
-                <Checkbox
-                  checked={packageTypes.includes(type)}
-                  onCheckedChange={checked => setPackageTypes(current => checked === true
-                    ? [...current, type]
-                    : current.filter(value => value !== type))}
+        {!isStaff && (
+          <>
+            <fieldset className="space-y-2">
+              <legend className="text-xs font-medium">Type of Package *</legend>
+              <div className="grid grid-cols-2 gap-2">
+                {(!showAllPackageTypes
+                  ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
+                  : PACKAGE_TYPES
+                ).map(type => (
+                  <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
+                    <Checkbox
+                      checked={packageTypes.includes(type)}
+                      onCheckedChange={checked => setPackageTypes(current => checked === true
+                        ? [...current, type]
+                        : current.filter(value => value !== type))}
+                    />
+                    <span className="break-words">{type}</span>
+                  </label>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAllPackageTypes(prev => !prev)}
+                className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
+              >
+                <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
+                {showAllPackageTypes ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </button>
+            </fieldset>
+
+            {packageTypes.includes('Other') && (
+              <div className="space-y-2">
+                <Label htmlFor="custom_type" className="text-xs font-medium">
+                  Describe Package Type
+                </Label>
+                <Input
+                  id="custom_type"
+                  placeholder="e.g. Mummy Jeans, Curtains"
+                  value={customPackageType}
+                  onChange={(e) => setCustomPackageType(e.target.value)}
+                  className="h-10 text-sm"
                 />
-                <span className="break-words">{type}</span>
-              </label>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowAllPackageTypes(prev => !prev)}
-            className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
-          >
-            <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
-            {showAllPackageTypes ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
+              </div>
             )}
-          </button>
-        </fieldset>
 
-        {packageTypes.includes('Other') && (
-          <div className="space-y-2">
-            <Label htmlFor="custom_type" className="text-xs font-medium">
-              Describe Package Type
-            </Label>
-            <Input
-              id="custom_type"
-              placeholder="e.g. Mummy Jeans, Curtains"
-              value={customPackageType}
-              onChange={(e) => setCustomPackageType(e.target.value)}
-              className="h-10 text-sm"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="package_description" className="text-xs font-medium">
+                Short Description (optional)
+              </Label>
+              <Textarea
+                id="package_description"
+                placeholder="e.g. Mummy jeans, Size 42, blue in colour"
+                value={packageDescription}
+                onChange={e => setPackageDescription(e.target.value)}
+                rows={2}
+                className="min-h-20 text-sm"
+              />
+            </div>
+          </>
         )}
-
-        <div className="space-y-2">
-          <Label htmlFor="package_description" className="text-xs font-medium">
-            Short Description (optional)
-          </Label>
-          <Textarea
-            id="package_description"
-            placeholder="e.g. Mummy jeans, Size 42, blue in colour"
-            value={packageDescription}
-            onChange={e => setPackageDescription(e.target.value)}
-            rows={2}
-            className="min-h-20 text-sm"
-          />
-        </div>
 
         <div className="space-y-2">
           <Label htmlFor="sending_fee" className="text-xs font-medium">
@@ -448,7 +457,7 @@ export function DispatchForm({
               min="0"
               step="10"
               inputMode="numeric"
-              placeholder={sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE)}
+              placeholder={isStaff ? String(DEFAULT_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
               value={sendingFee ?? ''}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -458,9 +467,11 @@ export function DispatchForm({
             />
           )}
           <p className="text-[11px] text-muted-foreground">
-            {payOnDelivery
-              ? 'PSV-Driver sending fee is paid to the driver on delivery.'
-              : 'Filled in from the sending method you chose.'}
+            {isStaff
+              ? 'Default sending fee is KES 150. You can adjust if different.'
+              : (payOnDelivery
+                ? 'PSV-Driver sending fee is paid to the driver on delivery.'
+                : 'Filled in from the sending method you chose.')}
           </p>
         </div>
 
