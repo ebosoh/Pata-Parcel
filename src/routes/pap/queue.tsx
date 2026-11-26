@@ -401,6 +401,7 @@ function PapQueuePage() {
                   </DialogTitle>
                 </DialogHeader>
                 <DispatchForm
+                  mode="staff"
                   destinations={destinations}
                   onSubmit={createParcel}
                   onSuccess={() => {

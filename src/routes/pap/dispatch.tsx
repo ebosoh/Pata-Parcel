@@ -327,6 +327,7 @@ export function PapDispatchPage() {
                   </DialogTitle>
                 </DialogHeader>
                 <DispatchForm
+                  mode="staff"
                   destinations={destinations}
                   onSubmit={createParcel}
                   onSuccess={() => {

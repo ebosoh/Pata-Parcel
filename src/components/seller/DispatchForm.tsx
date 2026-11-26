@@ -26,8 +26,10 @@ interface DispatchFormProps {
   onSubmit: (input: CreateParcelInput) => Promise<{ data: any; error: any }>;
   onSuccess?: () => void;
   onCancel?: () => void;
-  /** 'buyer' = public order-link form: goods amount and payment code required. */
-  mode?: 'seller' | 'buyer';
+  /** 'buyer' = public order-link form; 'staff' = staff dispatch without goods payment */
+  mode?: 'seller' | 'buyer' | 'staff';
+  /** Explicitly toggle goods payment section visibility */
+  hideGoodsPayment?: boolean;
 }
 
 export function DispatchForm({
@@ -36,8 +38,10 @@ export function DispatchForm({
   onSuccess,
   onCancel,
   mode = 'seller',
+  hideGoodsPayment = false,
 }: DispatchFormProps) {
   const isBuyer = mode === 'buyer';
+  const showGoodsPayment = !hideGoodsPayment && mode !== 'staff';
   // Form State
   const [buyerName, setBuyerName] = useState('');
   const [buyerTiktok, setBuyerTiktok] = useState('');
@@ -155,12 +159,12 @@ export function DispatchForm({
       return;
     }
 
-    const amount = goodsAmount.trim() === '' ? null : Number(goodsAmount);
+    const amount = showGoodsPayment && goodsAmount.trim() !== '' ? Number(goodsAmount) : null;
     if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
       setFormError('Please enter a valid amount for the goods');
       return;
     }
-    const code = paymentCode.trim();
+    const code = showGoodsPayment ? paymentCode.trim() : '';
     if (isBuyer && amount === null) {
       setFormError('Please enter the amount you paid for the goods');
       return;
@@ -480,43 +484,45 @@ export function DispatchForm({
       </div>
 
       {/* 4. Goods Payment */}
-      <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          4. Goods Payment
-        </h3>
-        <div className="space-y-2">
-          <Label htmlFor="goods_amount" className="text-xs font-medium">
-            Total Amount (goods) {isBuyer ? '*' : '(optional)'}
-          </Label>
-          <Input
-            id="goods_amount"
-            type="number"
-            min="0"
-            inputMode="numeric"
-            placeholder="e.g. 2500"
-            value={goodsAmount}
-            onChange={(e) => setGoodsAmount(e.target.value)}
-            required={isBuyer}
-            className="h-10 text-sm"
-          />
-          <p className="text-[11px] text-muted-foreground">Amount paid for the goods, not including sending fees.</p>
+      {showGoodsPayment && (
+        <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+            4. Goods Payment
+          </h3>
+          <div className="space-y-2">
+            <Label htmlFor="goods_amount" className="text-xs font-medium">
+              Total Amount (goods) {isBuyer ? '*' : '(optional)'}
+            </Label>
+            <Input
+              id="goods_amount"
+              type="number"
+              min="0"
+              inputMode="numeric"
+              placeholder="e.g. 2500"
+              value={goodsAmount}
+              onChange={(e) => setGoodsAmount(e.target.value)}
+              required={isBuyer}
+              className="h-10 text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground">Amount paid for the goods, not including sending fees.</p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="payment_code" className="text-xs font-medium">
+              M-Pesa / Airtel Money Code {isBuyer ? '*' : '(optional)'}
+            </Label>
+            <Input
+              id="payment_code"
+              placeholder="e.g. SKL4ABC12D"
+              value={paymentCode}
+              onChange={(e) => setPaymentCode(e.target.value.toUpperCase())}
+              required={isBuyer}
+              maxLength={20}
+              autoCapitalize="characters"
+              className="h-10 font-mono text-sm uppercase"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="payment_code" className="text-xs font-medium">
-            M-Pesa / Airtel Money Code {isBuyer ? '*' : '(optional)'}
-          </Label>
-          <Input
-            id="payment_code"
-            placeholder="e.g. SKL4ABC12D"
-            value={paymentCode}
-            onChange={(e) => setPaymentCode(e.target.value.toUpperCase())}
-            required={isBuyer}
-            maxLength={20}
-            autoCapitalize="characters"
-            className="h-10 font-mono text-sm uppercase"
-          />
-        </div>
-      </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex gap-2 pt-2">
