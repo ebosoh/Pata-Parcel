@@ -566,23 +566,6 @@ export function PapDispatchPage() {
                         <td className="px-3 py-2.5">
                           <div className="flex items-center justify-end gap-1.5">
                             <AdminParcelControls parcel={parcel} onChanged={refetch} />
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedParcel(parcel);
-                                if (parcel.sending_method === 'psv') setDispatchType('psv_official');
-                                else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
-                                else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
-                                else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
-                                else setDispatchType('pata_parcel');
-                              }}
-                              className="h-7 text-[11px] font-semibold border-primary/30 text-primary hover:bg-primary/10 cursor-pointer px-2"
-                              title="Dispatch to courier/driver"
-                            >
-                              <Send className="h-3 w-3 mr-1" />
-                              Dispatch
-                            </Button>
                             {!isDelivered ? (
                               <Button
                                 size="sm"
@@ -696,22 +679,6 @@ export function PapDispatchPage() {
                           WhatsApp
                         </Button>
                       </a>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedParcel(parcel);
-                          if (parcel.sending_method === 'psv') setDispatchType('psv_official');
-                          else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
-                          else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
-                          else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
-                          else setDispatchType('pata_parcel');
-                        }}
-                        className="h-8 font-bold text-xs border-primary/30 text-primary hover:bg-primary/10 flex items-center gap-1.5"
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                        Dispatch
-                      </Button>
                       {!isDelivered ? (
                         <Button
                           size="sm"
