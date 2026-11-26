@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Open
-- Staff Share Receipt: send the receipt to the buyer through WhatsApp and only mark it shared after a confirmed send.
+- Staff Share Receipt: open WhatsApp with the buyer and receipt ready so staff presses Send; make the Active Transit button share directly.
 
 ## Done
 - Email confirmation: verified real confirmed-account return and reload on phone and desktop; signup-response tests retain first-time verification without repeat prompts for confirmed accounts.
