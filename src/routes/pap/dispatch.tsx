@@ -49,8 +49,8 @@ import {
 import { formatPhoneDisplay } from '@/lib/constants';
 
 export const Route = createFileRoute('/pap/dispatch')({
-  validateSearch: (s: Record<string, unknown>): { tab?: 'transit' | 'sorting' | undefined } => ({
-    tab: s['tab'] === 'transit' || s['tab'] === 'sorting' ? s['tab'] : undefined,
+  validateSearch: (s: Record<string, unknown>): { tab?: 'transit' | 'sorting' | 'internal' | undefined } => ({
+    tab: s['tab'] === 'transit' || s['tab'] === 'sorting' || s['tab'] === 'internal' ? s['tab'] : undefined,
   }),
   head: () => ({
     meta: [
@@ -66,6 +66,16 @@ export const Route = createFileRoute('/pap/dispatch')({
   }),
   component: PapDispatchPage,
 });
+
+function getStayInfo(createdAt: string) {
+  const diffMs = Date.now() - new Date(createdAt).getTime();
+  const totalHours = diffMs / (1000 * 60 * 60);
+  const days = Math.floor(totalHours / 24);
+  const hours = Math.floor(totalHours % 24);
+  const stayLabel = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+  const totalDue = days >= 3 ? 100 : 50;
+  return { stayLabel, totalDue, days };
+}
 
 export function PapDispatchPage() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
@@ -88,8 +98,8 @@ export function PapDispatchPage() {
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
-  // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit)
-  const [activeTab, setActiveTab] = useState<'sorting' | 'transit'>('sorting');
+  // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit) vs 'internal' (Internal Pick-up)
+  const [activeTab, setActiveTab] = useState<'sorting' | 'transit' | 'internal'>('sorting');
   const { tab: tabParam } = Route.useSearch();
   useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -165,14 +175,25 @@ export function PapDispatchPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // Sorting parcels (Ready to Dispatch)
+  // Internal Pick-up parcels (staff-created dispatches or hub pick-ups not yet delivered)
+  const internalParcels = useMemo(() => {
+    return parcels.filter(
+      p => ((p as any).order_source === 'pap_staff' || p.sending_method === 'pata_parcel') && p.tracking_status !== 'delivered'
+    );
+  }, [parcels]);
+
+  // Sorting parcels (Ready to Dispatch - external sellers)
   const sortingParcels = useMemo(() => {
-    return parcels.filter(p => p.tracking_status === 'sorting');
+    return parcels.filter(
+      p => p.tracking_status === 'sorting' && (p as any).order_source !== 'pap_staff' && p.sending_method !== 'pata_parcel'
+    );
   }, [parcels]);
 
   // On Transit parcels
   const transitParcels = useMemo(() => {
-    return parcels.filter(p => p.tracking_status === 'on_transit');
+    return parcels.filter(
+      p => p.tracking_status === 'on_transit' && (p as any).order_source !== 'pap_staff' && p.sending_method !== 'pata_parcel'
+    );
   }, [parcels]);
 
   // Receipt already shared for the parcel open in the receipt modal, if any
@@ -187,17 +208,18 @@ export function PapDispatchPage() {
   }, [selectedParcel]);
 
   const displayList = useMemo(() => {
-    const list = activeTab === 'sorting' ? sortingParcels : transitParcels;
+    const list = activeTab === 'sorting' ? sortingParcels : activeTab === 'transit' ? transitParcels : internalParcels;
     if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
     return list.filter(p => {
       const matchBuyer = p.buyer_name?.toLowerCase().includes(q);
+      const matchBuyerPhone = p.buyer_phone?.includes(q);
       const matchDest = p.destination?.toLowerCase().includes(q);
       const matchRef = p.reference_number?.toLowerCase().includes(q);
       const matchSeller = p.seller?.business_name?.toLowerCase().includes(q);
-      return matchBuyer || matchDest || matchRef || matchSeller;
+      return matchBuyer || matchBuyerPhone || matchDest || matchRef || matchSeller;
     });
-  }, [activeTab, sortingParcels, transitParcels, searchQuery]);
+  }, [activeTab, sortingParcels, transitParcels, internalParcels, searchQuery]);
 
   // Handle Dispatch submission
   const handleConfirmDispatch = async (e: React.FormEvent) => {
@@ -368,28 +390,39 @@ export function PapDispatchPage() {
         )}
 
         {/* Tab Switcher */}
-        <div className="grid grid-cols-2 rounded-xl bg-muted p-1 border border-border/60">
+        <div className="grid grid-cols-3 rounded-xl bg-muted p-1 border border-border/60">
           <button
             onClick={() => setActiveTab('sorting')}
-            className={`py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+            className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'sorting'
                 ? 'bg-background text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Clock className="h-3.5 w-3.5" />
-            Ready to Dispatch ({sortingParcels.length})
+            <Clock className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Ready to Dispatch ({sortingParcels.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('transit')}
-            className={`py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+            className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'transit'
                 ? 'bg-background text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Truck className="h-3.5 w-3.5" />
-            Active Transit ({transitParcels.length})
+            <Truck className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Active Transit ({transitParcels.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('internal')}
+            className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              activeTab === 'internal'
+                ? 'bg-background text-primary shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Package className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Internal Pick-up ({internalParcels.length})</span>
           </button>
         </div>
 
@@ -458,7 +491,7 @@ export function PapDispatchPage() {
                   Receive parcels from the Incoming Queue first to start sorting.
                 </p>
               </>
-            ) : (
+            ) : activeTab === 'transit' ? (
               <>
                 <Truck className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
                 <h2 className="font-semibold text-foreground text-sm">No parcels on transit</h2>
@@ -466,7 +499,111 @@ export function PapDispatchPage() {
                   Parcels dispatched to SACCOs or couriers will appear here until delivered.
                 </p>
               </>
+            ) : (
+              <>
+                <Package className="h-12 w-12 mx-auto text-muted-foreground/60 mb-3" />
+                <h2 className="font-semibold text-foreground text-sm">No internal pick-ups pending</h2>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                  Staff-created dispatches and hub pick-ups will appear here for management.
+                </p>
+              </>
             )}
+          </div>
+        ) : activeTab === 'internal' && viewMode === 'table' ? (
+          <div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-xs">
+            <div className="bg-muted/40 px-3 py-2 border-b border-border flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-2">
+                <Package className="h-3.5 w-3.5 text-primary" />
+                <span>Internal Pick-up — {displayList.length} parcel{displayList.length === 1 ? '' : 's'}</span>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-muted/20 border-b border-border text-muted-foreground">
+                    <th className="text-left px-3 py-2 font-semibold">Ref #</th>
+                    <th className="text-left px-3 py-2 font-semibold">Buyer</th>
+                    <th className="text-left px-3 py-2 font-semibold">Date Created</th>
+                    <th className="text-left px-3 py-2 font-semibold">Stay</th>
+                    <th className="text-left px-3 py-2 font-semibold">Total Due</th>
+                    <th className="text-right px-3 py-2 font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {displayList.map((parcel) => {
+                    const { stayLabel, totalDue, days } = getStayInfo(parcel.created_at);
+                    const dateCreated = new Date(parcel.created_at).toLocaleString('en-KE', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    });
+                    const isDelivered = deliveredIds[parcel.id] || parcel.tracking_status === 'delivered';
+                    return (
+                      <tr key={parcel.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-3 py-2.5">
+                          <span className="font-mono font-bold text-primary text-[11px]">
+                            {parcel.reference_number || 'PAP-PENDING'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <p className="font-semibold text-foreground truncate max-w-[140px]">{parcel.buyer_name}</p>
+                          <p className="text-muted-foreground text-[10px]">{formatPhoneDisplay(parcel.buyer_phone)}</p>
+                        </td>
+                        <td className="px-3 py-2.5 text-muted-foreground whitespace-nowrap">{dateCreated}</td>
+                        <td className="px-3 py-2.5">
+                          <Badge className={`font-semibold text-[10px] ${days >= 3 ? 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'}`}>
+                            {stayLabel}
+                          </Badge>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className={`font-bold text-sm ${days >= 3 ? 'text-red-600' : 'text-primary'}`}>
+                            KES {totalDue}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <AdminParcelControls parcel={parcel} onChanged={refetch} />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedParcel(parcel);
+                                if (parcel.sending_method === 'psv') setDispatchType('psv_official');
+                                else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
+                                else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
+                                else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
+                                else setDispatchType('pata_parcel');
+                              }}
+                              className="h-7 text-[11px] font-semibold border-primary/30 text-primary hover:bg-primary/10 cursor-pointer px-2"
+                              title="Dispatch to courier/driver"
+                            >
+                              <Send className="h-3 w-3 mr-1" />
+                              Dispatch
+                            </Button>
+                            {!isDelivered ? (
+                              <Button
+                                size="sm"
+                                onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
+                                disabled={submitting}
+                                className="h-7 text-[11px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer px-2"
+                                title="Customer picked up parcel"
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Complete Pick-up
+                              </Button>
+                            ) : (
+                              <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">Delivered</Badge>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : viewMode === 'table' ? (
           <PapDispatchTable
@@ -489,15 +626,25 @@ export function PapDispatchPage() {
           />
         ) : (
           <div className="space-y-3">
-            {displayList.map((parcel) => (
+            {displayList.map((parcel) => {
+              const stayInfo = activeTab === 'internal' ? getStayInfo(parcel.created_at) : null;
+              const isDelivered = deliveredIds[parcel.id] || parcel.tracking_status === 'delivered';
+              return (
               <Card key={parcel.id} className="p-4 border border-border/80 bg-card space-y-3 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs font-bold text-primary">
                     {parcel.reference_number || 'PAP-PARCEL'}
                   </span>
-                  <Badge variant="outline" className="text-xs capitalize font-semibold">
-                    {parcel.sending_method.replace(/_/g, ' ')}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    {stayInfo && (
+                      <Badge className={`font-semibold text-[10px] ${stayInfo.days >= 3 ? 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300'}`}>
+                        Stay: {stayInfo.stayLabel}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs capitalize font-semibold">
+                      {parcel.sending_method.replace(/_/g, ' ')}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -515,9 +662,15 @@ export function PapDispatchPage() {
                     {parcel.pick_point && (
                       <p className="text-[11px] font-medium text-foreground">Pick-point: {parcel.pick_point}</p>
                     )}
-                    <p className="text-[11px] text-muted-foreground">
-                      Seller: {parcel.seller?.business_name || 'Online Seller'}
-                    </p>
+                    {stayInfo ? (
+                      <p className={`text-[11px] font-bold ${stayInfo.days >= 3 ? 'text-red-600' : 'text-primary'}`}>
+                        Total Due: KES {stayInfo.totalDue}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Seller: {parcel.seller?.business_name || 'Online Seller'}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -525,7 +678,54 @@ export function PapDispatchPage() {
 
                 <div className="pt-1 flex flex-wrap justify-end gap-2 border-t border-border/50">
                   <AdminParcelControls parcel={parcel} onChanged={refetch} />
-                  {activeTab === 'sorting' ? (
+                  {activeTab === 'internal' ? (
+                    <>
+                      <a
+                        href={`https://wa.me/${(() => { const c = parcel.buyer_phone.replace(/\D/g, ''); return c.startsWith('0') ? `254${c.slice(1)}` : c.startsWith('254') ? c : `254${c}`; })()}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Chat with buyer on WhatsApp"
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 font-bold text-xs flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          WhatsApp
+                        </Button>
+                      </a>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedParcel(parcel);
+                          if (parcel.sending_method === 'psv') setDispatchType('psv_official');
+                          else if (parcel.sending_method === 'psv_driver') setDispatchType('psv_unofficial');
+                          else if (parcel.sending_method === 'pickup_mtaani') setDispatchType('pickup_mtaani');
+                          else if (parcel.sending_method === 'door_to_door') setDispatchType('door_to_door');
+                          else setDispatchType('pata_parcel');
+                        }}
+                        className="h-8 font-bold text-xs border-primary/30 text-primary hover:bg-primary/10 flex items-center gap-1.5"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        Dispatch
+                      </Button>
+                      {!isDelivered ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkDelivered(parcel.id, parcel.reference_number)}
+                          disabled={submitting}
+                          className="h-8 font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Complete Pick-up
+                        </Button>
+                      ) : (
+                        <Badge className="bg-emerald-100 text-emerald-800 text-xs">Delivered</Badge>
+                      )}
+                    </>
+                  ) : activeTab === 'sorting' ? (
                     <Button
                       size="sm"
                       onClick={() => {
@@ -597,7 +797,8 @@ export function PapDispatchPage() {
                   )}
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 

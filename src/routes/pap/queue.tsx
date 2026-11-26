@@ -172,9 +172,9 @@ function PapQueuePage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // Incoming parcels are those in 'dispatched_to_pap' stage
+  // Incoming parcels are those in 'dispatched_to_pap' stage from external sellers
   const incomingParcels = useMemo(() => {
-    return parcels.filter(p => p.tracking_status === 'dispatched_to_pap');
+    return parcels.filter(p => p.tracking_status === 'dispatched_to_pap' && (p as any).order_source !== 'pap_staff');
   }, [parcels]);
 
   // Unique list of sellers with incoming dispatches
@@ -369,7 +369,7 @@ function PapQueuePage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {incomingParcels.length} parcel{incomingParcels.length === 1 ? '' : 's'} waiting to be received across {sellerList.length} seller account{sellerList.length === 1 ? '' : 's'}.
+              {incomingParcels.length} parcel{incomingParcels.length === 1 ? '' : 's'} waiting · {sellerList.length} seller{sellerList.length === 1 ? '' : 's'}.
             </p>
           </div>
 

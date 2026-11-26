@@ -366,6 +366,16 @@ export function usePapOperations(staffUserId?: string | null) {
         console.warn('Could not auto-verify dispatch:', verifyErr);
       }
 
+      // Tag as pap_staff so it can be distinguished from seller dispatches in the queue
+      try {
+        await supabase
+          .from('parcels')
+          .update({ order_source: 'pap_staff' } as any)
+          .eq('id', parcel.id);
+      } catch (tagErr) {
+        console.warn('Could not tag order_source as pap_staff:', tagErr);
+      }
+
       try {
         await supabase
           .from('parcels')

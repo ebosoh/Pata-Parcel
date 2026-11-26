@@ -20,6 +20,7 @@ import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
 const DEFAULT_SENDING_FEE = 150;
+const STAFF_SENDING_FEE = 50;
 
 interface DispatchFormProps {
   destinations: Destination[];
@@ -55,7 +56,7 @@ export function DispatchForm({
   const [packageTypes, setPackageTypes] = useState<string[]>([PACKAGE_TYPES[0]]);
   const [packageDescription, setPackageDescription] = useState('');
   const [customPackageType, setCustomPackageType] = useState('');
-  const [sendingFee, setSendingFee] = useState<number | null>(null);
+  const [sendingFee, setSendingFee] = useState<number | null>(isStaff ? STAFF_SENDING_FEE : null);
   const [goodsAmount, setGoodsAmount] = useState('');
   const [paymentCode, setPaymentCode] = useState('');
   const [showAllPackageTypes, setShowAllPackageTypes] = useState(false);
@@ -97,6 +98,7 @@ export function DispatchForm({
   const suggestedFee = effectiveMethod ? suggestedSendingFee(effectiveMethod, psvSacco) : null;
   const payOnDelivery = suggestedFee === 'on_delivery';
   useEffect(() => {
+    if (isStaff) return; // staff fee is fixed at STAFF_SENDING_FEE, don't overwrite
     setSendingFee(typeof suggestedFee === 'number' ? suggestedFee : null);
   }, [suggestedFee]);
 
@@ -245,6 +247,7 @@ export function DispatchForm({
           />
         </div>
 
+        {!isStaff && (
         <div className="space-y-2">
           <Label htmlFor="buyer_tiktok" className="text-xs font-medium">
             {isBuyer ? 'TikTok Username / Handle *' : 'Buyer TikTok Username / Handle'} {!isBuyer && <span className="text-[11px] font-normal text-muted-foreground">(Optional)</span>}
@@ -268,6 +271,7 @@ export function DispatchForm({
               : 'Helps your seller identify you if multiple buyers share the same name.'}
           </p>
         </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="buyer_phone" className="text-xs font-medium">
@@ -457,7 +461,7 @@ export function DispatchForm({
               min="0"
               step="10"
               inputMode="numeric"
-              placeholder={isStaff ? String(DEFAULT_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
+              placeholder={isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
               value={sendingFee ?? ''}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -468,7 +472,7 @@ export function DispatchForm({
           )}
           <p className="text-[11px] text-muted-foreground">
             {isStaff
-              ? 'Default sending fee is KES 150. You can adjust if different.'
+              ? 'Default sending fee is KES 50. You can adjust if different.'
               : (payOnDelivery
                 ? 'PSV-Driver sending fee is paid to the driver on delivery.'
                 : 'Filled in from the sending method you chose.')}

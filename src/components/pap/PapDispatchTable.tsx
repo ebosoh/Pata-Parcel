@@ -29,7 +29,7 @@ import type { ParcelWithSeller } from '@/hooks/usePapOperations';
 
 interface PapDispatchTableProps {
   parcels: ParcelWithSeller[];
-  activeTab: 'sorting' | 'transit';
+  activeTab: 'sorting' | 'transit' | 'internal';
   receiptsByParcel: Record<string, any>;
   deliveredIds: Record<string, boolean>;
   submitting: boolean;
