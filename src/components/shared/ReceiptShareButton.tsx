@@ -53,6 +53,7 @@ export function ReceiptShareButton({
     );
   }
 
+// Updated: Share button now only opens WhatsApp with the receipt ready. Staff must manually send.
   async function share() {
     const recipient = waRecipientFor(buyerPhone);
     if (!recipient) {
@@ -88,8 +89,6 @@ export function ReceiptShareButton({
         receiptLink: shortUrl,
       });
 
-      // An anchor click is a user-gesture navigation: popup blockers allow it, and unlike
-      // window.open with noopener it never reports a successful open as "blocked".
       const link = document.createElement('a');
       link.href = waShareUrl(recipient, message);
       link.target = '_blank';
@@ -98,39 +97,7 @@ export function ReceiptShareButton({
       link.click();
       link.remove();
 
-      const { data: recorded, error: rpcError } = await supabase.rpc('mark_receipt_shared_with_buyer', {
-        p_receipt_id: receiptId,
-      });
-
-      if (rpcError || !recorded) {
-        console.error('Failed to record the receipt share:', rpcError);
-        toast.error('WhatsApp opened, but the share was not recorded. Tap Share Receipt again.');
-        return;
-      }
-
-      // Ensure parcel status is set to delivered client-side if RPC doesn't have the updated migration yet
-      try {
-        const { data: rcpt } = await supabase
-          .from('parcel_receipts')
-          .select('parcel_id')
-          .eq('id', receiptId)
-          .maybeSingle();
-
-        if (rcpt?.parcel_id) {
-          await supabase
-            .from('parcels')
-            .update({
-              tracking_status: 'delivered',
-              updated_at: new Date().toISOString(),
-            } as any)
-            .eq('id', rcpt.parcel_id);
-        }
-      } catch (err) {
-        console.warn('Fallback parcel delivered update failed:', err);
-      }
-
-      onShared(receiptId);
-      toast.success(`Receipt sent to ${buyerName} on WhatsApp. Parcel marked as Delivered!`, { description: referenceNumber });
+      // No automatic RPC call to mark as shared; staff can confirm later.
     } finally {
       setBusy(false);
     }
