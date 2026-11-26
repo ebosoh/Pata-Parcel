@@ -57,6 +57,8 @@ export function ParcelCard({ parcel, onChanged }: ParcelCardProps) {
   const awaiting = parcel.tracking_status === 'awaiting_verification';
   const goodsPaid = parcel.goods_paid === true;
   const feeOnDelivery = parcel.payment_status !== 'paid';
+  const showGoodsPaid = !awaiting && goodsPaid;
+  const showFeeOnDelivery = awaiting || feeOnDelivery;
   const isPsvDriver = parcel.sending_method === 'psv_driver';
 
   const setPayment = async (nextGoodsPaid: boolean, nextFeeStatus: 'paid' | 'pay_on_delivery') => {
@@ -187,24 +189,24 @@ export function ParcelCard({ parcel, onChanged }: ParcelCardProps) {
             <span className="mb-1 block text-[10px] text-muted-foreground">Goods Status{parcel.goods_amount != null ? ` · KES ${parcel.goods_amount}` : ''}</span>
             <button
               type="button"
-              disabled={busy}
+              disabled={busy || awaiting}
               onClick={() => setPayment(!goodsPaid, feeOnDelivery ? 'pay_on_delivery' : 'paid')}
-              className={`h-9 w-full rounded-lg border font-bold ${goodsPaid ? PAID_PILL : NOT_PAID_PILL}`}
-              title="Tap to change"
+              className={`h-9 w-full rounded-lg border font-bold ${showGoodsPaid ? PAID_PILL : NOT_PAID_PILL}`}
+              title={awaiting ? 'Verify payment and dispatch to update this status' : 'Tap to change'}
             >
-              {goodsPaid ? 'Paid' : 'Not Paid'}
+              {showGoodsPaid ? 'Paid' : 'Not Paid'}
             </button>
           </div>
           <div>
             <span className="mb-1 block text-[10px] text-muted-foreground">Sending Fee Status{!feeOnDelivery && !isPsvDriver ? ` · KES ${parcel.total_sending_fee}` : ''}</span>
             <button
               type="button"
-              disabled={busy || isPsvDriver}
+              disabled={busy || awaiting || isPsvDriver}
               onClick={() => setPayment(goodsPaid, feeOnDelivery ? 'paid' : 'pay_on_delivery')}
-              className={`h-9 w-full rounded-lg border font-bold ${feeOnDelivery ? ON_DELIVERY_PILL : PAID_PILL}`}
-              title={isPsvDriver ? 'PSV-Driver is always paid on delivery' : 'Tap to change'}
+              className={`h-9 w-full rounded-lg border font-bold ${awaiting ? NOT_PAID_PILL : feeOnDelivery ? ON_DELIVERY_PILL : PAID_PILL}`}
+              title={awaiting ? 'Verify payment and dispatch to update this status' : isPsvDriver ? 'PSV-Driver is always paid on delivery' : 'Tap to change'}
             >
-              {feeOnDelivery ? 'On Delivery' : 'Paid'}
+              {showFeeOnDelivery ? 'On Delivery' : 'Paid'}
             </button>
           </div>
         </div>

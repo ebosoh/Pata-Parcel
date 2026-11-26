@@ -168,6 +168,8 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
               const awaiting = parcel.tracking_status === 'awaiting_verification';
               const goodsPaid = parcel.goods_paid === true;
               const feePaid = parcel.payment_status === 'paid';
+              const showGoodsPaid = !awaiting && goodsPaid;
+              const showFeePaid = !awaiting && feePaid;
               const isPsvDriver = parcel.sending_method === 'psv_driver';
 
               const cleanPhone = parcel.buyer_phone.replace(/\D/g, '');
@@ -251,12 +253,12 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
                           KES {goodsVal.toLocaleString()}
                         </span>
                         <div className="flex items-center gap-1 text-[10px]">
-                          <span className={goodsPaid ? 'text-emerald-600 font-medium' : 'text-amber-600'}>
-                            {goodsPaid ? 'Goods Paid' : 'Goods Unpaid'}
+                          <span className={showGoodsPaid ? 'text-emerald-600 font-medium' : 'text-red-600'}>
+                            {showGoodsPaid ? 'Goods Paid' : 'Goods Not Paid'}
                           </span>
                           <span>•</span>
-                          <span className={feePaid ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}>
-                            {feePaid ? 'Fee Paid' : isPsvDriver ? 'Fee COD' : 'Fee COD'}
+                          <span className={awaiting ? 'text-red-600 font-medium' : showFeePaid ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}>
+                            {showFeePaid ? 'Fee Paid' : 'Fee On Delivery'}
                           </span>
                         </div>
                       </div>
@@ -289,7 +291,7 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
                             size="sm"
                             disabled={busyId === parcel.id}
                             onClick={() => setConfirmParcel(parcel)}
-                            className="h-7 px-2 font-bold text-[11px] bg-primary text-primary-foreground hover:bg-primary/90"
+                            className="h-7 px-2 font-bold text-[11px] bg-red-600 text-white hover:bg-red-700"
                           >
                             <Send className="h-3 w-3 mr-1" />
                             Dispatch
@@ -350,21 +352,23 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
                               <div className="mt-2 flex flex-wrap gap-1.5">
                                 <Button
                                   size="sm"
-                                  variant={goodsPaid ? 'outline' : 'default'}
-                                  disabled={busyId === parcel.id}
+                                  variant={showGoodsPaid ? 'outline' : 'default'}
+                                  disabled={awaiting || busyId === parcel.id}
                                   onClick={() => handleSetPayment(parcel, !goodsPaid, feePaid ? 'paid' : 'pay_on_delivery')}
-                                  className="h-6 px-2 text-[10px] font-semibold"
+                                  className={`h-6 px-2 text-[10px] font-semibold ${awaiting ? 'bg-red-600 text-white hover:bg-red-600' : ''}`}
+                                  title={awaiting ? 'Verify payment and dispatch to update this status' : undefined}
                                 >
-                                  {goodsPaid ? 'Mark Goods Unpaid' : 'Mark Goods Paid'}
+                                  {showGoodsPaid ? 'Mark Goods Unpaid' : 'Mark Goods Paid'}
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant={feePaid ? 'outline' : 'secondary'}
-                                  disabled={busyId === parcel.id}
+                                  variant={showFeePaid ? 'outline' : 'secondary'}
+                                  disabled={awaiting || busyId === parcel.id}
                                   onClick={() => handleSetPayment(parcel, goodsPaid, feePaid ? 'pay_on_delivery' : 'paid')}
-                                  className="h-6 px-2 text-[10px] font-semibold"
+                                  className={`h-6 px-2 text-[10px] font-semibold ${awaiting ? 'bg-red-600 text-white hover:bg-red-600' : ''}`}
+                                  title={awaiting ? 'Verify payment and dispatch to update this status' : undefined}
                                 >
-                                  {feePaid ? 'Fee COD' : 'Fee Paid'}
+                                  {showFeePaid ? 'Fee COD' : 'Fee Paid'}
                                 </Button>
                               </div>
                             </div>
@@ -418,9 +422,9 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
               <AlertDialogAction
                 disabled={busyId === confirmParcel.id}
                 onClick={() => handleVerifyAndDispatch(confirmParcel)}
-                className="bg-primary text-primary-foreground font-bold hover:bg-primary/90"
+                className="bg-red-600 text-white font-bold hover:bg-red-700"
               >
-                Confirm Dispatch
+                Verified — Dispatch
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
