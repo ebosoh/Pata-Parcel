@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { serializePackageTypes, inferPackageTypesFromDescription } from '@/lib/packageDetails';
+import { normalizeBuyerPhone } from '@/lib/complaints';
 import { 
   PACKAGE_TYPES, 
   DELIVERY_SACCO_OPTIONS,
@@ -21,6 +22,56 @@ import { trackSellerCreateDispatch } from '@/lib/analytics';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
 const DEFAULT_SENDING_FEE = 150;
+
+const BUYER_PROFILE_KEY = 'pap_buyer_profile';
+const BUYER_PROFILES_BY_PHONE_KEY = 'pap_buyer_profiles_by_phone';
+
+interface SavedBuyerProfile {
+  name: string;
+  phone: string;
+  town: string;
+  deliverySacco?: string;
+  pickPoint?: string;
+}
+
+function getSavedBuyerByPhone(phone: string): SavedBuyerProfile | null {
+  const normalized = normalizeBuyerPhone(phone);
+  if (!normalized) return null;
+  try {
+    const rawMap = localStorage.getItem(BUYER_PROFILES_BY_PHONE_KEY);
+    if (rawMap) {
+      const map = JSON.parse(rawMap) as Record<string, SavedBuyerProfile>;
+      if (map && map[normalized]) return map[normalized];
+    }
+    const rawSingle = localStorage.getItem(BUYER_PROFILE_KEY);
+    if (rawSingle) {
+      const single = JSON.parse(rawSingle) as SavedBuyerProfile;
+      if (single?.phone && normalizeBuyerPhone(single.phone) === normalized) {
+        return single;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to read saved buyer profile from localStorage', e);
+  }
+  return null;
+}
+
+function saveBuyerProfile(profile: SavedBuyerProfile, saveAsDefaultBuyer: boolean): void {
+  const normalized = normalizeBuyerPhone(profile.phone);
+  try {
+    if (normalized) {
+      const rawMap = localStorage.getItem(BUYER_PROFILES_BY_PHONE_KEY);
+      const map = rawMap ? (JSON.parse(rawMap) as Record<string, SavedBuyerProfile>) : {};
+      map[normalized] = profile;
+      localStorage.setItem(BUYER_PROFILES_BY_PHONE_KEY, JSON.stringify(map));
+    }
+    if (saveAsDefaultBuyer) {
+      localStorage.setItem(BUYER_PROFILE_KEY, JSON.stringify(profile));
+    }
+  } catch (e) {
+    console.error('Failed to save buyer profile to localStorage', e);
+  }
+}
 
 interface DispatchFormProps {
   destinations: Destination[];
@@ -106,16 +157,45 @@ export function DispatchForm({
       setSendingFee(null);
     }
   }, [suggestedFee, isStaff]);
+  const lastAutoFilledPhoneRef = useRef<string | null>(null);
+
+  const applySavedBuyerProfile = (data: SavedBuyerProfile, overwriteExisting = false) => {
+    if (data.name && (overwriteExisting || !buyerName.trim())) setBuyerName(data.name);
+    if (data.town && (overwriteExisting || !destination.trim())) setDestination(data.town);
+    if (data.deliverySacco && (overwriteExisting || !deliverySacco.trim())) {
+      handleDeliverySaccoChange(data.deliverySacco);
+    }
+    if (data.pickPoint && (overwriteExisting || !pickPoint.trim())) setPickPoint(data.pickPoint);
+  };
+
+  const handleBuyerPhoneChange = (val: string) => {
+    setBuyerPhone(val);
+    const clean = val.replace(/\s/g, '');
+    if (!isValidKenyanPhone(clean)) return;
+    const normalized = normalizeBuyerPhone(clean);
+    if (!normalized || lastAutoFilledPhoneRef.current === normalized) return;
+    const saved = getSavedBuyerByPhone(clean);
+    if (saved) {
+      applySavedBuyerProfile(saved, true);
+      lastAutoFilledPhoneRef.current = normalized;
+    }
+  };
+
   // Persist buyer details in localStorage for repeat orders
   useEffect(() => {
     if (isBuyer) {
-      const stored = localStorage.getItem('pap_buyer_profile');
+      const stored = localStorage.getItem(BUYER_PROFILE_KEY);
       if (stored) {
         try {
-          const data = JSON.parse(stored);
+          const data = JSON.parse(stored) as SavedBuyerProfile;
           if (data.name) setBuyerName(data.name);
-          if (data.phone) setBuyerPhone(data.phone);
+          if (data.phone) {
+            setBuyerPhone(data.phone);
+            lastAutoFilledPhoneRef.current = normalizeBuyerPhone(data.phone) || null;
+          }
           if (data.town) setDestination(data.town);
+          if (data.deliverySacco) handleDeliverySaccoChange(data.deliverySacco);
+          if (data.pickPoint) setPickPoint(data.pickPoint);
         } catch (e) {
           console.error('Failed to parse buyer profile from localStorage', e);
         }
@@ -216,20 +296,19 @@ export function DispatchForm({
     if (result.error) {
       setFormError(result.error.message || 'Failed to dispatch parcel. Please check your network.');
     } else {
-      if (isBuyer) {
-        try {
-          localStorage.setItem(
-            'pap_buyer_profile',
-            JSON.stringify({
-              name: finalBuyerName,
-              phone: cleanPhone,
-              town: destination,
-            }),
-          );
-        } catch (e) {
-          console.error('Failed to save buyer profile to localStorage', e);
-        }
-      } else {
+      if (!isStaff) {
+        saveBuyerProfile(
+          {
+            name: finalBuyerName,
+            phone: cleanPhone,
+            town: destination,
+            deliverySacco: deliverySacco.trim(),
+            pickPoint: sendingMethod === 'door_to_door' ? pickPoint.trim() : '',
+          },
+          isBuyer,
+        );
+      }
+      if (!isBuyer) {
         trackSellerCreateDispatch({
           destination: destination.trim(),
           sending_method: isStaff ? 'pata_parcel' : sendingMethod,
@@ -238,6 +317,7 @@ export function DispatchForm({
           goods_amount: amount,
         });
       }
+      lastAutoFilledPhoneRef.current = null;
       // Reset form
       setBuyerName('');
 
@@ -296,7 +376,7 @@ export function DispatchForm({
               type="tel"
               placeholder={isBuyer ? '' : "0712 345 678"}
               value={buyerPhone}
-              onChange={(e) => setBuyerPhone(e.target.value)}
+              onChange={(e) => handleBuyerPhoneChange(e.target.value)}
               className="h-10 pl-3 text-sm"
               required
             />
