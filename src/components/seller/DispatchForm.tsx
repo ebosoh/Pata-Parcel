@@ -58,7 +58,6 @@ export function DispatchForm({
   const [customPackageType, setCustomPackageType] = useState('');
   const [sendingFee, setSendingFee] = useState<number | null>(isStaff ? STAFF_SENDING_FEE : null);
   const [goodsAmount, setGoodsAmount] = useState('');
-  const [paymentCode, setPaymentCode] = useState('');
   const [showAllPackageTypes, setShowAllPackageTypes] = useState(false);
 
   const handleDeliverySaccoChange = (val: string) => {
@@ -168,13 +167,8 @@ export function DispatchForm({
       setFormError('Please enter a valid amount for the goods');
       return;
     }
-    const code = showGoodsPayment ? paymentCode.trim() : '';
     if (isBuyer && amount === null) {
       setFormError('Please enter the amount you paid for the goods');
-      return;
-    }
-    if ((isBuyer || code) && !/^[A-Za-z0-9]{6,20}$/.test(code)) {
-      setFormError('Please enter a valid M-Pesa / Airtel Money code (e.g. SKL4ABC12D)');
       return;
     }
 
@@ -193,7 +187,7 @@ export function DispatchForm({
       package_description: !isStaff ? (packageDescription.trim() || null) : null,
       sending_fee: totalSendingFee,
       goods_amount: amount,
-      payment_code: code || null,
+      payment_code: null,
     });
 
     setLoading(false);
@@ -212,7 +206,6 @@ export function DispatchForm({
       setPackageDescription('');
       setCustomPackageType('');
       setGoodsAmount('');
-      setPaymentCode('');
       if (onSuccess) onSuccess();
     }
   };
@@ -517,21 +510,6 @@ export function DispatchForm({
               className="h-10 text-sm"
             />
             <p className="text-[11px] text-muted-foreground">Amount paid for the goods, not including sending fees.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="payment_code" className="text-xs font-medium">
-              M-Pesa / Airtel Money Code {isBuyer ? '*' : '(optional)'}
-            </Label>
-            <Input
-              id="payment_code"
-              placeholder="e.g. SKL4ABC12D"
-              value={paymentCode}
-              onChange={(e) => setPaymentCode(e.target.value.toUpperCase())}
-              required={isBuyer}
-              maxLength={20}
-              autoCapitalize="characters"
-              className="h-10 font-mono text-sm uppercase"
-            />
           </div>
         </div>
       )}

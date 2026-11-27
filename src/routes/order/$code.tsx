@@ -11,9 +11,9 @@ export const Route = createFileRoute('/order/$code')({
   head: () => ({
     meta: [
       { title: 'Send Your Delivery Details — Pata Parcel' },
-      { name: 'description', content: 'Fill in your delivery details and payment code so your seller can dispatch your parcel with Pata Parcel.' },
+      { name: 'description', content: 'Fill in your delivery details so your seller can dispatch your parcel with Pata Parcel.' },
       { property: 'og:title', content: 'Send Your Delivery Details — Pata Parcel' },
-      { property: 'og:description', content: 'Fill in your delivery details and payment code so your seller can dispatch your parcel with Pata Parcel.' },
+      { property: 'og:description', content: 'Fill in your delivery details so your seller can dispatch your parcel with Pata Parcel.' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
       { name: 'robots', content: 'noindex' },
