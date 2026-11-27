@@ -216,7 +216,7 @@ export function DispatchForm({
       )}
 
       {/* 1. Buyer Information */}
-      <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+      <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
         {!isBuyer && (
           <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
             1. Buyer Details
@@ -280,7 +280,7 @@ export function DispatchForm({
 
       {/* 2. Destination & Sending Method */}
       {!isStaff && (
-        <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+        <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
           {!isBuyer && (
             <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
               2. Destination & Delivery
@@ -354,7 +354,7 @@ export function DispatchForm({
       )}
 
       {/* 3. Package & Pricing */}
-      <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+      <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
         {!isBuyer && (
           <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
             {isStaff ? '2. Sending Fee' : '3. Package & Fees'}
@@ -469,7 +469,7 @@ export function DispatchForm({
 
       {/* 4. Goods Payment */}
       {showGoodsPayment && (
-        <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
+        <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
           {!isBuyer && (
             <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
               4. Goods Payment
