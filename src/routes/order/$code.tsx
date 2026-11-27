@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { supabase } from '@/lib/supabase';
 import { DispatchForm } from '@/components/seller/DispatchForm';
 import { paymentCodeRejection } from '@/lib/paymentCode';
+import { trackBuyerOrderSubmit } from '@/lib/analytics';
 import type { CreateParcelInput } from '@/hooks/useParcels';
 import type { Destination } from '@/types/database';
 import { CheckCircle2, Loader2, PackageCheck, ShieldCheck, AlertCircle } from 'lucide-react';
@@ -58,7 +59,16 @@ function BuyerOrderPage() {
     });
     const rejection = paymentCodeRejection(data);
     if (rejection) return { data: null, error: new Error(rejection) };
-    if (!error && typeof data === 'string') setDoneRef(data);
+    if (!error && typeof data === 'string') {
+      setDoneRef(data);
+      trackBuyerOrderSubmit({
+        destination: input.destination,
+        sending_method: input.sending_method,
+        package_type: input.package_type,
+        goods_amount: input.goods_amount,
+        sending_fee: input.sending_fee,
+      });
+    }
     return { data, error };
   };
 

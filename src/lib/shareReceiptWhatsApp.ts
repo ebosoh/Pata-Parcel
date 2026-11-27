@@ -6,6 +6,7 @@ import {
   waRecipientFor,
   waShareUrl,
 } from '@/lib/receiptSharing';
+import { trackShareReceiptWhatsApp } from '@/lib/analytics';
 
 const BUCKET = 'receipts';
 /** The buyer gets a week to open the receipt copy. */
@@ -65,5 +66,12 @@ export async function openReceiptInWhatsApp(share: ReceiptWhatsAppShare): Promis
 
   if (tab && !tab.closed) tab.location.href = url;
   else window.location.href = url;
+
+  trackShareReceiptWhatsApp({
+    tracking_code: share.referenceNumber,
+    destination: share.destination,
+    sacco: share.saco,
+  });
+
   return { ok: true };
 }

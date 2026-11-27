@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Package, ArrowRight, Loader2, Phone, Mail, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { isValidKenyanPhone } from '@/lib/constants';
 import { signupOutcome, type SignupResultData } from '@/lib/authFlow';
+import { trackUserLogin, trackUserSignUp } from '@/lib/analytics';
 
 interface LoginFormProps {
   onSendOTP: (phone: string) => Promise<{ error: { message: string } | null }>;
@@ -100,7 +101,10 @@ export function LoginForm({
     }
 
     const cleanPhone = phone.replace(/\s/g, '');
-    await onVerifyOTP(cleanPhone, otp);
+    const { error } = await onVerifyOTP(cleanPhone, otp);
+    if (!error) {
+      trackUserLogin('phone');
+    }
   };
 
   // Email submit
@@ -132,6 +136,9 @@ export function LoginForm({
         if (!signUpError) {
           const outcome = signupOutcome(data);
           setSignupDone(outcome === 'confirmation-required');
+          if (outcome === 'signed-in' || outcome === 'confirmation-required') {
+            trackUserSignUp('email');
+          }
           if (outcome === 'existing-account') {
             setEmailMode('signin');
             setPassword('');
@@ -143,7 +150,10 @@ export function LoginForm({
       }
     } else {
       if (onSignInWithEmail) {
-        await onSignInWithEmail(email, password);
+        const { error: signInError } = await onSignInWithEmail(email, password);
+        if (!signInError) {
+          trackUserLogin('email');
+        }
       }
     }
   };

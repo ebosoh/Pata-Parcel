@@ -16,6 +16,7 @@ import {
   PhoneCall,
 } from 'lucide-react';
 import type { TrackingStatus } from '@/types/database';
+import { trackParcelTrackSearch } from '@/lib/analytics';
 
 export const Route = createFileRoute('/track/$code')({
   head: () => ({
@@ -137,8 +138,14 @@ function TrackParcelPage() {
 
       if (!parcelData) {
         setParcel(null);
+        trackParcelTrackSearch({ tracking_code: code, status: null });
         return;
       }
+
+      trackParcelTrackSearch({
+        tracking_code: code,
+        status: (parcelData as any).tracking_status,
+      });
 
       // 2. Get seller name from profiles
       let sellerName: string | null = null;

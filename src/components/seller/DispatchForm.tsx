@@ -17,6 +17,7 @@ import type { CreateParcelInput } from '@/hooks/useParcels';
 import { Send, Loader2, Calculator, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { STAFF_SENDING_FEE } from '@/lib/internalPickup';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
+import { trackSellerCreateDispatch } from '@/lib/analytics';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
 const DEFAULT_SENDING_FEE = 150;
@@ -191,6 +192,15 @@ export function DispatchForm({
     if (result.error) {
       setFormError(result.error.message || 'Failed to dispatch parcel. Please check your network.');
     } else {
+      if (!isBuyer) {
+        trackSellerCreateDispatch({
+          destination: destination.trim(),
+          sending_method: isStaff ? 'pata_parcel' : sendingMethod,
+          package_type: finalPackageType,
+          sending_fee: totalSendingFee,
+          goods_amount: amount,
+        });
+      }
       // Reset form
       setBuyerName('');
       setBuyerTiktok('');

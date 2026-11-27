@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, Check, Link2, Share2, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { trackSellerCopyOrderLink } from '@/lib/analytics';
 
 export function OrderLinkCard({ code, businessName }: { code: string; businessName: string }) {
   const [origin, setOrigin] = useState('');
@@ -16,6 +17,7 @@ export function OrderLinkCard({ code, businessName }: { code: string; businessNa
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
+      trackSellerCopyOrderLink({ source: 'order_link_card_copy' });
       toast.success('Link copied — paste it on TikTok, Facebook, Instagram or WhatsApp');
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -24,6 +26,7 @@ export function OrderLinkCard({ code, businessName }: { code: string; businessNa
   };
 
   const share = async () => {
+    trackSellerCopyOrderLink({ source: 'order_link_card_share' });
     if (navigator.share) {
       try { await navigator.share({ title: 'Order via Pata Parcel', text: message, url: link }); } catch { /* cancelled */ }
     } else {
