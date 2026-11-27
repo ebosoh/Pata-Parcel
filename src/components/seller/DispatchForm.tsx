@@ -2,12 +2,10 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { serializePackageTypes, inferPackageTypesFromDescription } from '@/lib/packageDetails';
 import { normalizeBuyerPhone } from '@/lib/complaints';
 import { 
-  PACKAGE_TYPES, 
   DELIVERY_SACCO_OPTIONS,
   isValidKenyanPhone, 
   suggestedSendingFee,
@@ -15,7 +13,7 @@ import {
 } from '@/lib/constants';
 import type { SendingMethod, Destination } from '@/types/database';
 import type { CreateParcelInput } from '@/hooks/useParcels';
-import { Send, Loader2, Calculator, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, Loader2, Calculator, AlertCircle } from 'lucide-react';
 import { STAFF_SENDING_FEE } from '@/lib/internalPickup';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 import { trackSellerCreateDispatch } from '@/lib/analytics';
@@ -103,12 +101,9 @@ export function DispatchForm({
   const [psvSacco, setPsvSacco] = useState('');
   const [deliverySacco, setDeliverySacco] = useState('');
   const [pickPoint, setPickPoint] = useState('');
-  const [packageTypes, setPackageTypes] = useState<string[]>([PACKAGE_TYPES[0]]);
   const [packageDescription, setPackageDescription] = useState('');
-  const [customPackageType, setCustomPackageType] = useState('');
   const [sendingFee, setSendingFee] = useState<number | null>(isStaff ? STAFF_SENDING_FEE : null);
   const [goodsAmount, setGoodsAmount] = useState('');
-  const [showAllPackageTypes, setShowAllPackageTypes] = useState(false);
 
   const handleDeliverySaccoChange = (val: string) => {
     setDeliverySacco(val);
@@ -255,21 +250,15 @@ export function DispatchForm({
 
     const finalPackageType = isStaff
       ? 'Parcel'
-      : isBuyer
-        ? serializePackageTypes(inferPackageTypesFromDescription(packageDescription), '')
-        : serializePackageTypes(packageTypes, customPackageType);
-    if (!isStaff && !isBuyer && !finalPackageType) {
-      setFormError('Please select at least one package type');
-      return;
-    }
+      : serializePackageTypes(inferPackageTypesFromDescription(packageDescription), '');
 
     const amount = showGoodsPayment && goodsAmount.trim() !== '' ? Number(goodsAmount) : null;
     if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
       setFormError('Please enter a valid amount for the goods');
       return;
     }
-    if (isBuyer && amount === null) {
-      setFormError('Please enter the amount you paid for the goods');
+    if (showGoodsPayment && amount === null) {
+      setFormError(isBuyer ? 'Please enter the amount you paid for the goods' : 'Please enter the total amount for the goods');
       return;
     }
 
@@ -325,9 +314,7 @@ export function DispatchForm({
       setDestination('');
       setDeliverySacco('');
       setPickPoint('');
-      setPackageTypes([PACKAGE_TYPES[0]]);
       setPackageDescription('');
-      setCustomPackageType('');
       setGoodsAmount('');
       if (onSuccess) onSuccess();
     }
@@ -344,7 +331,7 @@ export function DispatchForm({
 
       {/* 1. Buyer Information */}
       <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
-        {!isBuyer && (
+        {isStaff && (
           <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
             1. Buyer Details
           </h3>
@@ -352,11 +339,11 @@ export function DispatchForm({
 
         <div className="space-y-2">
           <Label htmlFor="buyer_name" className="text-xs font-medium">
-            {isBuyer ? 'Name *' : 'Buyer Name *'}
+            Name *
           </Label>
           <Input
             id="buyer_name"
-            placeholder={isBuyer ? '' : "e.g. Mary Wanjiku"}
+            placeholder=""
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
             required
@@ -364,17 +351,15 @@ export function DispatchForm({
           />
         </div>
 
-
-
         <div className="space-y-2">
           <Label htmlFor="buyer_phone" className="text-xs font-medium">
-            {isBuyer ? 'Mpesa Number *' : 'Buyer Phone Number *'}
+            Mpesa Number *
           </Label>
           <div className="relative">
             <Input
               id="buyer_phone"
               type="tel"
-              placeholder={isBuyer ? '' : "0712 345 678"}
+              placeholder=""
               value={buyerPhone}
               onChange={(e) => handleBuyerPhoneChange(e.target.value)}
               className="h-10 pl-3 text-sm"
@@ -387,12 +372,6 @@ export function DispatchForm({
       {/* 2. Destination & Sending Method */}
       {!isStaff && (
         <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
-          {!isBuyer && (
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              2. Destination & Delivery
-            </h3>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="destination" className="text-xs font-medium">
               Destination Town *
@@ -402,7 +381,7 @@ export function DispatchForm({
               value={destination}
               onChange={setDestination}
               destinations={destinations}
-              placeholder={isBuyer ? '' : undefined}
+              placeholder=""
               required
             />
           </div>
@@ -419,7 +398,7 @@ export function DispatchForm({
               options={DELIVERY_SACCO_OPTIONS}
               listHeader="All SACCOs & Delivery Methods"
               noun="SACCO / Method"
-              placeholder={isBuyer ? '' : "Select or type SACCO / Delivery Method..."}
+              placeholder=""
               required
             />
           </div>
@@ -432,7 +411,7 @@ export function DispatchForm({
               </Label>
               <Input
                 id="custom_sacco"
-                placeholder={isBuyer ? '' : "e.g. Ena Coach, 2NK, Guardian"}
+                placeholder=""
                 value={psvSacco === 'PSV (SACCO)' ? '' : psvSacco}
                 onChange={(e) => setPsvSacco(e.target.value.trim() ? e.target.value : 'PSV (SACCO)')}
                 className="h-10 text-sm"
@@ -451,7 +430,7 @@ export function DispatchForm({
                 value={pickPoint}
                 onChange={setPickPoint}
                 options={NAIROBI_PICK_POINTS}
-                placeholder={isBuyer ? '' : "Type pick-point (e.g. Westlands, Kasarani)..."}
+                placeholder=""
                 required
               />
             </div>
@@ -461,98 +440,41 @@ export function DispatchForm({
 
       {/* 3. Package & Pricing */}
       <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
-        {!isBuyer && (
+        {isStaff && (
           <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-            {isStaff ? '2. Sending Fee' : '3. Package & Fees'}
+            2. Sending Fee
           </h3>
         )}
 
         {!isStaff && (
-          <>
-            {!isBuyer && (
-              <>
-                <fieldset className="space-y-2">
-                  <legend className="text-xs font-medium">Type of Package *</legend>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(!showAllPackageTypes
-                      ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
-                      : PACKAGE_TYPES
-                    ).map(type => (
-                      <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
-                        <Checkbox
-                          checked={packageTypes.includes(type)}
-                          onCheckedChange={checked => setPackageTypes(current => checked === true
-                            ? [...current, type]
-                            : current.filter(value => value !== type))}
-                        />
-                        <span className="break-words">{type}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowAllPackageTypes(prev => !prev)}
-                    className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
-                  >
-                    <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
-                    {showAllPackageTypes ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </button>
-                </fieldset>
-
-                {packageTypes.includes('Other') && (
-                  <div className="space-y-2">
-                    <Label htmlFor="custom_type" className="text-xs font-medium">
-                      Describe Package Type
-                    </Label>
-                    <Input
-                      id="custom_type"
-                      placeholder="e.g. Mummy Jeans, Curtains"
-                      value={customPackageType}
-                      onChange={(e) => setCustomPackageType(e.target.value)}
-                      className="h-10 text-sm"
-                    />
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="package_description" className="text-xs font-medium">
-                Short Description (optional)
-              </Label>
-              <Textarea
-                id="package_description"
-                placeholder="e.g. Mummy jeans, Size 42, blue in colour"
-                value={packageDescription}
-                onChange={e => setPackageDescription(e.target.value)}
-                rows={2}
-                className="min-h-20 text-sm"
-              />
-            </div>
-          </>
+          <div className="space-y-2">
+            <Label htmlFor="package_description" className="text-xs font-medium">
+              Short Description (optional)
+            </Label>
+            <Textarea
+              id="package_description"
+              placeholder="e.g. Mummy jeans, Size 42, blue in colour"
+              value={packageDescription}
+              onChange={e => setPackageDescription(e.target.value)}
+              rows={2}
+              className="min-h-20 text-sm"
+            />
+          </div>
         )}
 
-        {!isBuyer && (
-          <div className="space-y-2">
-            <Label htmlFor="sending_fee" className="text-xs font-medium">
-              Sending Fee (KES) *
-            </Label>
-            {payOnDelivery ? (
-              <div id="sending_fee" className="flex h-10 items-center rounded-md border border-amber-400 bg-amber-100 dark:bg-amber-950/40 px-3 text-sm font-bold text-foreground">
-                Pay on Delivery
-              </div>
-            ) : (
+        {isStaff && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="sending_fee" className="text-xs font-medium">
+                Sending Fee (KES) *
+              </Label>
               <Input
                 id="sending_fee"
                 type="number"
                 min="0"
                 step="10"
                 inputMode="numeric"
-                placeholder={isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
+                placeholder={String(STAFF_SENDING_FEE)}
                 value={sendingFee ?? ''}
                 onChange={(e) => {
                   const raw = e.target.value;
@@ -560,46 +482,41 @@ export function DispatchForm({
                 }}
                 className="h-10 text-sm"
               />
-            )}
-          </div>
-        )}
-
-        {/* Auto Calculation Banner */}
-        {!isBuyer && <div className="rounded-lg bg-secondary/30 p-3 border border-secondary">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-foreground font-semibold">
-              <Calculator className="h-4 w-4 text-primary" />
-              <span>Total Sending Fee:</span>
             </div>
-            <span className="text-base font-extrabold text-primary">
-              {payOnDelivery ? 'Pay on Delivery' : `KES ${totalSendingFee}`}
-            </span>
-          </div>
-        </div>}
+
+            {/* Auto Calculation Banner */}
+            <div className="rounded-lg bg-secondary/30 p-3 border border-secondary">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs text-foreground font-semibold">
+                  <Calculator className="h-4 w-4 text-primary" />
+                  <span>Total Sending Fee:</span>
+                </div>
+                <span className="text-base font-extrabold text-primary">
+                  {`KES ${totalSendingFee}`}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
 
       {/* 4. Goods Payment */}
       {showGoodsPayment && (
         <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
-          {!isBuyer && (
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-              4. Goods Payment
-            </h3>
-          )}
           <div className="space-y-2">
             <Label htmlFor="goods_amount" className="text-xs font-medium">
-              Total Amount (goods) {isBuyer ? '*' : '(optional)'}
+              Total Amount (goods) *
             </Label>
             <Input
               id="goods_amount"
               type="number"
               min="0"
               inputMode="numeric"
-              placeholder={isBuyer ? '' : "e.g. 2500"}
+              placeholder=""
               value={goodsAmount}
               onChange={(e) => setGoodsAmount(e.target.value)}
-              required={isBuyer}
+              required
               className="h-10 text-sm"
             />
           </div>
