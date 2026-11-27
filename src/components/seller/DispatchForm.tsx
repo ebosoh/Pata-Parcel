@@ -216,7 +216,20 @@ export function DispatchForm({
     if (result.error) {
       setFormError(result.error.message || 'Failed to dispatch parcel. Please check your network.');
     } else {
-      if (!isBuyer) {
+      if (isBuyer) {
+        try {
+          localStorage.setItem(
+            'pap_buyer_profile',
+            JSON.stringify({
+              name: finalBuyerName,
+              phone: cleanPhone,
+              town: destination,
+            }),
+          );
+        } catch (e) {
+          console.error('Failed to save buyer profile to localStorage', e);
+        }
+      } else {
         trackSellerCreateDispatch({
           destination: destination.trim(),
           sending_method: isStaff ? 'pata_parcel' : sendingMethod,
