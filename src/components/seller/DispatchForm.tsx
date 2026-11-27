@@ -46,7 +46,6 @@ export function DispatchForm({
   const showGoodsPayment = !hideGoodsPayment && !isStaff;
   // Form State
   const [buyerName, setBuyerName] = useState('');
-  const [buyerTiktok, setBuyerTiktok] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
   const [destination, setDestination] = useState('');
   const [sendingMethod, setSendingMethod] = useState<SendingMethod>('pickup_mtaani');
@@ -96,9 +95,22 @@ export function DispatchForm({
   const effectiveMethod = !deliverySacco.trim() ? '' : sendingMethod;
   const suggestedFee = effectiveMethod ? suggestedSendingFee(effectiveMethod, psvSacco) : null;
   const payOnDelivery = suggestedFee === 'on_delivery';
+  // Persist buyer details in localStorage for repeat orders
   useEffect(() => {
-    setSendingFee(isStaff ? STAFF_SENDING_FEE : typeof suggestedFee === 'number' ? suggestedFee : null);
-  }, [suggestedFee, isStaff]);
+    if (isBuyer) {
+      const stored = localStorage.getItem('pap_buyer_profile');
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          if (data.name) setBuyerName(data.name);
+          if (data.phone) setBuyerPhone(data.phone);
+          if (data.town) setDestination(data.town);
+        } catch (e) {
+          console.error('Failed to parse buyer profile from localStorage', e);
+        }
+      }
+    }
+  }, [isBuyer]);
 
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -124,11 +136,8 @@ export function DispatchForm({
       return;
     }
 
-    const cleanTiktok = !isBuyer ? '' : buyerTiktok.trim().replace(/^@+/, '');
-    if (isBuyer && !cleanTiktok) {
-      setFormError('Please enter your TikTok username / handle');
-      return;
-    }
+
+
 
     const cleanPhone = buyerPhone.replace(/\s/g, '');
     if (!isValidKenyanPhone(cleanPhone)) {
@@ -175,7 +184,7 @@ export function DispatchForm({
 
     setLoading(true);
 
-    const finalBuyerName = cleanTiktok ? `${buyerName.trim()} (@${cleanTiktok})` : buyerName.trim();
+    const finalBuyerName = buyerName.trim();
 
     const result = await onSubmit({
       buyer_name: finalBuyerName,
@@ -207,7 +216,7 @@ export function DispatchForm({
       }
       // Reset form
       setBuyerName('');
-      setBuyerTiktok('');
+
       setBuyerPhone('');
       setDestination('');
       setDeliverySacco('');
@@ -251,41 +260,20 @@ export function DispatchForm({
           />
         </div>
 
-        {isBuyer && (
-        <div className="space-y-2">
-          <Label htmlFor="buyer_tiktok" className="text-xs font-medium">
-            TikTok Username / Handle *
-          </Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-              @
-            </span>
-            <Input
-              id="buyer_tiktok"
-              value={buyerTiktok}
-              onChange={(e) => setBuyerTiktok(e.target.value)}
-              required
-              className="h-10 pl-8 text-sm"
-            />
-          </div>
-        </div>
-        )}
+
 
         <div className="space-y-2">
           <Label htmlFor="buyer_phone" className="text-xs font-medium">
             {isBuyer ? 'Mpesa Number *' : 'Buyer Phone Number *'}
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
-              +254
-            </span>
             <Input
               id="buyer_phone"
               type="tel"
               placeholder={isBuyer ? '' : "0712 345 678"}
               value={buyerPhone}
               onChange={(e) => setBuyerPhone(e.target.value)}
-              className="h-10 pl-14 text-sm"
+              className="h-10 pl-3 text-sm"
               required
             />
           </div>
