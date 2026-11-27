@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { serializePackageTypes } from '@/lib/packageDetails';
+import { serializePackageTypes, inferPackageTypesFromDescription } from '@/lib/packageDetails';
 import { 
   PACKAGE_TYPES, 
   DELIVERY_SACCO_OPTIONS,
@@ -153,8 +153,12 @@ export function DispatchForm({
       }
     }
 
-    const finalPackageType = isStaff ? 'Parcel' : serializePackageTypes(packageTypes, customPackageType);
-    if (!isStaff && !finalPackageType) {
+    const finalPackageType = isStaff
+      ? 'Parcel'
+      : isBuyer
+        ? serializePackageTypes(inferPackageTypesFromDescription(packageDescription), '')
+        : serializePackageTypes(packageTypes, customPackageType);
+    if (!isStaff && !isBuyer && !finalPackageType) {
       setFormError('Please select at least one package type');
       return;
     }
@@ -373,51 +377,55 @@ export function DispatchForm({
 
         {!isStaff && (
           <>
-            <fieldset className="space-y-2">
-              <legend className="text-xs font-medium">Type of Package *</legend>
-              <div className="grid grid-cols-2 gap-2">
-                {(!showAllPackageTypes
-                  ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
-                  : PACKAGE_TYPES
-                ).map(type => (
-                  <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
-                    <Checkbox
-                      checked={packageTypes.includes(type)}
-                      onCheckedChange={checked => setPackageTypes(current => checked === true
-                        ? [...current, type]
-                        : current.filter(value => value !== type))}
-                    />
-                    <span className="break-words">{type}</span>
-                  </label>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAllPackageTypes(prev => !prev)}
-                className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
-              >
-                <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
-                {showAllPackageTypes ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-            </fieldset>
+            {!isBuyer && (
+              <>
+                <fieldset className="space-y-2">
+                  <legend className="text-xs font-medium">Type of Package *</legend>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(!showAllPackageTypes
+                      ? PACKAGE_TYPES.filter(type => type === 'Clothing' || type === 'Shoes')
+                      : PACKAGE_TYPES
+                    ).map(type => (
+                      <label key={type} className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-2.5 py-2 text-xs has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10">
+                        <Checkbox
+                          checked={packageTypes.includes(type)}
+                          onCheckedChange={checked => setPackageTypes(current => checked === true
+                            ? [...current, type]
+                            : current.filter(value => value !== type))}
+                        />
+                        <span className="break-words">{type}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAllPackageTypes(prev => !prev)}
+                    className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline focus:outline-none"
+                  >
+                    <span>{showAllPackageTypes ? 'Show fewer options' : 'More options'}</span>
+                    {showAllPackageTypes ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </button>
+                </fieldset>
 
-            {packageTypes.includes('Other') && (
-              <div className="space-y-2">
-                <Label htmlFor="custom_type" className="text-xs font-medium">
-                  Describe Package Type
-                </Label>
-                <Input
-                  id="custom_type"
-                  placeholder={isBuyer ? '' : "e.g. Mummy Jeans, Curtains"}
-                  value={customPackageType}
-                  onChange={(e) => setCustomPackageType(e.target.value)}
-                  className="h-10 text-sm"
-                />
-              </div>
+                {packageTypes.includes('Other') && (
+                  <div className="space-y-2">
+                    <Label htmlFor="custom_type" className="text-xs font-medium">
+                      Describe Package Type
+                    </Label>
+                    <Input
+                      id="custom_type"
+                      placeholder="e.g. Mummy Jeans, Curtains"
+                      value={customPackageType}
+                      onChange={(e) => setCustomPackageType(e.target.value)}
+                      className="h-10 text-sm"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <div className="space-y-2">
@@ -436,31 +444,33 @@ export function DispatchForm({
           </>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="sending_fee" className="text-xs font-medium">
-            Sending Fee (KES) *
-          </Label>
-          {payOnDelivery ? (
-            <div id="sending_fee" className="flex h-10 items-center rounded-md border border-amber-400 bg-amber-100 dark:bg-amber-950/40 px-3 text-sm font-bold text-foreground">
-              Pay on Delivery
-            </div>
-          ) : (
-            <Input
-              id="sending_fee"
-              type="number"
-              min="0"
-              step="10"
-              inputMode="numeric"
-              placeholder={isBuyer ? '' : (isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE)))}
-              value={sendingFee ?? ''}
-              onChange={(e) => {
-                const raw = e.target.value;
-                setSendingFee(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
-              }}
-              className="h-10 text-sm"
-            />
-          )}
-        </div>
+        {!isBuyer && (
+          <div className="space-y-2">
+            <Label htmlFor="sending_fee" className="text-xs font-medium">
+              Sending Fee (KES) *
+            </Label>
+            {payOnDelivery ? (
+              <div id="sending_fee" className="flex h-10 items-center rounded-md border border-amber-400 bg-amber-100 dark:bg-amber-950/40 px-3 text-sm font-bold text-foreground">
+                Pay on Delivery
+              </div>
+            ) : (
+              <Input
+                id="sending_fee"
+                type="number"
+                min="0"
+                step="10"
+                inputMode="numeric"
+                placeholder={isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
+                value={sendingFee ?? ''}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setSendingFee(raw === '' ? null : Math.max(0, parseInt(raw) || 0));
+                }}
+                className="h-10 text-sm"
+              />
+            )}
+          </div>
+        )}
 
         {/* Auto Calculation Banner */}
         {!isBuyer && <div className="rounded-lg bg-secondary/30 p-3 border border-secondary">
