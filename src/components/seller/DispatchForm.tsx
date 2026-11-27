@@ -56,6 +56,19 @@ export function DispatchForm({
   const [packageDescription, setPackageDescription] = useState('');
   const [customPackageType, setCustomPackageType] = useState('');
   const [sendingFee, setSendingFee] = useState<number | null>(isStaff ? STAFF_SENDING_FEE : null);
+
+  // Auto‑populate sending fee based on selected method
+  useEffect(() => {
+    if (isStaff) {
+      // Staff uses a fixed fee defined elsewhere
+      setSendingFee(STAFF_SENDING_FEE);
+    } else if (suggestedFee !== null && suggestedFee !== 'on_delivery') {
+      setSendingFee(suggestedFee as number);
+    } else {
+      // No suggestion (e.g., awaiting SACCO selection) – keep existing or default
+      setSendingFee(null);
+    }
+  }, [suggestedFee, isStaff]);
   const [goodsAmount, setGoodsAmount] = useState('');
   const [showAllPackageTypes, setShowAllPackageTypes] = useState(false);
 
