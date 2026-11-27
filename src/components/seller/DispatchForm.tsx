@@ -217,17 +217,19 @@ export function DispatchForm({
 
       {/* 1. Buyer Information */}
       <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          {isBuyer ? '1. Your Details' : '1. Buyer Details'}
-        </h3>
+        {!isBuyer && (
+          <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+            1. Buyer Details
+          </h3>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="buyer_name" className="text-xs font-medium">
-            {isBuyer ? 'Your Name *' : 'Buyer Name *'}
+            {isBuyer ? 'Name *' : 'Buyer Name *'}
           </Label>
           <Input
             id="buyer_name"
-            placeholder="e.g. Mary Wanjiku"
+            placeholder={isBuyer ? '' : "e.g. Mary Wanjiku"}
             value={buyerName}
             onChange={(e) => setBuyerName(e.target.value)}
             required
@@ -246,7 +248,6 @@ export function DispatchForm({
             </span>
             <Input
               id="buyer_tiktok"
-              placeholder="e.g. mary_wanjiku or Mary Wanjiku"
               value={buyerTiktok}
               onChange={(e) => setBuyerTiktok(e.target.value)}
               required
@@ -258,7 +259,7 @@ export function DispatchForm({
 
         <div className="space-y-2">
           <Label htmlFor="buyer_phone" className="text-xs font-medium">
-            {isBuyer ? 'Your Phone Number *' : 'Buyer Phone Number *'}
+            {isBuyer ? 'Mpesa Number *' : 'Buyer Phone Number *'}
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
@@ -267,7 +268,7 @@ export function DispatchForm({
             <Input
               id="buyer_phone"
               type="tel"
-              placeholder="0712 345 678"
+              placeholder={isBuyer ? '' : "0712 345 678"}
               value={buyerPhone}
               onChange={(e) => setBuyerPhone(e.target.value)}
               className="h-10 pl-14 text-sm"
@@ -280,9 +281,11 @@ export function DispatchForm({
       {/* 2. Destination & Sending Method */}
       {!isStaff && (
         <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-            2. Destination & Delivery
-          </h3>
+          {!isBuyer && (
+            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+              2. Destination & Delivery
+            </h3>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="destination" className="text-xs font-medium">
@@ -293,6 +296,7 @@ export function DispatchForm({
               value={destination}
               onChange={setDestination}
               destinations={destinations}
+              placeholder={isBuyer ? '' : undefined}
               required
             />
           </div>
@@ -309,7 +313,7 @@ export function DispatchForm({
               options={DELIVERY_SACCO_OPTIONS}
               listHeader="All SACCOs & Delivery Methods"
               noun="SACCO / Method"
-              placeholder="Select or type SACCO / Delivery Method..."
+              placeholder={isBuyer ? '' : "Select or type SACCO / Delivery Method..."}
               required
             />
           </div>
@@ -322,7 +326,7 @@ export function DispatchForm({
               </Label>
               <Input
                 id="custom_sacco"
-                placeholder="e.g. Ena Coach, 2NK, Guardian"
+                placeholder={isBuyer ? '' : "e.g. Ena Coach, 2NK, Guardian"}
                 value={psvSacco === 'PSV (SACCO)' ? '' : psvSacco}
                 onChange={(e) => setPsvSacco(e.target.value.trim() ? e.target.value : 'PSV (SACCO)')}
                 className="h-10 text-sm"
@@ -341,7 +345,7 @@ export function DispatchForm({
                 value={pickPoint}
                 onChange={setPickPoint}
                 options={NAIROBI_PICK_POINTS}
-                placeholder="Type pick-point (e.g. Westlands, Kasarani)..."
+                placeholder={isBuyer ? '' : "Type pick-point (e.g. Westlands, Kasarani)..."}
                 required
               />
             </div>
@@ -351,9 +355,11 @@ export function DispatchForm({
 
       {/* 3. Package & Pricing */}
       <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-          {isStaff ? '2. Sending Fee' : '3. Package & Fees'}
-        </h3>
+        {!isBuyer && (
+          <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+            {isStaff ? '2. Sending Fee' : '3. Package & Fees'}
+          </h3>
+        )}
 
         {!isStaff && (
           <>
@@ -396,7 +402,7 @@ export function DispatchForm({
                 </Label>
                 <Input
                   id="custom_type"
-                  placeholder="e.g. Mummy Jeans, Curtains"
+                  placeholder={isBuyer ? '' : "e.g. Mummy Jeans, Curtains"}
                   value={customPackageType}
                   onChange={(e) => setCustomPackageType(e.target.value)}
                   className="h-10 text-sm"
@@ -435,7 +441,7 @@ export function DispatchForm({
               min="0"
               step="10"
               inputMode="numeric"
-              placeholder={isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE))}
+              placeholder={isBuyer ? '' : (isStaff ? String(STAFF_SENDING_FEE) : (sendingMethod === 'psv' && !psvSacco ? 'Pick a SACCO first' : String(DEFAULT_SENDING_FEE)))}
               value={sendingFee ?? ''}
               onChange={(e) => {
                 const raw = e.target.value;
@@ -464,9 +470,11 @@ export function DispatchForm({
       {/* 4. Goods Payment */}
       {showGoodsPayment && (
         <div className="space-y-3 rounded-xl border border-border/80 bg-card p-3.5 shadow-sm">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-            4. Goods Payment
-          </h3>
+          {!isBuyer && (
+            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
+              4. Goods Payment
+            </h3>
+          )}
           <div className="space-y-2">
             <Label htmlFor="goods_amount" className="text-xs font-medium">
               Total Amount (goods) {isBuyer ? '*' : '(optional)'}
@@ -476,7 +484,7 @@ export function DispatchForm({
               type="number"
               min="0"
               inputMode="numeric"
-              placeholder="e.g. 2500"
+              placeholder={isBuyer ? '' : "e.g. 2500"}
               value={goodsAmount}
               onChange={(e) => setGoodsAmount(e.target.value)}
               required={isBuyer}
