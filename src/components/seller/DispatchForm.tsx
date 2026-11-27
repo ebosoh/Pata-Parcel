@@ -257,9 +257,6 @@ export function DispatchForm({
               className="h-10 pl-8 text-sm"
             />
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Required so your seller can confirm and match your order to your TikTok account.
-          </p>
         </div>
         )}
 
@@ -281,9 +278,6 @@ export function DispatchForm({
               required
             />
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {isBuyer ? 'The seller and Pata Parcel will use this number to reach you.' : 'Buyer will receive an automated SMS with your WhatsApp contact once dispatched.'}
-          </p>
         </div>
       </div>
 
@@ -337,9 +331,6 @@ export function DispatchForm({
                 onChange={(e) => setPsvSacco(e.target.value.trim() ? e.target.value : 'PSV (SACCO)')}
                 className="h-10 text-sm"
               />
-              <p className="text-[11px] text-muted-foreground">
-                If you know your specific SACCO stage, enter it here or leave blank.
-              </p>
             </div>
           )}
 
@@ -357,9 +348,6 @@ export function DispatchForm({
                 placeholder="Type pick-point (e.g. Westlands, Kasarani)..."
                 required
               />
-              <p className="text-[11px] text-muted-foreground">
-                The Nairobi location where the rider will collect or deliver the parcel.
-              </p>
             </div>
           )}
         </div>
@@ -460,13 +448,6 @@ export function DispatchForm({
               className="h-10 text-sm"
             />
           )}
-          <p className="text-[11px] text-muted-foreground">
-            {isStaff
-              ? `Staff dispatch sending fee is KES ${STAFF_SENDING_FEE}. You can adjust if different.`
-              : (payOnDelivery
-                ? 'PSV-Driver sending fee is paid to the driver on delivery.'
-                : 'Filled in from the sending method you chose.')}
-          </p>
         </div>
 
         {/* Auto Calculation Banner */}
@@ -509,7 +490,6 @@ export function DispatchForm({
               required={isBuyer}
               className="h-10 text-sm"
             />
-            <p className="text-[11px] text-muted-foreground">Amount paid for the goods, not including sending fees.</p>
           </div>
         </div>
       )}
