@@ -28,17 +28,58 @@ type Seller = { business_name: string | null; owner_name: string; location: stri
 function BuyerOrderPage() {
   const { code } = Route.useParams();
   const [seller, setSeller] = useState<Seller | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [doneRef, setDoneRef] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.rpc('get_order_seller', { _code: code }).then(({ data }) => {
-      setSeller((data as Seller[] | null)?.[0] ?? null);
-    });
-    supabase.from('destinations').select('*').eq('is_active', true).order('name').then(({ data }) => {
-      if (data) setDestinations(data as Destination[]);
-    });
-  }, [code]);
+    let cancelled = false;
+    setSeller(undefined);
+    setLoadError(null);
+
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_order_seller', { _code: code });
+        if (cancelled) return;
+        if (error) {
+          console.error('Failed to load order seller:', error);
+          setLoadError(error.message || 'Could not load order details.');
+          setSeller(null);
+          return;
+        }
+        setSeller((data as Seller[] | null)?.[0] ?? null);
+      } catch (err) {
+        console.error('Error loading order seller:', err);
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : 'Network error while loading order.');
+          setSeller(null);
+        }
+      }
+    };
+
+    const loadDestinations = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('destinations')
+          .select('*')
+          .eq('is_active', true)
+          .order('name');
+        if (!cancelled && !error && data) {
+          setDestinations(data as Destination[]);
+        }
+      } catch (err) {
+        console.error('Error loading destinations:', err);
+      }
+    };
+
+    load();
+    loadDestinations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, retryCount]);
 
   const sellerName = seller ? seller.business_name || seller.owner_name : '';
 
@@ -90,8 +131,21 @@ function BuyerOrderPage() {
         ) : seller === null ? (
           <div className="rounded-2xl border border-destructive/30 bg-card p-6 text-center shadow-md">
             <AlertCircle className="mx-auto mb-2 h-10 w-10 text-destructive" />
-            <h1 className="text-lg font-bold text-foreground">This order link isn't valid</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Ask your seller to send you their Pata Parcel link again.</p>
+            <h1 className="text-lg font-bold text-foreground">
+              {loadError ? 'Could not load this order link' : "This order link isn't valid"}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {loadError || 'Ask your seller to send you their Pata Parcel link again.'}
+            </p>
+            {loadError && (
+              <button
+                type="button"
+                onClick={() => setRetryCount((c) => c + 1)}
+                className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Try again
+              </button>
+            )}
           </div>
         ) : doneRef ? (
           <div className="rounded-2xl border border-primary/30 bg-card p-6 text-center shadow-md">
