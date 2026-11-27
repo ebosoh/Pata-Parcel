@@ -9,7 +9,6 @@ import {
   PACKAGE_TYPES, 
   DELIVERY_SACCO_OPTIONS,
   isValidKenyanPhone, 
-  computePlatformFee,
   suggestedSendingFee,
   NAIROBI_PICK_POINTS
 } from '@/lib/constants';
@@ -112,9 +111,6 @@ export function DispatchForm({
     () => (payOnDelivery ? 0 : Math.max(0, sendingFee ?? (isStaff ? STAFF_SENDING_FEE : DEFAULT_SENDING_FEE))),
     [sendingFee, payOnDelivery, isStaff],
   );
-
-  // Platform fee: 15% of the total sending fee
-  const totalPlatformFee = useMemo(() => computePlatformFee(totalSendingFee), [totalSendingFee]);
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -460,10 +456,6 @@ export function DispatchForm({
             <span className="text-base font-extrabold text-primary">
               {payOnDelivery ? 'Pay on Delivery' : `KES ${totalSendingFee}`}
             </span>
-          </div>
-          <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1">
-            <span>Pata Parcel Platform Fee:</span>
-            <span>KES {totalPlatformFee} (15% of sending fee)</span>
           </div>
         </div>}
 
