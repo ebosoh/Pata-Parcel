@@ -28,7 +28,8 @@ function LoginPage() {
     sendOTP, 
     verifyOTP, 
     signInWithEmail, 
-    signUpWithEmail, 
+    signUpWithEmail,
+    resetPassword,
     loading, 
     error, 
     isAuthenticated, 
@@ -68,6 +69,7 @@ function LoginPage() {
       onVerifyOTP={verifyOTP}
       onSignInWithEmail={signInWithEmail}
       onSignUpWithEmail={signUpWithEmail}
+      onResetPassword={resetPassword}
       loading={loading}
       error={error}
       initialMode={mode === 'signup' ? 'signup' : 'signin'}

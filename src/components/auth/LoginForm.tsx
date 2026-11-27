@@ -11,6 +11,7 @@ interface LoginFormProps {
   onVerifyOTP: (phone: string, token: string) => Promise<{ error: { message: string } | null; data: unknown }>;
   onSignInWithEmail?: (email: string, pass: string) => Promise<{ error: { message: string } | null; data: unknown }>;
   onSignUpWithEmail?: (email: string, pass: string, profile: any) => Promise<{ error: { message: string } | null; data: SignupResultData }>;
+  onResetPassword?: (email: string) => Promise<{ error: { message: string } | null }>;
   loading: boolean;
   error: string | null;
   initialMode?: 'signin' | 'signup';
@@ -21,12 +22,13 @@ export function LoginForm({
   onVerifyOTP,
   onSignInWithEmail,
   onSignUpWithEmail,
+  onResetPassword,
   loading,
   error,
   initialMode = 'signin',
 }: LoginFormProps) {
   const [authMethod] = useState<'phone' | 'email'>('email');
-  const [emailMode, setEmailMode] = useState<'signin' | 'signup'>(initialMode);
+  const [emailMode, setEmailMode] = useState<'signin' | 'signup' | 'forgot'>(initialMode);
 
   // Phone state
   const [phone, setPhone] = useState('');
@@ -44,13 +46,32 @@ export function LoginForm({
   const [localError, setLocalError] = useState<string | null>(null);
   const [signupDone, setSignupDone] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
-    setEmailMode(initialMode);
+    setEmailMode(initialMode as 'signin' | 'signup' | 'forgot');
     setSignupDone(false);
     setLocalError(null);
     setNotice(null);
+    setResetSent(false);
   }, [initialMode]);
+
+  // Forgot password submit
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError(null);
+    if (!forgotEmail) {
+      setLocalError('Please enter your email address');
+      return;
+    }
+    if (onResetPassword) {
+      const { error } = await onResetPassword(forgotEmail);
+      if (!error) {
+        setResetSent(true);
+      }
+    }
+  };
 
   // Phone submit
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -271,7 +292,7 @@ export function LoginForm({
             </Button>
           </div>
         )}
-        {authMethod === 'email' && !signupDone && (
+        {authMethod === 'email' && !signupDone && emailMode !== 'forgot' && (
           <form onSubmit={handleEmailAuth} className="space-y-3.5">
             {emailMode === 'signup' && (
               <>
@@ -365,7 +386,7 @@ export function LoginForm({
               )}
             </Button>
 
-            <div className="text-center pt-1">
+            <div className="text-center pt-1 space-y-0.5">
               <Button
                 type="button"
                 variant="link"
@@ -380,8 +401,100 @@ export function LoginForm({
                   ? "Don't have an account? Sign up"
                   : 'Already registered? Sign in'}
               </Button>
+              {emailMode === 'signin' && (
+                <div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => {
+                      setEmailMode('forgot');
+                      setForgotEmail(email);
+                      setLocalError(null);
+                      setNotice(null);
+                    }}
+                    className="h-auto text-xs text-muted-foreground hover:text-primary"
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
+              )}
             </div>
           </form>
+        )}
+
+        {/* 3. Forgot Password Flow */}
+        {authMethod === 'email' && emailMode === 'forgot' && !resetSent && (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="text-center space-y-1 pb-1">
+              <h2 className="text-sm font-bold text-foreground">Reset your password</h2>
+              <p className="text-xs text-muted-foreground">
+                Enter the email address on your account and we'll send you a reset link.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="forgot_email" className="text-xs font-medium">Email Address</Label>
+              <Input
+                id="forgot_email"
+                type="email"
+                placeholder="seller@pataparcel.co.ke"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                required
+                autoFocus
+                className="h-9 text-xs"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Send Reset Link'
+              )}
+            </Button>
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => {
+                  setEmailMode('signin');
+                  setLocalError(null);
+                }}
+                className="h-auto text-xs text-muted-foreground hover:text-primary"
+              >
+                ← Back to Sign In
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {/* Reset link sent confirmation */}
+        {authMethod === 'email' && emailMode === 'forgot' && resetSent && (
+          <div className="text-center space-y-3 py-2">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary/30">
+              <Mail className="h-6 w-6 text-primary" />
+            </div>
+            <h2 className="text-sm font-bold text-foreground">Check your email</h2>
+            <p className="text-xs text-muted-foreground">
+              If <span className="font-semibold text-foreground">{forgotEmail}</span> is registered,
+              you'll receive a password reset link shortly. Check your spam folder too.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full text-xs font-semibold"
+              onClick={() => {
+                setEmailMode('signin');
+                setResetSent(false);
+                setForgotEmail('');
+              }}
+            >
+              Back to Sign In
+            </Button>
+          </div>
         )}
       </div>
     </div>

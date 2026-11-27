@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AdminActivityRouteImport } from './routes/admin/activity'
 import { Route as AdminBlacklistRouteImport } from './routes/admin/blacklist'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
@@ -38,6 +39,11 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminActivityRoute = AdminActivityRouteImport.update({
@@ -134,6 +140,7 @@ const TrackCodeRoute = TrackCodeRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/activity': typeof AdminActivityRoute
   '/admin/blacklist': typeof AdminBlacklistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/reset-password'
     | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/reset-password'
     | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/reset-password'
     | '/admin/activity'
     | '/admin/blacklist'
     | '/admin/dashboard'
@@ -270,6 +282,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   AdminActivityRoute: typeof AdminActivityRoute
   AdminBlacklistRoute: typeof AdminBlacklistRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/activity': {
@@ -438,6 +458,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   AdminActivityRoute: AdminActivityRoute,
   AdminBlacklistRoute: AdminBlacklistRoute,
   AdminDashboardRoute: AdminDashboardRoute,
