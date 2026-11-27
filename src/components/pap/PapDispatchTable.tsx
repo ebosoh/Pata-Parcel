@@ -30,12 +30,12 @@ import type { ParcelWithSeller } from '@/hooks/usePapOperations';
 interface PapDispatchTableProps {
   parcels: ParcelWithSeller[];
   activeTab: 'sorting' | 'transit' | 'internal';
-  receiptsByParcel: Record<string, any>;
+  receiptSentToBuyer: (parcelId: string) => boolean;
+  onShareReceipt: (parcel: ParcelWithSeller) => void;
   deliveredIds: Record<string, boolean>;
   submitting: boolean;
   onDispatchClick: (parcel: ParcelWithSeller) => void;
   onMarkDelivered: (parcelId: string, referenceNumber?: string) => void;
-  onNavigateReceipts: (referenceNumber: string) => void;
   onRefetch: () => void;
 }
 
@@ -74,12 +74,12 @@ function getStatusBadge(status: string) {
 export function PapDispatchTable({
   parcels,
   activeTab,
-  receiptsByParcel,
+  receiptSentToBuyer,
+  onShareReceipt,
   deliveredIds,
   submitting,
   onDispatchClick,
   onMarkDelivered,
-  onNavigateReceipts,
   onRefetch,
 }: PapDispatchTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -223,22 +223,23 @@ export function PapDispatchTable({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => onNavigateReceipts(parcel.reference_number || '')}
+                                onClick={() => onShareReceipt(parcel)}
+                                title={receiptSentToBuyer(parcel.id) ? 'Receipt shared with buyer — tap to send again' : 'Share receipt with buyer on WhatsApp'}
                                 className={`h-7 px-2 text-[10px] font-semibold flex items-center gap-1 ${
-                                  receiptsByParcel[parcel.id]
+                                  receiptSentToBuyer(parcel.id)
                                     ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300'
                                     : 'border-primary/40 text-primary hover:bg-primary/5'
                                 }`}
                               >
-                                {receiptsByParcel[parcel.id] ? (
+                                {receiptSentToBuyer(parcel.id) ? (
                                   <>
                                     <CheckCircle className="h-3 w-3" />
-                                    Receipt
+                                    Receipt Shared
                                   </>
                                 ) : (
                                   <>
                                     <FileText className="h-3 w-3" />
-                                    Receipt
+                                    Share Receipt
                                   </>
                                 )}
                               </Button>

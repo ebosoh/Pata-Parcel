@@ -69,7 +69,7 @@ function ResetPasswordPage() {
     const { error } = await updatePassword(password);
     if (!error) {
       setDone(true);
-      setTimeout(() => navigate({ to: '/login', replace: true }), 3000);
+      setTimeout(() => navigate({ to: '/login', search: { mode: undefined }, replace: true }), 3000);
     }
   };
 
@@ -86,7 +86,7 @@ function ResetPasswordPage() {
           <Button
             variant="outline"
             className="w-full text-xs"
-            onClick={() => navigate({ to: '/login', replace: true })}
+            onClick={() => navigate({ to: '/login', search: { mode: undefined }, replace: true })}
           >
             Back to Sign In
           </Button>

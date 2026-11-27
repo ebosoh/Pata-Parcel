@@ -4,6 +4,7 @@ import { PapDispatchTable } from '@/components/pap/PapDispatchTable';
 import { StorageImage } from '@/components/shared/StorageImage';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { openReceiptInWhatsApp } from '@/lib/shareReceiptWhatsApp';
 import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
@@ -48,6 +49,8 @@ import {
   Printer
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
+
+const SENT_TO_BUYER_KEY = 'pap:receipts-sent-to-buyer';
 
 export const Route = createFileRoute('/pap/dispatch')({
   validateSearch: (s: Record<string, unknown>): { tab?: 'transit' | 'sorting' | 'internal' | undefined } => ({
@@ -160,6 +163,15 @@ export function PapDispatchPage() {
 
   // Receipt Modal state (after dispatch)
   const [receiptModalParcel, setReceiptModalParcel] = useState<any | null>(null);
+  const [sentToBuyerIds, setSentToBuyerIds] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SENT_TO_BUYER_KEY);
+      if (saved) setSentToBuyerIds(JSON.parse(saved) as Record<string, boolean>);
+    } catch {
+      // Nothing remembered on this device.
+    }
+  }, []);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
 
@@ -259,6 +271,42 @@ export function PapDispatchPage() {
         setTimeout(() => setFeedback(null), 3000);
       }
     }
+  };
+
+  // Share Receipt: with a receipt on file, open WhatsApp on the buyer's chat with
+  // the receipt ready for staff to send; with none yet, go and scan it first.
+  const receiptSentToBuyer = (parcelId: string) =>
+    !!sentToBuyerIds[parcelId] || !!receiptsByParcel[parcelId]?.shared_with_buyer_at;
+
+  const handleShareReceipt = async (parcel: any) => {
+    const receipt = receiptsByParcel[parcel.id];
+    if (!receipt) {
+      navigate({ to: '/pap/receipts', search: { code: parcel.reference_number || '' } });
+      return;
+    }
+    const result = await openReceiptInWhatsApp({
+      receiptImageUrl: receipt.receipt_image_url,
+      referenceNumber: parcel.reference_number || '',
+      buyerName: parcel.buyer_name,
+      buyerPhone: parcel.buyer_phone,
+      destination: parcel.destination,
+      saco: parcel.psv_sacco ?? null,
+    });
+    if (!result.ok) {
+      toast.error(result.message);
+      return;
+    }
+    // Remembered on this device only: recording it in the database would also
+    // mark the parcel delivered, which staff confirm separately.
+    setSentToBuyerIds(prev => {
+      const next = { ...prev, [parcel.id]: true };
+      try {
+        window.localStorage.setItem(SENT_TO_BUYER_KEY, JSON.stringify(next));
+      } catch {
+        // Storage unavailable: the button still updates for this visit.
+      }
+      return next;
+    });
   };
 
   // Handle immediate receipt upload
@@ -593,7 +641,8 @@ export function PapDispatchPage() {
           <PapDispatchTable
             parcels={displayList}
             activeTab={activeTab}
-            receiptsByParcel={receiptsByParcel}
+            receiptSentToBuyer={receiptSentToBuyer}
+            onShareReceipt={handleShareReceipt}
             deliveredIds={deliveredIds}
             submitting={submitting}
             onDispatchClick={(parcel) => {
@@ -605,7 +654,6 @@ export function PapDispatchPage() {
               else setDispatchType('pata_parcel');
             }}
             onMarkDelivered={handleMarkDelivered}
-            onNavigateReceipts={(ref) => navigate({ to: '/pap/receipts', search: { code: ref } })}
             onRefetch={refetch}
           />
         ) : (
@@ -730,14 +778,14 @@ export function PapDispatchPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate({ to: '/pap/receipts', search: { code: parcel.reference_number || '' } })}
+                          onClick={() => handleShareReceipt(parcel)}
                           className={`h-8 font-bold text-xs flex items-center gap-1.5 ${
-                            receiptsByParcel[parcel.id]
+                            receiptSentToBuyer(parcel.id)
                               ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300'
                               : 'border-primary/40 text-primary hover:bg-primary/5'
                           }`}
                         >
-                          {receiptsByParcel[parcel.id] ? (
+                          {receiptSentToBuyer(parcel.id) ? (
                             <>
                               <CheckCircle className="h-3.5 w-3.5" />
                               Receipt Shared

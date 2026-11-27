@@ -2,13 +2,7 @@ import { useState } from 'react';
 import { Check, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import { toStoragePath } from '@/components/shared/StorageImage';
-import { buildReceiptShareMessage, waRecipientFor, waShareUrl, shortenReceiptUrl } from '@/lib/receiptSharing';
-
-const BUCKET = 'receipts';
-/** The buyer gets a week to open the receipt copy. */
-const LINK_VALID_SECONDS = 60 * 60 * 24 * 7;
+import { openReceiptInWhatsApp } from '@/lib/shareReceiptWhatsApp';
 
 interface ReceiptShareButtonProps {
   receiptId: string;
@@ -53,51 +47,19 @@ export function ReceiptShareButton({
     );
   }
 
-// Updated: Share button now only opens WhatsApp with the receipt ready. Staff must manually send.
+  // Opens WhatsApp with the receipt ready; staff press Send themselves.
   async function share() {
-    const recipient = waRecipientFor(buyerPhone);
-    if (!recipient) {
-      toast.error(`The buyer (${buyerName || 'buyer'}) has no valid Kenyan phone number to receive the receipt.`);
-      return;
-    }
-
-    const path = toStoragePath(receiptImageUrl);
-    if (!path) {
-      toast.error('This receipt photo is not available to send.');
-      return;
-    }
-
     setBusy(true);
     try {
-      const { data: signed, error: signError } = await supabase.storage
-        .from(BUCKET)
-        .createSignedUrl(path, LINK_VALID_SECONDS);
-
-      if (signError || !signed?.signedUrl) {
-        console.error('Failed to open receipt for sharing:', signError);
-        toast.error('Could not open the receipt to send. Please try again.');
-        return;
-      }
-
-      const shortUrl = await shortenReceiptUrl(signed.signedUrl);
-
-      const message = buildReceiptShareMessage({
+      const result = await openReceiptInWhatsApp({
+        receiptImageUrl,
         referenceNumber,
         buyerName,
+        buyerPhone,
         destination,
         saco,
-        receiptLink: shortUrl,
       });
-
-      const link = document.createElement('a');
-      link.href = waShareUrl(recipient, message);
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      // No automatic RPC call to mark as shared; staff can confirm later.
+      if (!result.ok) toast.error(result.message);
     } finally {
       setBusy(false);
     }

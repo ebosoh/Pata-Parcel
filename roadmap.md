@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Open
-- Staff Share Receipt: open WhatsApp with the buyer and receipt ready so staff presses Send; make the Active Transit button share directly.
 
 ## Done
+- Staff Share Receipt: in Active Transit it opens WhatsApp on the buyer's chat with the receipt ready for staff to send; with no receipt yet it opens the scan page.
 - Email confirmation: verified real confirmed-account return and reload on phone and desktop; signup-response tests retain first-time verification without repeat prompts for confirmed accounts.
 - Unique payment codes: first reuse warns, second reuse blacklists the normalized phone; buyer and seller flows verified on phones and desktop, temporary test data removed.
 - Dispatch form: multiple package types and optional description; verified saved details after reload at phone width.
