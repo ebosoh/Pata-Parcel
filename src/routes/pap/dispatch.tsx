@@ -456,8 +456,19 @@ export function PapDispatchPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Print and New Dispatch hidden for assistant staff */}
-            {!isAssistant && (
+            {isAssistant ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsNewDialogOpen(true)}
+                className="h-10 shrink-0 px-3 font-bold bg-red-600 text-white hover:bg-red-700 flex items-center gap-1.5"
+                title="Create New Parcel"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create New Parcel</span>
+                <span className="sm:hidden">New</span>
+              </Button>
+            ) : (
               <>
                 <Button
                   variant="outline"
