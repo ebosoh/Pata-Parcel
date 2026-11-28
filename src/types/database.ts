@@ -76,6 +76,7 @@ export type Database = {
           payment_code?: string | null;
           goods_paid?: boolean;
           order_source?: string;
+          product_image_url?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -98,6 +99,7 @@ export type Database = {
           tracking_status?: TrackingStatus;
           platform_fee?: number;
           platform_fee_paid?: boolean;
+          product_image_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -313,6 +315,7 @@ export type Database = {
           _code: string; _buyer_name: string; _buyer_phone: string; _destination: string; _sending_method: string;
           _psv_sacco: string; _pick_point: string; _package_type: string; _package_description: string;
           _sending_fee: number; _goods_amount: number; _payment_code: string;
+          _product_image_url?: string | null;
         };
         Returns: string;
       };

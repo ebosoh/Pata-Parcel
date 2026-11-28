@@ -2,8 +2,6 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { serializePackageTypes, inferPackageTypesFromDescription } from '@/lib/packageDetails';
 import { normalizeBuyerPhone } from '@/lib/complaints';
 import { 
   DELIVERY_SACCO_OPTIONS,
@@ -17,6 +15,8 @@ import { Send, Loader2, Calculator, AlertCircle } from 'lucide-react';
 import { STAFF_SENDING_FEE } from '@/lib/internalPickup';
 import { DestinationCombobox } from '@/components/seller/DestinationCombobox';
 import { trackSellerCreateDispatch } from '@/lib/analytics';
+import { ProductScanner } from '@/components/shared/ProductScanner';
+import { supabase } from '@/lib/supabase';
 
 // Suggested values shown as placeholders so sellers can clear and retype them
 const DEFAULT_SENDING_FEE = 150;
@@ -100,8 +100,34 @@ export function DispatchForm({
   const [psvSacco, setPsvSacco] = useState('');
   const [deliverySacco, setDeliverySacco] = useState('');
   const [pickPoint, setPickPoint] = useState('');
-  const [packageDescription, setPackageDescription] = useState('');
   const [sendingFee, setSendingFee] = useState<number | null>(isStaff ? STAFF_SENDING_FEE : null);
+
+  // Product screenshot state
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
+  const [productImagePreview, setProductImagePreview] = useState<string | null>(null);
+
+  useEffect(() => () => {
+    if (productImagePreview) URL.revokeObjectURL(productImagePreview);
+  }, [productImagePreview]);
+
+  /** Upload the product image to Supabase storage and return its path, or null on failure. */
+  const uploadProductImage = async (file: File): Promise<string | null> => {
+    try {
+      const fileName = `${crypto.randomUUID()}.jpg`;
+      const filePath = `product-scans/${fileName}`;
+      const { error } = await supabase.storage
+        .from('receipts')
+        .upload(filePath, file, { contentType: 'image/jpeg', upsert: false });
+      if (error) {
+        console.warn('Product image upload failed:', error.message);
+        return null;
+      }
+      return filePath;
+    } catch (err) {
+      console.warn('Product image upload error:', err);
+      return null;
+    }
+  };
 
   const handleDeliverySaccoChange = (val: string) => {
     setDeliverySacco(val);
@@ -246,11 +272,15 @@ export function DispatchForm({
       }
     }
 
-    const finalPackageType = isStaff
-      ? 'Parcel'
-      : serializePackageTypes(inferPackageTypesFromDescription(packageDescription), '');
+    const finalPackageType = isStaff ? 'Parcel' : 'Other';
 
     setLoading(true);
+
+    // Upload product screenshot if one was captured
+    let productImageUrl: string | null = null;
+    if (!isStaff && productImageFile) {
+      productImageUrl = await uploadProductImage(productImageFile);
+    }
 
     const finalBuyerName = buyerName.trim();
 
@@ -262,10 +292,11 @@ export function DispatchForm({
       psv_sacco: !isStaff && (sendingMethod === 'psv' || sendingMethod === 'psv_driver') ? (psvSacco || null) : null,
       pick_point: !isStaff && sendingMethod === 'door_to_door' ? pickPoint.trim() : null,
       package_type: finalPackageType,
-      package_description: !isStaff ? (packageDescription.trim() || null) : null,
+      package_description: null,
       sending_fee: totalSendingFee,
       goods_amount: null,
       payment_code: null,
+      product_image_url: productImageUrl,
     });
 
     setLoading(false);
@@ -302,7 +333,9 @@ export function DispatchForm({
       setDestination('');
       setDeliverySacco('');
       setPickPoint('');
-      setPackageDescription('');
+      if (productImagePreview) URL.revokeObjectURL(productImagePreview);
+      setProductImageFile(null);
+      setProductImagePreview(null);
       if (onSuccess) onSuccess();
     }
   };
@@ -435,16 +468,19 @@ export function DispatchForm({
 
         {!isStaff && (
           <div className="space-y-2">
-            <Label htmlFor="package_description" className="text-xs font-medium">
-              Short Description (optional)
+            <Label className="text-xs font-medium">
+              Screenshot (Optional)
             </Label>
-            <Textarea
-              id="package_description"
-              placeholder="e.g. Mummy jeans, Size 42, blue in colour"
-              value={packageDescription}
-              onChange={e => setPackageDescription(e.target.value)}
-              rows={2}
-              className="min-h-20 text-sm"
+            <ProductScanner
+              file={productImageFile}
+              previewUrl={productImagePreview}
+              onChange={(file, url) => {
+                if (productImagePreview && productImagePreview !== url) {
+                  URL.revokeObjectURL(productImagePreview);
+                }
+                setProductImageFile(file);
+                setProductImagePreview(url);
+              }}
             />
           </div>
         )}

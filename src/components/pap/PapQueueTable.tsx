@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { StorageImage } from '@/components/shared/StorageImage';
 import {
   MapPin,
   Clock,
@@ -235,6 +236,15 @@ export function PapQueueTable({
                             <p className="text-muted-foreground text-[11px]">Type: {parcel.package_type || 'General Parcel'}</p>
                             {parcel.package_description && (
                               <p className="text-muted-foreground text-[11px] mt-0.5">Note: {parcel.package_description}</p>
+                            )}
+                            {parcel.product_image_url && (
+                              <div className="mt-1.5">
+                                <StorageImage
+                                  src={parcel.product_image_url}
+                                  alt="Product screenshot"
+                                  className="h-20 w-20 rounded-md border border-border/50 object-cover"
+                                />
+                              </div>
                             )}
                             {parcel.pick_point && (
                               <p className="text-muted-foreground text-[11px] mt-0.5">Pick Point: {parcel.pick_point}</p>

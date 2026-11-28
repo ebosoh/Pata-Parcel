@@ -15,6 +15,8 @@ export interface CreateParcelInput {
   sending_fee: number;
   goods_amount?: number | null;
   payment_code?: string | null;
+  /** Storage path of an optional product screenshot uploaded at dispatch time. */
+  product_image_url?: string | null;
 }
 
 export function useParcels(sellerId?: string | null) {

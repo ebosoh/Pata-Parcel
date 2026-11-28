@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { Parcel, SendingMethod } from '@/types/database';
 import { formatPhoneDisplay } from '@/lib/constants';
+import { StorageImage } from '@/components/shared/StorageImage';
 
 interface ParcelCardProps {
   parcel: Parcel;
@@ -180,6 +181,17 @@ export function ParcelCard({ parcel, onChanged }: ParcelCardProps) {
           <div className="rounded-lg border border-border/40 bg-muted/20 px-2.5 py-1.5 text-xs">
             <span className="block text-[10px] text-muted-foreground">Short Description</span>
             <p className="break-words whitespace-pre-wrap font-medium text-foreground">{parcel.package_description}</p>
+          </div>
+        )}
+
+        {parcel.product_image_url && (
+          <div className="rounded-lg border border-border/40 bg-muted/20 p-2 text-xs">
+            <span className="mb-1.5 block text-[10px] text-muted-foreground">Screenshot</span>
+            <StorageImage
+              src={parcel.product_image_url}
+              alt="Product screenshot"
+              className="h-32 w-full rounded-md border border-border/40 object-cover"
+            />
           </div>
         )}
 

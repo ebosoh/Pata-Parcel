@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrackingProgressBar } from './TrackingProgressBar';
+import { StorageImage } from '@/components/shared/StorageImage';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -321,6 +322,15 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
                               <p className="mt-1 font-medium text-foreground">Type: <span className="font-normal">{parcel.package_type || 'General Parcel'}</span></p>
                               {parcel.package_description && (
                                 <p className="text-muted-foreground text-[11px] mt-0.5">Note: {parcel.package_description}</p>
+                              )}
+                              {parcel.product_image_url && (
+                                <div className="mt-1.5">
+                                  <StorageImage
+                                    src={parcel.product_image_url}
+                                    alt="Product screenshot"
+                                    className="h-20 w-20 rounded-md border border-border/50 object-cover"
+                                  />
+                                </div>
                               )}
                               {parcel.pick_point && (
                                 <p className="text-muted-foreground text-[11px] mt-0.5">Pick Point: {parcel.pick_point}</p>

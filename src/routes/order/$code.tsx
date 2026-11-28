@@ -97,6 +97,7 @@ function BuyerOrderPage() {
       _sending_fee: input.sending_fee,
       _goods_amount: input.goods_amount ?? 0,
       _payment_code: input.payment_code ?? '',
+      _product_image_url: input.product_image_url ?? null,
     });
     const rejection = paymentCodeRejection(data);
     if (rejection) return { data: null, error: new Error(rejection) };
