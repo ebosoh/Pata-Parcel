@@ -88,11 +88,10 @@ export function DispatchForm({
   onSuccess,
   onCancel,
   mode = 'seller',
-  hideGoodsPayment = false,
+  hideGoodsPayment: _hideGoodsPayment = false,
 }: DispatchFormProps) {
   const isBuyer = mode === 'buyer';
   const isStaff = mode === 'staff';
-  const showGoodsPayment = !hideGoodsPayment && !isStaff;
   // Form State
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
@@ -103,7 +102,6 @@ export function DispatchForm({
   const [pickPoint, setPickPoint] = useState('');
   const [packageDescription, setPackageDescription] = useState('');
   const [sendingFee, setSendingFee] = useState<number | null>(isStaff ? STAFF_SENDING_FEE : null);
-  const [goodsAmount, setGoodsAmount] = useState('');
 
   const handleDeliverySaccoChange = (val: string) => {
     setDeliverySacco(val);
@@ -252,16 +250,6 @@ export function DispatchForm({
       ? 'Parcel'
       : serializePackageTypes(inferPackageTypesFromDescription(packageDescription), '');
 
-    const amount = showGoodsPayment && goodsAmount.trim() !== '' ? Number(goodsAmount) : null;
-    if (amount !== null && (!Number.isFinite(amount) || amount < 0)) {
-      setFormError('Please enter a valid amount for the goods');
-      return;
-    }
-    if (showGoodsPayment && amount === null) {
-      setFormError(isBuyer ? 'Please enter the amount you paid for the goods' : 'Please enter the total amount for the goods');
-      return;
-    }
-
     setLoading(true);
 
     const finalBuyerName = buyerName.trim();
@@ -276,7 +264,7 @@ export function DispatchForm({
       package_type: finalPackageType,
       package_description: !isStaff ? (packageDescription.trim() || null) : null,
       sending_fee: totalSendingFee,
-      goods_amount: amount,
+      goods_amount: null,
       payment_code: null,
     });
 
@@ -303,7 +291,7 @@ export function DispatchForm({
           sending_method: isStaff ? 'pata_parcel' : sendingMethod,
           package_type: finalPackageType,
           sending_fee: totalSendingFee,
-          goods_amount: amount,
+          goods_amount: null,
         });
       }
       lastAutoFilledPhoneRef.current = null;
@@ -315,7 +303,6 @@ export function DispatchForm({
       setDeliverySacco('');
       setPickPoint('');
       setPackageDescription('');
-      setGoodsAmount('');
       if (onSuccess) onSuccess();
     }
   };
@@ -500,28 +487,6 @@ export function DispatchForm({
         )}
 
       </div>
-
-      {/* 4. Goods Payment */}
-      {showGoodsPayment && (
-        <div className="space-y-3 rounded-xl border border-border/90 bg-card p-4 shadow-md">
-          <div className="space-y-2">
-            <Label htmlFor="goods_amount" className="text-xs font-medium">
-              Total Amount (goods) *
-            </Label>
-            <Input
-              id="goods_amount"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              placeholder=""
-              value={goodsAmount}
-              onChange={(e) => setGoodsAmount(e.target.value)}
-              required
-              className="h-10 text-sm"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Action Buttons */}
       <div className="flex gap-2 pt-2">
