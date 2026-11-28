@@ -176,6 +176,13 @@
       "when": 1795859464184,
       "tag": "0024_align_admin_profile_phone_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795859944418,
+      "tag": "0025_reverse_internal_pickups",
+      "breakpoints": true
     }
   ]
 }

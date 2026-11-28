@@ -46,7 +46,8 @@ import {
   LayoutGrid,
   Table2,
   Plus,
-  Printer
+  Printer,
+  RotateCcw
 } from 'lucide-react';
 import { formatPhoneDisplay } from '@/lib/constants';
 
@@ -82,7 +83,7 @@ function getStayInfo(createdAt: string) {
 }
 
 export function PapDispatchPage() {
-  const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -92,6 +93,8 @@ export function PapDispatchPage() {
     error,
     dispatchParcel,
     deliverParcel,
+    reversePickup,
+    batchReversePickup,
     uploadReceipt,
     receiptsByParcel,
     refetch,
@@ -188,12 +191,33 @@ export function PapDispatchPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // Internal Pick-up parcels (staff-created dispatches or hub pick-ups not yet delivered)
+  // Internal Pick-up parcels (staff-created dispatches or hub pick-ups)
   const internalParcels = useMemo(() => {
     return parcels.filter(
-      p => (isInternalPickup(p) || p.sending_method === 'pata_parcel') && p.tracking_status !== 'delivered'
+      p => isInternalPickup(p) || p.sending_method === 'pata_parcel'
     );
   }, [parcels]);
+
+  // Sub-filter for Internal Pick-up tab: 'all' | 'pending' | 'completed'
+  const [internalStatusFilter, setInternalStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
+
+  const pendingInternalCount = useMemo(() => {
+    return internalParcels.filter(p => !deliveredIds[p.id] && p.tracking_status !== 'delivered').length;
+  }, [internalParcels, deliveredIds]);
+
+  const completedInternalCount = useMemo(() => {
+    return internalParcels.filter(p => deliveredIds[p.id] || p.tracking_status === 'delivered').length;
+  }, [internalParcels, deliveredIds]);
+
+  const filteredInternalParcels = useMemo(() => {
+    if (internalStatusFilter === 'pending') {
+      return internalParcels.filter(p => !deliveredIds[p.id] && p.tracking_status !== 'delivered');
+    }
+    if (internalStatusFilter === 'completed') {
+      return internalParcels.filter(p => deliveredIds[p.id] || p.tracking_status === 'delivered');
+    }
+    return internalParcels;
+  }, [internalParcels, internalStatusFilter, deliveredIds]);
 
   // Sorting parcels (Ready to Dispatch - external sellers)
   const sortingParcels = useMemo(() => {
@@ -221,7 +245,7 @@ export function PapDispatchPage() {
   }, [selectedParcel]);
 
   const displayList = useMemo(() => {
-    const list = activeTab === 'sorting' ? sortingParcels : activeTab === 'transit' ? transitParcels : internalParcels;
+    const list = activeTab === 'sorting' ? sortingParcels : activeTab === 'transit' ? transitParcels : filteredInternalParcels;
     if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
     return list.filter(p => {
@@ -232,7 +256,7 @@ export function PapDispatchPage() {
       const matchSeller = p.seller?.business_name?.toLowerCase().includes(q);
       return matchBuyer || matchBuyerPhone || matchDest || matchRef || matchSeller;
     });
-  }, [activeTab, sortingParcels, transitParcels, internalParcels, searchQuery]);
+  }, [activeTab, sortingParcels, transitParcels, filteredInternalParcels, searchQuery]);
 
   // Handle Dispatch submission
   const handleConfirmDispatch = async (e: React.FormEvent) => {
@@ -353,6 +377,52 @@ export function PapDispatchPage() {
 
     setFeedback(`Parcel ${refNum || ''} marked as Delivered!`);
     setTimeout(() => setFeedback(null), 3000);
+  };
+
+  // Handle Reverse Pick-up
+  const handleReversePickup = async (parcelId: string, refNum?: string) => {
+    setSubmitting(true);
+    setDeliveryError(null);
+    setDeliveredIds(prev => {
+      const next = { ...prev };
+      delete next[parcelId];
+      return next;
+    });
+
+    const { error: revErr } = await reversePickup(parcelId);
+    setSubmitting(false);
+
+    if (revErr) {
+      setDeliveryError(`Could not reverse pick-up for ${refNum || 'parcel'}. Please try again.`);
+      setTimeout(() => setDeliveryError(null), 5000);
+      return;
+    }
+
+    setFeedback(`Pick-up for ${refNum || 'parcel'} reversed — returned to pending.`);
+    toast.success(`Pick-up reversed for ${refNum || 'parcel'}`);
+    setTimeout(() => setFeedback(null), 4000);
+  };
+
+  // Handle Reverse All Completed
+  const handleReverseAllCompleted = async () => {
+    const completedParcels = internalParcels.filter(p => deliveredIds[p.id] || p.tracking_status === 'delivered');
+    if (completedParcels.length === 0) return;
+    setSubmitting(true);
+    setDeliveryError(null);
+    setDeliveredIds({});
+
+    const { error: revErr } = await batchReversePickup(completedParcels.map(p => p.id));
+    setSubmitting(false);
+
+    if (revErr) {
+      setDeliveryError('Could not reverse completed pick-ups. Please try again.');
+      setTimeout(() => setDeliveryError(null), 5000);
+      return;
+    }
+
+    setFeedback(`All ${completedParcels.length} completed pick-up(s) reversed back to pending.`);
+    toast.success(`Reversed ${completedParcels.length} pick-up(s) back to pending`);
+    setTimeout(() => setFeedback(null), 4000);
   };
 
   return (
@@ -523,6 +593,61 @@ export function PapDispatchPage() {
           </div>
         </div>
 
+        {/* Internal Pick-up Sub-filter & Actions Bar */}
+        {activeTab === 'internal' && !loading && internalParcels.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/40 p-2 rounded-xl border border-border/60">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setInternalStatusFilter('all')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  internalStatusFilter === 'all'
+                    ? 'bg-background text-primary shadow-xs font-bold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                All ({internalParcels.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setInternalStatusFilter('pending')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  internalStatusFilter === 'pending'
+                    ? 'bg-background text-primary shadow-xs font-bold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Pending Pick-up ({pendingInternalCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setInternalStatusFilter('completed')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+                  internalStatusFilter === 'completed'
+                    ? 'bg-background text-primary shadow-xs font-bold'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Completed ({completedInternalCount})
+              </button>
+            </div>
+
+            {completedInternalCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReverseAllCompleted}
+                disabled={submitting}
+                className="h-8 text-xs font-bold border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 flex items-center gap-1.5"
+                title="Reverse all completed pick-ups back to pending"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>Reverse All Completed ({completedInternalCount})</span>
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* List of Parcels */}
         {loading ? (
           <div className="space-y-3">
@@ -626,7 +751,23 @@ export function PapDispatchPage() {
                                 Complete Pick-up
                               </Button>
                             ) : (
-                              <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">Delivered</Badge>
+                              <div className="flex items-center gap-1.5">
+                                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-[10px] font-semibold flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Picked Up
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleReversePickup(parcel.id, parcel.reference_number)}
+                                  disabled={submitting}
+                                  className="h-7 text-[11px] font-bold border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 cursor-pointer px-2 flex items-center gap-1"
+                                  title="Reverse completed pick-up action"
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                  Reverse Pick-up
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </td>
@@ -738,7 +879,23 @@ export function PapDispatchPage() {
                           Complete Pick-up
                         </Button>
                       ) : (
-                        <Badge className="bg-emerald-100 text-emerald-800 text-xs">Delivered</Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-semibold flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Picked Up
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleReversePickup(parcel.id, parcel.reference_number)}
+                            disabled={submitting}
+                            className="h-8 font-bold text-xs border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 flex items-center gap-1.5"
+                            title="Reverse completed pick-up action"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Reverse Pick-up
+                          </Button>
+                        </div>
                       )}
                     </>
                   ) : activeTab === 'sorting' ? (

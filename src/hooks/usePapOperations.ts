@@ -272,6 +272,66 @@ export function usePapOperations(staffUserId?: string | null) {
     }
   }, [staffUserId, fetchParcels]);
 
+  // Reverse a delivered/completed parcel back to sorting stage
+  const reversePickup = useCallback(async (parcelId: string, notes?: string) => {
+    if (!staffUserId) return { error: new Error('Staff user not authenticated') };
+
+    try {
+      const { error: updateErr } = await supabase
+        .from('parcels')
+        .update({
+          tracking_status: 'sorting' as TrackingStatus,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .eq('id', parcelId);
+
+      if (updateErr) throw updateErr;
+
+      await supabase.from('parcel_tracking').insert({
+        parcel_id: parcelId,
+        status: 'sorting' as TrackingStatus,
+        updated_by: staffUserId,
+        notes: notes || 'Pick-up action reversed by admin — parcel returned to sorting',
+      } as any);
+
+      await fetchParcels();
+      return { error: null };
+    } catch (err: any) {
+      return { error: err };
+    }
+  }, [staffUserId, fetchParcels]);
+
+  // Batch reverse multiple delivered parcels back to sorting stage
+  const batchReversePickup = useCallback(async (parcelIds: string[]) => {
+    if (!staffUserId || parcelIds.length === 0) return { error: new Error('Missing staff user or parcel IDs') };
+
+    try {
+      const { error: updateErr } = await supabase
+        .from('parcels')
+        .update({
+          tracking_status: 'sorting' as TrackingStatus,
+          updated_at: new Date().toISOString(),
+        } as any)
+        .in('id', parcelIds);
+
+      if (updateErr) throw updateErr;
+
+      const trackingRows = parcelIds.map(id => ({
+        parcel_id: id,
+        status: 'sorting' as TrackingStatus,
+        updated_by: staffUserId,
+        notes: 'Pick-up action reversed by admin — parcel returned to sorting',
+      }));
+
+      await supabase.from('parcel_tracking').insert(trackingRows as any);
+
+      await fetchParcels();
+      return { error: null };
+    } catch (err: any) {
+      return { error: err };
+    }
+  }, [staffUserId, fetchParcels]);
+
   // Upload receipt image to Supabase Storage and link to parcel
   const uploadReceipt = useCallback(async (parcelId: string, file: File) => {
     if (!staffUserId) return { data: null, error: new Error('Staff user not authenticated') };
@@ -411,6 +471,8 @@ export function usePapOperations(staffUserId?: string | null) {
     receiveParcels,
     dispatchParcel,
     deliverParcel,
+    reversePickup,
+    batchReversePickup,
     uploadReceipt,
     createParcel,
     refetch: fetchParcels,
