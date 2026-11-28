@@ -830,7 +830,7 @@ export function PapDispatchPage() {
           />
         ) : (
           <div className="space-y-3">
-            {displayList.map((parcel) => {
+            {internalPagination.paginatedItems.map((parcel) => {
               const stayInfo = activeTab === 'internal' ? getStayInfo(parcel.created_at) : null;
               const isDelivered = deliveredIds[parcel.id] || parcel.tracking_status === 'delivered';
               return (
@@ -1005,6 +1005,18 @@ export function PapDispatchPage() {
               </Card>
               );
             })}
+            <div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-xs">
+              <TablePagination
+                page={internalPagination.page}
+                pageSize={internalPagination.pageSize}
+                totalItems={internalPagination.totalItems}
+                totalPages={internalPagination.totalPages}
+                startItem={internalPagination.startItem}
+                endItem={internalPagination.endItem}
+                onPageChange={internalPagination.setPage}
+                onPageSizeChange={internalPagination.setPageSize}
+              />
+            </div>
           </div>
         )}
 
