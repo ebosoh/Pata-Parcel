@@ -391,8 +391,9 @@ export function PapDispatchPage() {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  // Handle Reverse Pick-up
+  // Handle Reverse Pick-up (admin only)
   const handleReversePickup = async (parcelId: string, refNum?: string) => {
+    if (!isAdmin) return;
     setSubmitting(true);
     setDeliveryError(null);
     setDeliveredIds(prev => {
@@ -415,8 +416,9 @@ export function PapDispatchPage() {
     setTimeout(() => setFeedback(null), 4000);
   };
 
-  // Handle Reverse All Completed
+  // Handle Reverse All Completed (admin only)
   const handleReverseAllCompleted = async () => {
+    if (!isAdmin) return;
     const completedParcels = internalParcels.filter(p => deliveredIds[p.id] || p.tracking_status === 'delivered');
     if (completedParcels.length === 0) return;
     setSubmitting(true);
@@ -645,7 +647,7 @@ export function PapDispatchPage() {
               </button>
             </div>
 
-            {completedInternalCount > 0 && (
+            {isAdmin && completedInternalCount > 0 && (
               <Button
                 variant="outline"
                 size="sm"
@@ -769,17 +771,19 @@ export function PapDispatchPage() {
                                   <CheckCircle className="h-3 w-3" />
                                   Picked Up
                                 </Badge>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleReversePickup(parcel.id, parcel.reference_number)}
-                                  disabled={submitting}
-                                  className="h-7 text-[11px] font-bold border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 cursor-pointer px-2 flex items-center gap-1"
-                                  title="Reverse completed pick-up action"
-                                >
-                                  <RotateCcw className="h-3 w-3" />
-                                  Reverse Pick-up
-                                </Button>
+                                {isAdmin && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleReversePickup(parcel.id, parcel.reference_number)}
+                                    disabled={submitting}
+                                    className="h-7 text-[11px] font-bold border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 cursor-pointer px-2 flex items-center gap-1"
+                                    title="Reverse completed pick-up action"
+                                  >
+                                    <RotateCcw className="h-3 w-3" />
+                                    Reverse Pick-up
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -897,17 +901,19 @@ export function PapDispatchPage() {
                             <CheckCircle className="h-3 w-3" />
                             Picked Up
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleReversePickup(parcel.id, parcel.reference_number)}
-                            disabled={submitting}
-                            className="h-8 font-bold text-xs border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 flex items-center gap-1.5"
-                            title="Reverse completed pick-up action"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Reverse Pick-up
-                          </Button>
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleReversePickup(parcel.id, parcel.reference_number)}
+                              disabled={submitting}
+                              className="h-8 font-bold text-xs border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-950/40 flex items-center gap-1.5"
+                              title="Reverse completed pick-up action"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              Reverse Pick-up
+                            </Button>
+                          )}
                         </div>
                       )}
                     </>
