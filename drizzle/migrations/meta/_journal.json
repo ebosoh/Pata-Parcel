@@ -162,6 +162,20 @@
       "when": 1795767444418,
       "tag": "0022_buyer_order_payment_code_optional",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795859290478,
+      "tag": "0023_admin_edit_seller_profiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795859464184,
+      "tag": "0024_align_admin_profile_phone_validation",
+      "breakpoints": true
     }
   ]
 }

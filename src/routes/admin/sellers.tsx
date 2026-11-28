@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { SellerDispatchesTable } from '@/components/seller/SellerDispatchesTable';
+import { AdminSellerProfileEditor } from '@/components/seller/AdminSellerProfileEditor';
 import {
   Store,
   Search,
@@ -620,17 +621,17 @@ export function AdminSellersPage() {
         {/* 4. Comprehensive Seller Profile Modal */}
         {selectedSeller && (
           <Dialog open={profileModalOpen} onOpenChange={(open) => (!open ? handleCloseProfile() : null)}>
-            <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-5">
+            <DialogContent className="w-[calc(100%-1rem)] max-w-2xl grid-cols-1 max-h-[92vh] overflow-y-auto overflow-x-hidden p-4 sm:p-5">
               <DialogHeader>
-                <div className="flex items-center justify-between pb-1">
-                  <DialogTitle className="text-base font-bold flex items-center gap-2">
-                    <Store className="h-5 w-5 text-primary" />
+                <div className="flex min-w-0 items-center justify-between pb-1 pr-6">
+                  <DialogTitle className="text-base font-bold flex min-w-0 items-center gap-2">
+                    <Store className="h-5 w-5 shrink-0 text-primary" />
                     Seller Profile & Dispatch Details
                   </DialogTitle>
                 </div>
               </DialogHeader>
 
-              <div className="space-y-4 pt-1 text-xs">
+              <div className="min-w-0 space-y-4 pt-1 text-xs">
                 {/* Profile Card Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-border/80 bg-muted/30 p-4">
                   <div className="h-16 w-16 shrink-0 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center overflow-hidden">
@@ -694,6 +695,17 @@ export function AdminSellersPage() {
                 </div>
 
                 {/* Quick Action Buttons */}
+                {user && (
+                  <AdminSellerProfileEditor
+                    key={selectedSeller.id}
+                    seller={selectedSeller}
+                    userId={user.id}
+                    onSaved={(updated) => {
+                      setSelectedSeller(updated);
+                      setSellers((current) => current.map((seller) => seller.id === updated.id ? updated : seller));
+                    }}
+                  />
+                )}
                 <div className="flex flex-wrap gap-2">
                   {waRecipientFor(selectedSeller.phone) && (
                     <a

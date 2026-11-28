@@ -457,6 +457,10 @@ export type Database = {
         Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
       }
+      admin_update_seller_profile: {
+        Args: { _input: Json; _seller_id: string }
+        Returns: Json
+      }
       get_order_seller: {
         Args: { _code: string }
         Returns: {

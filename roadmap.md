@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Open
+- Super Admin: edit seller profile details and pictures; verify permissions and saved changes on phones.
 
 ## Done
 - Staff Share Receipt: in Active Transit it opens WhatsApp on the buyer's chat with the receipt ready for staff to send; with no receipt yet it opens the scan page.

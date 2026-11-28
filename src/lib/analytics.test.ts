@@ -52,9 +52,9 @@ test('trackEvent pushes to dataLayer and calls gtag', () => {
   withMockWindow((dataLayer, gtagCalls) => {
     trackEvent('custom_event', { plan: 'pro' });
     assert.equal(dataLayer.length, 1);
-    assert.equal(dataLayer[0].event, 'custom_event');
-    assert.equal(dataLayer[0].plan, 'pro');
-    assert.ok(typeof dataLayer[0].timestamp === 'string');
+    assert.equal(dataLayer[0]?.['event'], 'custom_event');
+    assert.equal(dataLayer[0]?.['plan'], 'pro');
+    assert.ok(typeof dataLayer[0]?.['timestamp'] === 'string');
 
     assert.equal(gtagCalls.length, 1);
     assert.deepEqual(gtagCalls[0], ['event', 'custom_event', { plan: 'pro' }]);
@@ -70,10 +70,10 @@ test('trackBuyerOrderSubmit calculates total KES value', () => {
       goods_amount: 1500,
       sending_fee: 140,
     });
-    assert.equal(dataLayer[0].event, 'buyer_order_submit');
-    assert.equal(dataLayer[0].destination, 'Nakuru');
-    assert.equal(dataLayer[0].value, 1640);
-    assert.equal(dataLayer[0].currency, 'KES');
+    assert.equal(dataLayer[0]?.['event'], 'buyer_order_submit');
+    assert.equal(dataLayer[0]?.['destination'], 'Nakuru');
+    assert.equal(dataLayer[0]?.['value'], 1640);
+    assert.equal(dataLayer[0]?.['currency'], 'KES');
   });
 });
 
@@ -93,7 +93,7 @@ test('all key funnel event helpers emit expected event names', () => {
     trackUserLogin('phone');
 
     assert.deepEqual(
-      dataLayer.map((entry) => entry.event),
+      dataLayer.map((entry) => entry['event']),
       [
         'seller_create_dispatch',
         'seller_copy_order_link',

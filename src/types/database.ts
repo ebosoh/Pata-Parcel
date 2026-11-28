@@ -306,6 +306,8 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      has_role: { Args: { _user_id: string; _role: 'pap_admin' | 'pap_staff' }; Returns: boolean };
+      admin_update_seller_profile: { Args: { _seller_id: string; _input: Json }; Returns: Json };
       seller_create_parcel: { Args: { _input: Json }; Returns: Json };
       resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };
       mark_receipt_shared_with_buyer: { Args: { p_receipt_id: string }; Returns: boolean };

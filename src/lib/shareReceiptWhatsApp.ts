@@ -70,7 +70,7 @@ export async function openReceiptInWhatsApp(share: ReceiptWhatsAppShare): Promis
   trackShareReceiptWhatsApp({
     tracking_code: share.referenceNumber,
     destination: share.destination,
-    sacco: share.saco,
+    sacco: share.saco ?? null,
   });
 
   return { ok: true };

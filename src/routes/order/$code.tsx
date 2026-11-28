@@ -107,7 +107,7 @@ function BuyerOrderPage() {
         destination: input.destination,
         sending_method: input.sending_method,
         package_type: input.package_type,
-        goods_amount: input.goods_amount,
+        goods_amount: input.goods_amount ?? null,
         sending_fee: input.sending_fee,
       });
     }
