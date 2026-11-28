@@ -224,6 +224,7 @@ export type Database = {
           pick_point: string | null
           platform_fee: number
           platform_fee_paid: boolean
+          product_image_url: string | null
           psv_sacco: string | null
           reference_number: string
           seller_id: string
@@ -250,6 +251,7 @@ export type Database = {
           pick_point?: string | null
           platform_fee?: number
           platform_fee_paid?: boolean
+          product_image_url?: string | null
           psv_sacco?: string | null
           reference_number?: string
           seller_id: string
@@ -276,6 +278,7 @@ export type Database = {
           pick_point?: string | null
           platform_fee?: number
           platform_fee_paid?: boolean
+          product_image_url?: string | null
           psv_sacco?: string | null
           reference_number?: string
           seller_id?: string
@@ -499,6 +502,7 @@ export type Database = {
           _package_type: string
           _payment_code: string
           _pick_point: string
+          _product_image_url?: string
           _psv_sacco: string
           _sending_fee: number
           _sending_method: string
