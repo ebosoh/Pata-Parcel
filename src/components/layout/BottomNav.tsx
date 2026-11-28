@@ -46,12 +46,19 @@ const PAP_ADMIN_OVERFLOW: NavItem[] = [
   { to: '/admin/blacklist',  label: 'Blacklist',         icon: ShieldAlert},
 ];
 
+// ── Assistant Staff: Only Internal Pick-up tab ─────────────────────────────
+const ASSISTANT_STAFF_MAIN: NavItem[] = [
+  { to: '/pap/dispatch?tab=internal', label: 'Internal Pick-up', icon: Package },
+];
+const ASSISTANT_STAFF_OVERFLOW: NavItem[] = [];
+
 function getNav(role: UserRole | null): { main: NavItem[]; overflow: NavItem[] } {
   switch (role) {
-    case 'seller':    return { main: SELLER_MAIN,    overflow: SELLER_OVERFLOW    };
-    case 'pap_staff': return { main: PAP_STAFF_MAIN, overflow: PAP_STAFF_OVERFLOW };
-    case 'pap_admin': return { main: PAP_ADMIN_MAIN, overflow: PAP_ADMIN_OVERFLOW };
-    default:          return { main: [],              overflow: []                 };
+    case 'seller':          return { main: SELLER_MAIN,          overflow: SELLER_OVERFLOW          };
+    case 'pap_staff':       return { main: PAP_STAFF_MAIN,       overflow: PAP_STAFF_OVERFLOW       };
+    case 'assistant_staff': return { main: ASSISTANT_STAFF_MAIN, overflow: ASSISTANT_STAFF_OVERFLOW };
+    case 'pap_admin':       return { main: PAP_ADMIN_MAIN,       overflow: PAP_ADMIN_OVERFLOW       };
+    default:                return { main: [],                    overflow: []                       };
   }
 }
 
@@ -116,7 +123,8 @@ export function BottomNav({ role }: BottomNavProps) {
       <div className="mx-auto flex h-16 max-w-lg items-center justify-around">
         {/* Main nav items */}
         {main.map((item) => {
-          const isActive = location.pathname.startsWith(item.to);
+          const path = item.to.split('?')[0];
+          const isActive = location.pathname.startsWith(path);
           const Icon = item.icon;
           return (
             <Link

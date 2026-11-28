@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type UserRole = 'seller' | 'pap_admin' | 'pap_staff';
+export type UserRole = 'seller' | 'pap_admin' | 'pap_staff' | 'assistant_staff';
 export type SendingMethod = 'pickup_mtaani' | 'pata_parcel' | 'door_to_door' | 'psv' | 'psv_driver';
 export type PaymentStatus = 'paid' | 'unpaid' | 'pay_on_delivery';
 export type TrackingStatus = 'awaiting_verification' | 'dispatched_to_pap' | 'sorting' | 'on_transit' | 'delivered';
@@ -306,7 +306,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      has_role: { Args: { _user_id: string; _role: 'pap_admin' | 'pap_staff' }; Returns: boolean };
+      has_role: { Args: { _user_id: string; _role: 'pap_admin' | 'pap_staff' | 'assistant_staff' }; Returns: boolean };
       admin_update_seller_profile: { Args: { _seller_id: string; _input: Json }; Returns: Json };
       seller_create_parcel: { Args: { _input: Json }; Returns: Json };
       resolve_buyer_complaint: { Args: { p_complaint_id: string }; Returns: boolean };

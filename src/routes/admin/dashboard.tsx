@@ -25,10 +25,14 @@ export const Route = createFileRoute('/admin/dashboard')({
   component: AdminDashboard,
 });
 
-type StaffRole = 'pap_admin' | 'pap_staff';
+type StaffRole = 'pap_admin' | 'pap_staff' | 'assistant_staff';
 interface StaffRow { user_id: string; email: string; owner_name: string; role: StaffRole }
 
-const ROLE_LABEL: Record<StaffRole, string> = { pap_admin: 'Admin', pap_staff: 'Staff' };
+const ROLE_LABEL: Record<StaffRole, string> = {
+  pap_admin: 'Admin',
+  pap_staff: 'Staff',
+  assistant_staff: 'Assistant Staff',
+};
 
 function AdminDashboard() {
   const { user, profile, isAuthenticated, loading: authLoading } = useAuth();
@@ -110,6 +114,7 @@ function AdminDashboard() {
                   <SelectTrigger aria-label="Role"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pap_staff">Staff</SelectItem>
+                    <SelectItem value="assistant_staff">Assistant Staff</SelectItem>
                     <SelectItem value="pap_admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -138,9 +143,10 @@ function AdminDashboard() {
                   ) : (
                     <>
                       <Select value={row.role} onValueChange={v => setStaffRole(row.email, v as StaffRole)}>
-                        <SelectTrigger className="w-28 h-8 text-xs" aria-label={`Role for ${row.email}`}><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-36 h-8 text-xs" aria-label={`Role for ${row.email}`}><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pap_staff">Staff</SelectItem>
+                          <SelectItem value="assistant_staff">Assistant Staff</SelectItem>
                           <SelectItem value="pap_admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>

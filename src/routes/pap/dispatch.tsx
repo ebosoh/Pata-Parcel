@@ -85,6 +85,7 @@ function getStayInfo(createdAt: string) {
 export function PapDispatchPage() {
   const { user, profile, isAuthenticated, loading: authLoading, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const isAssistant = profile?.role === 'assistant_staff';
 
   const {
     parcels,
@@ -108,7 +109,13 @@ export function PapDispatchPage() {
   // Tabs: 'sorting' (Ready to Dispatch) vs 'transit' (On Transit) vs 'internal' (Internal Pick-up)
   const [activeTab, setActiveTab] = useState<'sorting' | 'transit' | 'internal'>('sorting');
   const { tab: tabParam } = Route.useSearch();
-  useEffect(() => { if (tabParam) setActiveTab(tabParam); }, [tabParam]);
+  useEffect(() => {
+    if (isAssistant) {
+      setActiveTab('internal');
+    } else if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [isAssistant, tabParam]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'card' | 'table'>(() => {
     if (typeof window !== 'undefined') {
@@ -245,7 +252,13 @@ export function PapDispatchPage() {
   }, [selectedParcel]);
 
   const displayList = useMemo(() => {
-    const list = activeTab === 'sorting' ? sortingParcels : activeTab === 'transit' ? transitParcels : filteredInternalParcels;
+    const list = isAssistant
+      ? filteredInternalParcels
+      : activeTab === 'sorting'
+        ? sortingParcels
+        : activeTab === 'transit'
+          ? transitParcels
+          : filteredInternalParcels;
     if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
     return list.filter(p => {
@@ -256,7 +269,7 @@ export function PapDispatchPage() {
       const matchSeller = p.seller?.business_name?.toLowerCase().includes(q);
       return matchBuyer || matchBuyerPhone || matchDest || matchRef || matchSeller;
     });
-  }, [activeTab, sortingParcels, transitParcels, filteredInternalParcels, searchQuery]);
+  }, [isAssistant, activeTab, sortingParcels, transitParcels, filteredInternalParcels, searchQuery]);
 
   // Handle Dispatch submission
   const handleConfirmDispatch = async (e: React.FormEvent) => {
@@ -426,59 +439,66 @@ export function PapDispatchPage() {
   };
 
   return (
-    <AppShell role="pap_staff">
+    <AppShell role={profile?.role ?? 'pap_staff'}>
       <div className="space-y-4 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h1 className="truncate text-xl font-bold text-foreground flex items-center gap-2">
               <Truck className="h-5 w-5 text-primary shrink-0" />
-              <span>PAP Dispatch & Sorting Hub</span>
+              <span>{isAssistant ? 'PAP Internal Pick-up Hub' : 'PAP Dispatch & Sorting Hub'}</span>
             </h1>
             <p className="text-xs text-muted-foreground">
-              Dispatch parcels to PSV, Pick-up Mtaani, Door-to-Door, or PAP points
+              {isAssistant
+                ? 'Manage customer pick-ups and collections at the Pata Parcel hub'
+                : 'Dispatch parcels to PSV, Pick-up Mtaani, Door-to-Door, or PAP points'}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsPrintModalOpen(true)}
-              className="h-10 shrink-0 px-3 font-semibold text-xs flex items-center gap-1.5"
-              title="Print offline sorting manifest table"
-            >
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Print / PDF</span>
-            </Button>
-
-            <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="h-10 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">New Dispatch</span>
-                  <span className="sm:hidden">New</span>
+            {/* Print and New Dispatch hidden for assistant staff */}
+            {!isAssistant && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsPrintModalOpen(true)}
+                  className="h-10 shrink-0 px-3 font-semibold text-xs flex items-center gap-1.5"
+                  title="Print offline sorting manifest table"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span className="hidden sm:inline">Print / PDF</span>
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                    <Package className="h-5 w-5" />
-                    Dispatch New Parcel
-                  </DialogTitle>
-                </DialogHeader>
-                <DispatchForm
-                  mode="staff"
-                  destinations={destinations}
-                  onSubmit={createParcel}
-                  onSuccess={() => {
-                    setIsNewDialogOpen(false);
-                    toast.success('New dispatch created successfully');
-                  }}
-                  onCancel={() => setIsNewDialogOpen(false)}
-                />
-              </DialogContent>
-            </Dialog>
+
+                <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="h-10 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">New Dispatch</span>
+                      <span className="sm:hidden">New</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                        <Package className="h-5 w-5" />
+                        Dispatch New Parcel
+                      </DialogTitle>
+                    </DialogHeader>
+                    <DispatchForm
+                      mode="staff"
+                      destinations={destinations}
+                      onSubmit={createParcel}
+                      onSuccess={() => {
+                        setIsNewDialogOpen(false);
+                        toast.success('New dispatch created successfully');
+                      }}
+                      onCancel={() => setIsNewDialogOpen(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
 
             <Button
               variant="outline"
@@ -508,42 +528,44 @@ export function PapDispatchPage() {
           </div>
         )}
 
-        {/* Tab Switcher */}
-        <div className="grid grid-cols-3 rounded-xl bg-muted p-1 border border-border/60">
-          <button
-            onClick={() => setActiveTab('sorting')}
-            className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'sorting'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Clock className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Ready to Dispatch ({sortingParcels.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('transit')}
-            className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'transit'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Truck className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Active Transit ({transitParcels.length})</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('internal')}
-            className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'internal'
-                ? 'bg-background text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Package className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Internal Pick-up ({internalParcels.length})</span>
-          </button>
-        </div>
+        {/* Tab Switcher — hidden for assistant staff (they only see Internal Pick-up) */}
+        {!isAssistant && (
+          <div className="grid grid-cols-3 rounded-xl bg-muted p-1 border border-border/60">
+            <button
+              onClick={() => setActiveTab('sorting')}
+              className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'sorting'
+                  ? 'bg-background text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Ready to Dispatch ({sortingParcels.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('transit')}
+              className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'transit'
+                  ? 'bg-background text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Truck className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Active Transit ({transitParcels.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('internal')}
+              className={`py-2 px-1 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                activeTab === 'internal'
+                  ? 'bg-background text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Package className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Internal Pick-up ({internalParcels.length})</span>
+            </button>
+          </div>
+        )}
 
         {/* Search Input & View Toggle */}
         <div className="flex items-center gap-2">

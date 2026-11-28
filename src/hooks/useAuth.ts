@@ -300,6 +300,7 @@ export function useAuth() {
     isAuthenticated: !!state.session,
     isAdmin: state.profile?.role === 'pap_admin',
     isStaff: state.profile?.role === 'pap_staff',
+    isAssistantStaff: state.profile?.role === 'assistant_staff',
     isSeller: state.profile?.role === 'seller' || (!state.profile?.role && !!state.session),
   };
 }

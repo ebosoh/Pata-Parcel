@@ -22,6 +22,8 @@ function getRoleLabel(role?: UserRole | string | null): string {
       return 'Admin';
     case 'pap_staff':
       return 'PAP Staff';
+    case 'assistant_staff':
+      return 'Assistant Staff';
     case 'seller':
       return 'Seller';
     default:
@@ -41,6 +43,12 @@ function getRoleBadge(role?: UserRole | string | null) {
       return (
         <Badge className="bg-blue-600 hover:bg-blue-600 text-white text-[11px] font-semibold gap-1">
           <ShieldCheck className="h-3 w-3" /> PAP Staff
+        </Badge>
+      );
+    case 'assistant_staff':
+      return (
+        <Badge className="bg-indigo-600 hover:bg-indigo-600 text-white text-[11px] font-semibold gap-1">
+          <ShieldCheck className="h-3 w-3" /> Assistant Staff
         </Badge>
       );
     case 'seller':
@@ -161,6 +169,9 @@ export function Header() {
     }
     if (profile?.role === 'pap_staff') {
       return { to: '/pap/profile', label: 'Go to Staff Profile' };
+    }
+    if (profile?.role === 'assistant_staff') {
+      return { to: '/pap/dispatch', label: 'Go to Internal Pick-up' };
     }
     return { to: '/seller/profile', label: 'Go to Seller Profile' };
   };

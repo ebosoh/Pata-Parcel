@@ -50,7 +50,9 @@ function LoginPage() {
         ? '/admin/dashboard'
         : profile?.role === 'pap_staff'
           ? '/pap/queue'
-          : '/seller/dispatch';
+          : profile?.role === 'assistant_staff'
+            ? '/pap/dispatch'
+            : '/seller/dispatch';
       navigate({ to: target, replace: true });
     }
   }, [isAuthenticated, loading, profile, navigate]);
