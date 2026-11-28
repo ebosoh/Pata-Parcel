@@ -4,6 +4,7 @@ COMMENT ON COLUMN public.parcels.product_image_url IS 'Optional URL of a product
 
 -- Allow anonymous users to upload files to the product-scans/ folder in the receipts bucket.
 -- Files are keyed by a UUID so they cannot be guessed.
+DROP POLICY IF EXISTS "Anon upload product scans" ON storage.objects;
 CREATE POLICY "Anon upload product scans" ON storage.objects
   FOR INSERT
   TO anon, authenticated
@@ -14,6 +15,7 @@ CREATE POLICY "Anon upload product scans" ON storage.objects
   );
 
 -- Allow the parcel's seller and PAP staff to read linked product scans
+DROP POLICY IF EXISTS "Signed-in read product scans" ON storage.objects;
 CREATE POLICY "Signed-in read product scans" ON storage.objects
   FOR SELECT
   TO authenticated
@@ -30,6 +32,9 @@ CREATE POLICY "Signed-in read product scans" ON storage.objects
         )
     )
   );
+
+-- Drop old 12-argument overload so PostgREST RPC resolution is unambiguous
+DROP FUNCTION IF EXISTS public.submit_buyer_order(text,text,text,text,text,text,text,text,text,numeric,numeric,text);
 
 -- Update submit_buyer_order to accept and store product_image_url
 CREATE OR REPLACE FUNCTION public.submit_buyer_order(
@@ -75,7 +80,7 @@ BEGIN
  CASE WHEN _sending_method = 'psv_driver' THEN 0 ELSE greatest(coalesce(_sending_fee,0),0) END,
  CASE WHEN _sending_method = 'psv_driver' THEN 0 ELSE greatest(coalesce(_sending_fee,0),0) END,
  CASE WHEN _sending_method = 'psv_driver' THEN 'pay_on_delivery' ELSE 'paid' END,
- 'awaiting_verification',_goods_amount,_pay,false,'buyer_link',nullif(trim(coalesce(_product_image_url,'')),'')))
+ 'awaiting_verification',_goods_amount,_pay,false,'buyer_link',nullif(trim(coalesce(_product_image_url,'')),''))
  RETURNING reference_number INTO _ref;
  IF _ref IS NULL THEN RETURN 'PAYMENT_REJECTED:' || coalesce(nullif(current_setting('app.payment_rejection',true),''),'Order could not be created'); END IF;
  RETURN _ref;
@@ -106,7 +111,7 @@ BEGIN
  trim(_input->>'package_type'),nullif(trim(_input->>'package_description'),''),1,
  CASE WHEN v_method = 'psv_driver' THEN 0 ELSE v_fee END,CASE WHEN v_method = 'psv_driver' THEN 0 ELSE v_fee END,
  CASE WHEN v_method = 'psv_driver' THEN 'pay_on_delivery' ELSE 'paid' END,'awaiting_verification',(_input->>'goods_amount')::numeric,
- nullif(upper(trim(_input->>'payment_code')),''),false,v_source,nullif(trim(coalesce(_input->>'product_image_url','')),'')))
+ nullif(upper(trim(_input->>'payment_code')),''),false,v_source,nullif(trim(coalesce(_input->>'product_image_url','')),''))
  RETURNING * INTO v_parcel;
  IF v_parcel.id IS NULL THEN RETURN jsonb_build_object('error',coalesce(nullif(current_setting('app.payment_rejection',true),''),'Order could not be created')); END IF;
  RETURN jsonb_build_object('parcel',to_jsonb(v_parcel));
