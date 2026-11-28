@@ -482,13 +482,6 @@ export function PapDispatchPage() {
                 </Button>
 
                 <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="h-10 shrink-0 px-3 font-bold bg-primary text-primary-foreground shadow-md hover:bg-primary/90 flex items-center gap-1.5 sm:px-4">
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">New Dispatch</span>
-                      <span className="sm:hidden">New</span>
-                    </Button>
-                  </DialogTrigger>
                   <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle className="text-lg font-bold text-primary flex items-center gap-2">
