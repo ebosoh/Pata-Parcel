@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -185,6 +187,8 @@ function AdminBlacklistPage() {
         return a.name.localeCompare(b.name);
       });
   }, [records, statusFilter, reasonFilter, searchQuery, sortBy]);
+
+  const pagination = usePagination(filteredRecords);
 
   // Statistics
   const stats = useMemo(() => {
@@ -402,7 +406,7 @@ function AdminBlacklistPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredRecords.map((item) => {
+                  pagination.paginatedItems.map((item) => {
                     const dateFormatted = new Date(item.flaggedAt).toLocaleDateString('en-KE', {
                       day: 'numeric',
                       month: 'short',
@@ -525,6 +529,16 @@ function AdminBlacklistPage() {
               </tbody>
             </table>
           </div>
+          <TablePagination
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalItems={pagination.totalItems}
+            totalPages={pagination.totalPages}
+            startItem={pagination.startItem}
+            endItem={pagination.endItem}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+          />
         </Card>
 
         {/* Dialog: Blacklist New Number */}

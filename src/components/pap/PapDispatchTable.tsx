@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 import { TrackingProgressBar } from '@/components/seller/TrackingProgressBar';
 import { StorageImage } from '@/components/shared/StorageImage';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   MapPin,
   Send,
@@ -84,6 +86,7 @@ export function PapDispatchTable({
   onRefetch,
 }: PapDispatchTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const pagination = usePagination(parcels);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -105,7 +108,7 @@ export function PapDispatchTable({
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/60">
-            {parcels.map((parcel) => {
+            {pagination.paginatedItems.map((parcel) => {
               const isExpanded = expandedId === parcel.id;
               const cleanPhone = parcel.buyer_phone.replace(/\D/g, '');
               const waPhone = cleanPhone.startsWith('0')
@@ -331,6 +334,16 @@ export function PapDispatchTable({
           </TableBody>
         </Table>
       </div>
+      <TablePagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        totalItems={pagination.totalItems}
+        totalPages={pagination.totalPages}
+        startItem={pagination.startItem}
+        endItem={pagination.endItem}
+        onPageChange={pagination.setPage}
+        onPageSizeChange={pagination.setPageSize}
+      />
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/lib/supabase';
 import { getDispatchDrivers, saveDispatchDriver, updateDispatchDriverRecord, deleteDispatchDriverRecord } from '@/lib/drivers';
 import { Card } from '@/components/ui/card';
@@ -221,6 +223,8 @@ export function AdminDriversPage() {
     );
   }, [drivers, searchQuery]);
 
+  const pagination = usePagination(filteredDrivers);
+
   if (!authLoading && profile && profile.role !== 'pap_admin') {
     return (
       <AppShell role={profile.role as any}>
@@ -342,7 +346,7 @@ export function AdminDriversPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
-                  {filteredDrivers.map(d => (
+                  {pagination.paginatedItems.map(d => (
                     <tr key={d.id} className="hover:bg-muted/20 transition-colors">
                       <td className="p-3 font-semibold text-foreground">
                         <div className="flex items-center gap-1.5">
@@ -415,6 +419,16 @@ export function AdminDriversPage() {
                   ))}
                 </tbody>
               </table>
+              <TablePagination
+                page={pagination.page}
+                pageSize={pagination.pageSize}
+                totalItems={pagination.totalItems}
+                totalPages={pagination.totalPages}
+                startItem={pagination.startItem}
+                endItem={pagination.endItem}
+                onPageChange={pagination.setPage}
+                onPageSizeChange={pagination.setPageSize}
+              />
             </div>
 
             {/* Mobile Card View */}

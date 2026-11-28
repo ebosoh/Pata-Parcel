@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 import { StorageImage } from '@/components/shared/StorageImage';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   MapPin,
   Clock,
@@ -93,6 +95,7 @@ export function PapQueueTable({
   onRefetch,
 }: PapQueueTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const pagination = usePagination(parcels);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -124,7 +127,7 @@ export function PapQueueTable({
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/60">
-            {parcels.map((parcel) => {
+            {pagination.paginatedItems.map((parcel) => {
               const isSelected = selectedIds.includes(parcel.id);
               const isExpanded = expandedId === parcel.id;
               const arrival = formatArrivalTime(parcel.created_at);
@@ -293,6 +296,16 @@ export function PapQueueTable({
           </TableBody>
         </Table>
       </div>
+      <TablePagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        totalItems={pagination.totalItems}
+        totalPages={pagination.totalPages}
+        startItem={pagination.startItem}
+        endItem={pagination.endItem}
+        onPageChange={pagination.setPage}
+        onPageSizeChange={pagination.setPageSize}
+      />
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import { formatPhoneDisplay } from '@/lib/constants';
 import { formatStay, internalPickupTotalDue, INTERNAL_PICKUP_LATE_FEE } from '@/lib/internalPickup';
 import type { ParcelWithSeller } from '@/hooks/usePapOperations';
@@ -50,6 +52,8 @@ export function InternalPickupTable({
   submitting = false,
   deliveredIds = {},
 }: Props) {
+  const pagination = usePagination(parcels);
+
   if (parcels.length === 0) {
     return (
       <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-border bg-card/50">
@@ -145,7 +149,7 @@ export function InternalPickupTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {parcels.map((p) => {
+              {pagination.paginatedItems.map((p) => {
                 const isDelivered = deliveredIds[p.id] || p.tracking_status === 'delivered';
                 return (
                   <TableRow key={p.id}>
@@ -202,6 +206,16 @@ export function InternalPickupTable({
             </TableBody>
           </Table>
         </div>
+        <TablePagination
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          totalItems={pagination.totalItems}
+          totalPages={pagination.totalPages}
+          startItem={pagination.startItem}
+          endItem={pagination.endItem}
+          onPageChange={pagination.setPage}
+          onPageSizeChange={pagination.setPageSize}
+        />
       </div>
     </>
   );

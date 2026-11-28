@@ -2,6 +2,8 @@ import { AdminParcelControls } from '@/components/pap/AdminParcelControls';
 import { isInternalPickup } from '@/lib/internalPickup';
 import { PapDispatchTable } from '@/components/pap/PapDispatchTable';
 import { StorageImage } from '@/components/shared/StorageImage';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { openReceiptInWhatsApp } from '@/lib/shareReceiptWhatsApp';
@@ -269,6 +271,8 @@ export function PapDispatchPage() {
       return matchBuyer || matchBuyerPhone || matchDest || matchRef || matchSeller;
     });
   }, [isAssistant, activeTab, sortingParcels, transitParcels, filteredInternalParcels, searchQuery]);
+
+  const internalPagination = usePagination(displayList);
 
   // Handle Dispatch submission
   const handleConfirmDispatch = async (e: React.FormEvent) => {
@@ -719,7 +723,7 @@ export function PapDispatchPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  {displayList.map((parcel) => {
+                  {internalPagination.paginatedItems.map((parcel) => {
                     const { stayLabel, totalDue, days } = getStayInfo(parcel.created_at);
                     const dateCreated = new Date(parcel.created_at).toLocaleString('en-KE', {
                       day: 'numeric',
@@ -794,6 +798,16 @@ export function PapDispatchPage() {
                 </tbody>
               </table>
             </div>
+            <TablePagination
+              page={internalPagination.page}
+              pageSize={internalPagination.pageSize}
+              totalItems={internalPagination.totalItems}
+              totalPages={internalPagination.totalPages}
+              startItem={internalPagination.startItem}
+              endItem={internalPagination.endItem}
+              onPageChange={internalPagination.setPage}
+              onPageSizeChange={internalPagination.setPageSize}
+            />
           </div>
         ) : viewMode === 'table' ? (
           <PapDispatchTable

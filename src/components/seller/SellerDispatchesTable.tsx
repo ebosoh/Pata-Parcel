@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TrackingProgressBar } from './TrackingProgressBar';
 import { StorageImage } from '@/components/shared/StorageImage';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,6 +115,7 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmParcel, setConfirmParcel] = useState<Parcel | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const pagination = usePagination(parcels);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -164,7 +167,7 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/60">
-            {parcels.map((parcel) => {
+            {pagination.paginatedItems.map((parcel) => {
               const isExpanded = expandedId === parcel.id;
               const awaiting = parcel.tracking_status === 'awaiting_verification';
               const goodsPaid = parcel.goods_paid === true;
@@ -393,6 +396,16 @@ export function SellerDispatchesTable({ parcels, onChanged }: SellerDispatchesTa
           </TableBody>
         </Table>
       </div>
+      <TablePagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        totalItems={pagination.totalItems}
+        totalPages={pagination.totalPages}
+        startItem={pagination.startItem}
+        endItem={pagination.endItem}
+        onPageChange={pagination.setPage}
+        onPageSizeChange={pagination.setPageSize}
+      />
 
       {/* Confirmation Dialog for Dispatch to PAP */}
       {confirmParcel && (

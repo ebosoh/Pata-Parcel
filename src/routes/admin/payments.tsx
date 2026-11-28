@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/hooks/useAuth';
+import { TablePagination } from '@/components/shared/TablePagination';
+import { usePagination } from '@/hooks/usePagination';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Loader2, CreditCard, Wallet, Clock, Banknote, TrendingUp, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
@@ -82,6 +84,8 @@ function DispatchTable({ parcels }: { parcels: ParcelPayment[] }) {
     else { setSortField(field); setSortDir('desc'); }
   };
 
+  const pagination = usePagination(sorted);
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40 inline" />;
     return sortDir === 'asc'
@@ -94,8 +98,9 @@ function DispatchTable({ parcels }: { parcels: ParcelPayment[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border mt-2">
-      <table className="w-full text-xs">
+    <div className="rounded-lg border border-border mt-2 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
         <thead>
           <tr className="bg-muted/50 text-left">
             <th className="px-3 py-2 font-semibold whitespace-nowrap cursor-pointer select-none" onClick={() => toggle('created_at')}>
@@ -118,7 +123,7 @@ function DispatchTable({ parcels }: { parcels: ParcelPayment[] }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {sorted.map(p => (
+          {pagination.paginatedItems.map(p => (
             <tr key={p.id} className="hover:bg-muted/30 transition-colors">
               <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                 {new Date(p.created_at).toLocaleDateString('en-KE', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -155,6 +160,17 @@ function DispatchTable({ parcels }: { parcels: ParcelPayment[] }) {
           </tr>
         </tfoot>
       </table>
+      </div>
+      <TablePagination
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        totalItems={pagination.totalItems}
+        totalPages={pagination.totalPages}
+        startItem={pagination.startItem}
+        endItem={pagination.endItem}
+        onPageChange={pagination.setPage}
+        onPageSizeChange={pagination.setPageSize}
+      />
     </div>
   );
 }
